@@ -24,16 +24,46 @@ npm install
 
 
 ### 3) Banco de dados (PostgreSQL)
-Crie um banco (ex.: `pixdb`) e um usuário com acesso:
+Se ainda não tem postegres VPS:
 
-```sql
-CREATE DATABASE pixdb;
--- Ajuste o usuário/senha conforme seu ambiente
--- CREATE USER pixuser WITH ENCRYPTED PASSWORD 'sua_senha';
--- GRANT ALL PRIVILEGES ON DATABASE pixdb TO pixuser;
+> apt update
+> apt install postgresql postgresql-contrib -y
+
+Entrar no Postgres:
+
+> sudo -u postgres psql
+
+Criar banco e usuário:
+
+> CREATE DATABASE compraslivretec;
+> CREATE USER compras_user WITH PASSWORD 'SENHA_FORTE_AQUI';
+> GRANT ALL PRIVILEGES ON DATABASE compraslivretec TO compras_user;
+> \q
+> \c compraslivretec
+> GRANT ALL ON SCHEMA public TO compras_user;
+> ALTER SCHEMA public OWNER TO compras_user;
+> \q
+
+
+Criando tabela:
+
+> psql -U compras_user -d compraslivretec -h localhost
+```sql 
+  CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    payment_id VARCHAR(255),
+    amount NUMERIC(10,2),
+    description TEXT,
+    status VARCHAR(50),
+    target_url TEXT,
+    access_token TEXT,
+    email VARCHAR(255),
+    access_password TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    paid_at TIMESTAMP,
+    product_url TEXT
+);
 ```
-
-Conexão configurada via variáveis de ambiente (ver seção .env). Ao iniciar o app, a tabela `payments` é criada automaticamente se não existir.
 
 
 ### 4) Mercado Pago - credenciais

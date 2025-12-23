@@ -18,11 +18,11 @@ const pool = new Pool(process.env.DATABASE_URL ? {
 	connectionString: process.env.DATABASE_URL,
 	ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : undefined
 } : {
-	host: process.env.PGHOST || 'localhost',
-	port: Number(process.env.PGPORT || 5432),
-	user: process.env.PGUSER || 'postgres',
-	password: process.env.PGPASSWORD || '123',
-	database: process.env.PGDATABASE || 'aquecedor_whatsapp'
+	host: process.env.PGHOST,
+	port: Number(process.env.PGPORT),
+	user: process.env.PGUSER,
+	password: process.env.PGPASSWORD,
+	database: process.env.PGDATABASE
 });
 
 async function initSchema() {

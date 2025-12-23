@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Área de Membros - Login</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+	<style>
+		:root {
+    --primary: #5d46f4;
+    --primary-hover: #4a38c7;
+    --bg: #f8fafc;
+    --text-main: #1e293b;
+    --error-bg: #fef2f2;
+    --error-text: #991b1b;
+}
+
+body { 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    margin: 0; 
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg);
+    color: var(--text-main); 
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header i {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.login-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.card { 
+    background: white;
+    border: none; 
+    border-radius: 20px; 
+    padding: 40px; 
+    width: 100%;
+    max-width: 400px; 
+    box-sizing: border-box;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+}
+
+.error-message { 
+    background: var(--error-bg);
+    color: var(--error-text); 
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px; 
+    margin-bottom: 20px; 
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #fee2e2;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+label { 
+    font-weight: 600; 
+    display: block; 
+    margin-bottom: 8px; 
+    font-size: 13px; 
+    color: #64748b;
+}
+
+input { 
+    width: 100%; 
+    padding: 12px 16px; 
+    border: 2px solid #e2e8f0; 
+    border-radius: 12px; 
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: all 0.2s;
+    background: #fcfcfd;
+}
+
+input:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+    background: white;
+    box-shadow: 0 0 0 4px rgba(93, 70, 244, 0.1);
+}
+
+button { 
+    width: 100%;
+    background: var(--primary); 
+    color: white; 
+    padding: 14px; 
+    border: 0; 
+    border-radius: 12px; 
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer; 
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+button:hover { 
+    background: var(--primary-hover); 
+    transform: translateY(-1px);
+}
+
+.footer-info {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.footer-info a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+	</style>
+</head>
+<body>
+    <div class="login-header">
+        <i class="fa-solid fa-circle-user"></i>
+        <h2>Acessar Área de Membros</h2>
+    </div>
+
+    <div class="card">
+        <% if (error) { %>
+            <div class="error-message">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <%= error %>
+            </div>
+        <% } %>
+
+        <form method="post" action="/membros">
+            <div class="input-group">
+                <label for="email">E-mail de acesso</label>
+                <input id="email" name="email" type="email" value="<%= email %>" placeholder="seu@email.com" required autofocus />
+            </div>
+
+            <div class="input-group">
+                <label for="password">Sua senha</label>
+                <input id="password" name="password" type="password" placeholder="Digite sua senha" required />
+            </div>
+
+            <button type="submit">
+                Entrar na conta <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
+        </form>
+    </div>
+
+    <div class="footer-info">
+        Problemas com o acesso? <br>
+        <a href="https://wa.me/5581985315669">Contate nosso suporte</a>
+    </div>
+</body>
+</html>
+
+

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Área de Membros</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+	<style>
+		:root {
+    --primary: #5d46f4;
+    --primary-light: #f1f0ff;
+    --bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+}
+
+body { 
+    font-family: 'Inter', system-ui, sans-serif; 
+    margin: 0; 
+    padding: 40px 20px; 
+    background-color: var(--bg); 
+    color: var(--text-main); 
+}
+
+.dashboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+h2 { margin: 0; font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+
+.user-badge {
+    background: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 14px;
+    border: 1px solid #e2e8f0;
+    color: var(--text-muted);
+}
+
+.user-badge strong { color: var(--primary); }
+
+.card { 
+    background: white; 
+    border-radius: 16px; 
+    padding: 24px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border: 1px solid #e2e8f0;
+}
+
+/* Estilo da lista de produtos */
+.product-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    align-items: center;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.product-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.product-info .name {
+    display: block;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.product-info .date {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.btn-access {
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.btn-access:hover { background: #4a38c7; }
+
+.btn-open-all {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+
+.btn-open-all:hover {
+    background: var(--primary-light);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 15px;
+    opacity: 0.3;
+}
+
+/* Responsividade para Celular */
+@media (max-width: 600px) {
+    .product-item {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        text-align: center;
+    }
+    header { justify-content: center; text-align: center; }
+}
+	</style>
+	<script>
+		function openAll() {
+			document.querySelectorAll('a.product-link').forEach(a => window.open(a.href, '_blank'));
+		}
+	</script>
+</head>
+<div class="dashboard-container">
+    <header>
+        <h2>Meus Produtos</h2>
+		<div style="display: flex; align-items: center;">
+
+			<div class="user-badge">
+				<i class="fa-regular fa-user"></i> Olá, <strong><%= email %></strong>
+			</div>
+			<p style="text-align: center; margin-left: 30px;">
+				<a href="/logout" style="color: var(--text-muted); font-size: 14px; text-decoration: none;">
+					<i class="fa-solid fa-right-from-bracket"></i> Sair da conta
+				</a>
+			</p>
+		</div>
+    </header>
+
+    <div class="card">
+        <% if (!items || items.length === 0) { %>
+            <div class="empty-state">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>Nenhum produto encontrado para este e-mail.</p>
+            </div>
+        <% } else { %>
+            
+            <div class="product-list">
+                <% items.forEach(function(it){ %>
+                    <div class="product-item">
+                        <div class="product-info">
+                            <span class="name"><%= it.description %></span>
+                            <span class="date">
+                                <i class="fa-regular fa-calendar-check"></i> 
+                                Adquirido em: <%= new Date(it.created_at).toLocaleDateString('pt-BR') %>
+                            </span>
+                        </div>
+                        
+                        <div style="text-align: center; font-size: 13px; color: var(--text-muted);">
+                            <i class="fa-solid fa-unlock-keyhole"></i> Acesso Liberado
+                        </div>
+
+                        <a class="product-link btn-access" href="<%= it.product_url %>" target="_blank" rel="noopener">
+                            Acessar Conteúdo <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                <% }) %>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn-open-all" onclick="openAll()">
+                    <i class="fa-solid fa-layer-group"></i> Abrir todos os links
+                </button>
+            </div>
+        <% } %>
+    </div>
+
+    
+</div>
+</html>
+
+

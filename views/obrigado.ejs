@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Obrigado</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+	<style>
+		:root {
+    --primary: #5d46f4;
+    --success: #10b981;
+    --bg: #f8fafc;
+    --text: #1e293b;
+}
+
+body { 
+    font-family: 'Inter', system-ui, sans-serif; 
+    margin: 0; 
+    padding: 40px 20px; 
+    color: var(--text); 
+    background-color: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.success-icon {
+    font-size: 3.5rem;
+    color: var(--success);
+    margin-bottom: 16px;
+    animation: scaleUp 0.5s ease-out;
+}
+
+@keyframes scaleUp {
+    0% { transform: scale(0); }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+h2.ok { 
+    font-weight: 800; 
+    color: #064e3b; 
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.card { 
+    background: white;
+    border: none;
+    border-radius: 20px; 
+    padding: 32px; 
+    max-width: 550px; 
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.instruction-text {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+label { font-weight: 600; display: block; margin-top: 12px; font-size: 14px; color: #475569; }
+
+input[type="email"] { 
+    width: 100%; 
+    padding: 14px; 
+    border: 2px solid #e2e8f0; 
+    border-radius: 12px; 
+    margin-top: 8px; 
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+input:focus { outline: none; border-color: var(--primary); }
+
+button { 
+    width: 100%;
+    background: var(--primary); 
+    color: white; 
+    padding: 14px; 
+    border: 0; 
+    border-radius: 12px; 
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer; 
+    margin-top: 20px; 
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+button:hover { background: #4a38c7; transform: translateY(-2px); }
+
+.credentials-box {
+    margin-top: 32px;
+    background: #f1f5f9;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.credential-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.credential-item:last-child { border: none; }
+
+.credential-item span:first-child {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.credential-item strong {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    color: var(--primary);
+    background: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.warning-box {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+	</style>
+</head>
+<body>
+    <div class="success-icon">
+        <i class="fa-solid fa-circle-check"></i>
+    </div>
+    
+    <h2 class="ok">Pagamento Confirmado!</h2>
+
+    <div class="card">
+        <p class="instruction-text">
+            Sua compra foi processada com sucesso. Informe seu e-mail abaixo para liberar suas credenciais de acesso imediatamente.
+        </p>
+
+
+        <div class="credentials-box">
+            <div style="font-weight: 800; font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-key" style="color: var(--primary)"></i> Suas Credenciais
+            </div>
+            
+            <div class="credential-item">
+                <span>E-MAIL</span>
+                <strong><%= email || 'Aguardando...' %></strong>
+            </div>
+            
+            <div class="credential-item">
+                <span>SENHA</span>
+                <strong><%= password %></strong>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <i class="fa-solid fa-circle-info"></i>
+            Você poderá alterar sua senha na área de membros.
+        </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/membros" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+            Acessar Área de Membros <i class="fa-solid fa-up-right-from-square" style="font-size: 12px;"></i>
+        </a>
+    </div>
+</body>	
+</html>
+
+

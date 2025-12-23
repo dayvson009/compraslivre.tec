@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Produtos</title>
+	<style>
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #1f2937; }
+		h1 { margin: 0 0 16px; font-size: 22px; }
+		.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+		.card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+		.price { font-weight: 700; }
+		button { background: #111827; color: white; padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; }
+	</style>
+</head>
+<body>
+	<h1>Produtos</h1>
+	<div class="grid">
+		<% products.forEach(function(p){ %>
+			<div class="card">
+				<div style="font-weight:700;"><%= p.name %></div>
+				<div style="margin-top:6px;"><%= p.description %></div>
+				<div class="price" style="margin: 8px 0;">R$ <%= p.price.toFixed(2) %></div>
+				<a href="/produto/<%= p.id %>"><button type="button">Selecionar</button></a>
+			</div>
+		<% }) %>
+	</div>
+</body>
+</html>
+
+

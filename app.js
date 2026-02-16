@@ -168,7 +168,7 @@ const products = [
 
 // Home - lista de produtos
 app.get('/', (req, res) => {
-	res.render('capcut', { products });
+	res.render('home', { products });
 });
 
 // Landing CapCut

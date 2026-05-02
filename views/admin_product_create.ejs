@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto - ComprasLivre.tec</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tech-blue': '#2563eb',
+                        'tech-dark': '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <!-- Header Admin -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-microchip text-tech-blue text-2xl"></i>
+                <span class="font-bold text-xl text-slate-800 tracking-tight">ComprasLivre<span class="text-tech-blue">.tec</span></span>
+                <span class="ml-2 px-2 py-0.5 bg-blue-100 text-tech-blue text-xs font-bold rounded-full">ADMIN</span>
+            </div>
+            <nav class="hidden md:flex gap-6">
+                <a href="/admin/produtos" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-list mr-1"></i> Produtos</a>
+                <a href="/admin/produtos/novo" class="text-sm font-bold text-tech-blue border-b-2 border-tech-blue pb-1"><i class="fas fa-plus mr-1"></i> Cadastrar</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm text-slate-500 hover:text-tech-blue transition"><i class="fas fa-external-link-alt mr-1"></i> Ver Site</a>
+                <div class="w-px h-4 bg-slate-200"></div>
+                <a href="/admin/logout" class="text-sm text-red-500 hover:text-red-700 font-bold transition"><i class="fas fa-sign-out-alt mr-1"></i> Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <div class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 mb-2">Cadastrar Novo Produto</h1>
+                <p class="text-slate-500">Preencha as informações abaixo para adicionar um novo software ao catálogo.</p>
+            </div>
+        </div>
+
+        <script>
+            // Show success message if parameter ?success=1
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success')) {
+                document.write(`
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-8 rounded shadow-sm" role="alert">
+                        <p class="font-bold">Sucesso!</p>
+                        <p>O produto foi cadastrado e salvo corretamente no sistema.</p>
+                    </div>
+                `);
+            }
+        </script>
+
+        <form action="/admin/produtos" method="POST" class="space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+            
+            <!-- Sessão 1: Informações Básicas -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-info-circle text-tech-blue mr-2"></i> Informações Básicas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">ID do Produto *</label>
+                        <input type="text" name="id" placeholder="Ex: MLB2026030305" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                        <p class="text-xs text-slate-400 mt-1">Identificador único (usado nas URLs).</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Nome do Produto *</label>
+                        <input type="text" name="name" placeholder="Ex: Microsoft Office 2024" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Preço Normal (De:)</label>
+                        <input type="number" step="0.01" name="priceBefore" placeholder="147.00" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Preço Promocional (Por:) *</label>
+                        <input type="number" step="0.01" name="price" placeholder="75.00" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Preço Especial (Se for Upsell)</label>
+                        <input type="number" step="0.01" name="priceUpsell" placeholder="Ex: 50.00" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition text-green-600 font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessão 2: Especificações -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-list text-tech-blue mr-2"></i> Especificações</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Desenvolvedor</label>
+                        <input type="text" name="development" placeholder="Ex: Microsoft" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Nome Curto do Software</label>
+                        <input type="text" name="nameSoft" placeholder="Ex: Office" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Versão</label>
+                        <input type="text" name="version" placeholder="Ex: 2024" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Licença</label>
+                        <input type="text" name="licence" placeholder="Ex: Vitalícia" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Formato</label>
+                        <input type="text" name="formart" placeholder="Ex: Digital" value="Digital" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessão 3: URLs e Mídias -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-link text-tech-blue mr-2"></i> Links e Mídias</h2>
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">URL de Download do Produto</label>
+                        <input type="url" name="urlProduto" placeholder="Link do Google Drive ou semelhante" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">URL do Vídeo Tutorial</label>
+                        <input type="url" name="tutorialVideo" placeholder="Link do YouTube" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Imagem Principal (Caminho ou URL)</label>
+                        <input type="text" name="image" placeholder="Ex: office/office.webp" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div id="thumbs-container" class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Miniaturas (Imagens da Galeria)</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="thumbs[]" placeholder="Caminho/URL da miniatura" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addThumb()" class="text-sm text-tech-blue font-bold text-left hover:underline w-max"><i class="fas fa-plus"></i> Adicionar outra miniatura</button>
+                </div>
+            </div>
+
+            <!-- Sessão 4: Textos Ricos -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-file-alt text-tech-blue mr-2"></i> Textos e Descrição</h2>
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Descrição do Produto (Suporta HTML)</label>
+                        <textarea name="description" rows="6" placeholder="<p>Descrição detalhada aqui...</p>" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Mais Informações (Mostrado após a compra, ex: chave de licença)</label>
+                        <textarea name="moreInfo" rows="3" placeholder="<p>Chave: XXXXX-XXXXX</p>" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessão 5: Estratégia de Vendas (Upsell/Orderbump) -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-chart-line text-tech-blue mr-2"></i> Estratégia de Vendas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-6 rounded-xl border border-blue-100">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Order Bump</label>
+                        <p class="text-xs text-slate-500 mb-2">Oferta mostrada no checkout, adicionada com 1 clique.</p>
+                        <select name="orderbump" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            <option value="">Nenhum</option>
+                            <% if(typeof products !== 'undefined' && products.length > 0) { %>
+                                <% products.forEach(function(p) { %>
+                                    <option value="<%= p.id %>"><%= p.name %> (R$ <%= p.price %>)</option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Upsell</label>
+                        <p class="text-xs text-slate-500 mb-2">Oferta mostrada após a confirmação da compra.</p>
+                        <select name="upsell" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            <option value="">Nenhum</option>
+                            <% if(typeof products !== 'undefined' && products.length > 0) { %>
+                                <% products.forEach(function(p) { %>
+                                    <option value="<%= p.id %>"><%= p.name %> (R$ <%= p.price %>)</option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessão 6: Perguntas Frequentes (FAQ) -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-question-circle text-tech-blue mr-2"></i> Perguntas Frequentes (FAQ)</h2>
+                <div id="faq-container" class="space-y-4">
+                    <!-- Faq item 0 -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Pergunta</label>
+                                <input type="text" name="questions[0][question]" placeholder="Ex: Quando expira?" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Resposta</label>
+                                <input type="text" name="questions[0][resp]" placeholder="Ex: Nunca, é vitalício!" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="addFaq()" class="mt-4 text-sm text-tech-blue font-bold flex items-center hover:underline"><i class="fas fa-plus-circle mr-1"></i> Adicionar Pergunta</button>
+            </div>
+
+            <!-- Sessão 7: Depoimentos (Pinions) -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-star text-tech-blue mr-2"></i> Depoimentos</h2>
+                <div id="pinion-container" class="space-y-4">
+                    <!-- Pinion item 0 -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div class="md:col-span-8">
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Comentário</label>
+                                <input type="text" name="pinions[0][pinion]" placeholder="Ex: Muito bom, ativou rápido!" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Estrelas (1 a 5)</label>
+                                <input type="number" name="pinions[0][rate]" min="1" max="5" value="5" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Img (Opcional)</label>
+                                <input type="text" name="pinions[0][image]" placeholder="caminho.jpg" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="addPinion()" class="mt-4 text-sm text-tech-blue font-bold flex items-center hover:underline"><i class="fas fa-plus-circle mr-1"></i> Adicionar Depoimento</button>
+            </div>
+
+            <div class="pt-6 border-t border-slate-200">
+                <button type="submit" class="w-full bg-tech-blue hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-lg transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
+                    <i class="fas fa-save"></i> Salvar Produto
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        let faqCount = 1;
+        function addFaq() {
+            const container = document.getElementById('faq-container');
+            const html = `
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mt-4 relative">
+                    <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Pergunta</label>
+                            <input type="text" name="questions[${faqCount}][question]" placeholder="Ex: Quando expira?" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Resposta</label>
+                            <input type="text" name="questions[${faqCount}][resp]" placeholder="Ex: Nunca, é vitalício!" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            faqCount++;
+        }
+
+        let pinionCount = 1;
+        function addPinion() {
+            const container = document.getElementById('pinion-container');
+            const html = `
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mt-4 relative">
+                    <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mt-2">
+                        <div class="md:col-span-8">
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Comentário</label>
+                            <input type="text" name="pinions[${pinionCount}][pinion]" placeholder="Ex: Muito bom, ativou rápido!" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Estrelas (1 a 5)</label>
+                            <input type="number" name="pinions[${pinionCount}][rate]" min="1" max="5" value="5" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Img (Opcional)</label>
+                            <input type="text" name="pinions[${pinionCount}][image]" placeholder="caminho.jpg" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            pinionCount++;
+        }
+
+        function addThumb() {
+            const container = document.getElementById('thumbs-container');
+            const html = `
+                <div class="flex gap-2 mt-2">
+                    <input type="text" name="thumbs[]" placeholder="Caminho/URL da miniatura" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    <button type="button" onclick="this.parentElement.remove()" class="px-4 bg-red-50 text-red-500 rounded-lg border border-red-200 hover:bg-red-100"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - ComprasLivre.tec</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tech-blue': '#2563eb',
+                        'tech-dark': '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <!-- Header Admin -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-microchip text-tech-blue text-2xl"></i>
+                <span class="font-bold text-xl text-slate-800 tracking-tight">ComprasLivre<span class="text-tech-blue">.tec</span></span>
+                <span class="ml-2 px-2 py-0.5 bg-blue-100 text-tech-blue text-xs font-bold rounded-full">ADMIN</span>
+            </div>
+            <nav class="hidden md:flex gap-6">
+                <a href="/admin/produtos" class="text-sm font-bold text-tech-blue border-b-2 border-tech-blue pb-1"><i class="fas fa-list mr-1"></i> Produtos</a>
+                <a href="/admin/produtos/novo" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-plus mr-1"></i> Cadastrar</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm text-slate-500 hover:text-tech-blue transition"><i class="fas fa-external-link-alt mr-1"></i> Ver Site</a>
+                <div class="w-px h-4 bg-slate-200"></div>
+                <a href="/admin/logout" class="text-sm text-red-500 hover:text-red-700 font-bold transition"><i class="fas fa-sign-out-alt mr-1"></i> Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-12">
+        <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 mb-2">Gerenciar Produtos</h1>
+                <p class="text-slate-500">Lista de todos os softwares cadastrados no sistema.</p>
+            </div>
+            <a href="/admin/produtos/novo" class="bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md flex items-center gap-2">
+                <i class="fas fa-plus"></i> Novo Produto
+            </a>
+        </div>
+
+        <script>
+            // Show success message
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') == '2') {
+                document.write(`
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-8 rounded shadow-sm" role="alert">
+                        <p class="font-bold">Atualizado!</p>
+                        <p>O produto foi editado com sucesso.</p>
+                    </div>
+                `);
+            } else if (urlParams.get('success') == '3') {
+                document.write(`
+                    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-8 rounded shadow-sm" role="alert">
+                        <p class="font-bold">Excluído!</p>
+                        <p>O produto foi removido permanentemente.</p>
+                    </div>
+                `);
+            }
+        </script>
+
+        <div class="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
+                            <th class="p-4 font-semibold border-b border-slate-200">Imagem</th>
+                            <th class="p-4 font-semibold border-b border-slate-200">ID / Nome</th>
+                            <th class="p-4 font-semibold border-b border-slate-200">Preço</th>
+                            <th class="p-4 font-semibold border-b border-slate-200 text-center">Status</th>
+                            <th class="p-4 font-semibold border-b border-slate-200 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <% if (products && products.length > 0) { %>
+                            <% products.forEach(function(product) { %>
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="p-4">
+                                        <% if (product.image) { %>
+                                            <div class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center p-1 border border-slate-200">
+                                                <img src="/images/<%= product.image %>" onerror="this.src='<%= product.image %>'" alt="img" class="max-w-full max-h-full object-contain">
+                                            </div>
+                                        <% } else { %>
+                                            <div class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300 border border-slate-200">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        <% } %>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="text-xs text-slate-400 font-mono mb-1"><%= product.id %></div>
+                                        <div class="font-bold text-slate-800"><%= product.name %></div>
+                                        <div class="text-xs text-slate-500"><%= product.development %> | v.<%= product.version %></div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-green-600">R$ <%= Number(product.price).toFixed(2).replace('.', ',') %></div>
+                                        <% if (product.priceBefore) { %>
+                                            <div class="text-xs text-slate-400 line-through">R$ <%= Number(product.priceBefore).toFixed(2).replace('.', ',') %></div>
+                                        <% } %>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <form action="/admin/produtos/status/<%= product.id %>" method="POST" class="inline">
+                                            <% if (product.active !== false) { %>
+                                                <button type="submit" class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold hover:bg-green-200 transition" title="Clique para inativar">
+                                                    <i class="fas fa-check-circle mr-1"></i> Ativo
+                                                </button>
+                                            <% } else { %>
+                                                <button type="submit" class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold hover:bg-slate-200 transition" title="Clique para ativar">
+                                                    <i class="fas fa-eye-slash mr-1"></i> Inativo
+                                                </button>
+                                            <% } %>
+                                        </form>
+                                    </td>
+                                    <td class="p-4 text-right space-x-2">
+                                        <a href="/admin/produtos/editar/<%= product.id %>" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-tech-blue hover:bg-tech-blue hover:text-white transition" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="/admin/produtos/excluir/<%= product.id %>" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir permanentemente este produto?');">
+                                            <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition" title="Excluir">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-slate-500">
+                                    Nenhum produto cadastrado ainda.
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

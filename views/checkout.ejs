@@ -7,8 +7,8 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 	<style>
 		:root {
-    --primary: #5d46f4;
-    --primary-dark: #4a38c7;
+    --primary: #3483fa;
+    --primary-dark: #2968c8;
     --bg: #f4f7ff;
     --text: #1f2937;
     --gray-light: #f9fafb;
@@ -16,31 +16,50 @@
 
 body { 
     font-family: 'Inter', system-ui, sans-serif; 
-    margin: 0; 
-    padding: 40px 20px;
+    margin: 0;
     color: var(--text); 
     background-color: var(--bg);
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
+}
+
+header {
+  background-color: #FFF159;
+  padding: 10px 5%;
+  border-bottom: 1px solid #888;
+  width: 100%;
+}
+header a {
+  text-decoration: none;
+  color: #555;
+}
+
+.header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
 }
 
 h2 { 
-    color: #111827; 
-    margin-bottom: 24px; 
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    color: #000000e6;
+    font-weight: normal;
+    text-align: left;
+    width: 100%;
+    max-width: 850px;
 }
 
 .card { 
     background: white;
     border: none;
     border-radius: 16px; 
-    padding: 32px; 
+    padding: 20px; 
     max-width: 800px; 
-    width: 100%;
+    width: 90%;
     box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
@@ -181,7 +200,20 @@ button.secondary:hover { background: #d1d5db; }
 	</script>
 </head>
 <body>
-    <h2><i class="fa-solid fa-shield-check" style="color: var(--primary)"></i> Finalizar Pagamento</h2>
+    <header>
+        <div class="header-container">
+            <div class="logo-area">
+                <a class="logo-text" href="/" style="font-weight: bold;">ComprasLivre</a>            
+            </div>
+            <div class="nav-links">
+                <a href="/contato">Contato</a>
+            </div>
+        </div>
+    </header>
+    <h2 style="display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-lock text-green-600" style="color: #16a34a;"></i> 
+        Pagamento Seguro: <%= typeof description !== 'undefined' ? description : product.name %>
+    </h2>
 
     <div class="card">
 		<img src="/images/mercado-pago-logo.png" style="margin: 0 auto 50px 65px;display: block;">

@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Área de Membros - Login</title>
+	<title>Painel Administrativo - Login</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 	<style>
 		:root {
@@ -137,8 +137,8 @@ button:hover {
 </head>
 <body>
     <div class="login-header">
-        <i class="fa-solid fa-circle-user"></i>
-        <h2>Acessar Área de Membros</h2>
+        <i class="fa-solid fa-microchip"></i>
+        <h2>Acesso Administrativo</h2>
     </div>
 
     <div class="card">
@@ -149,10 +149,10 @@ button:hover {
             </div>
         <% } %>
 
-        <form method="post" action="/membros">
+        <form method="post" action="/admin/login">
             <div class="input-group">
-                <label for="email">E-mail de acesso</label>
-                <input id="email" name="email" type="email" value="<%= email %>" placeholder="seu@email.com" required autofocus />
+                <label for="email">E-mail do Administrador</label>
+                <input id="email" name="email" type="email" value="<%= locals.email ? email : '' %>" placeholder="admin@compraslivre.com" required autofocus />
             </div>
 
             <div class="input-group">

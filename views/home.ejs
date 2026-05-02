@@ -1,260 +1,610 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte Técnico & Instalação Profissional</title>
+    <title>Compras Livre Tec - Suporte Técnico Especializado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        .bg-dark-header { background: #0b011c; }
-        .software-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); transition: all 0.3s; }
-        .faq-item { border-bottom: 1px solid #e2e8f0; }
-        #sale-notification { position: fixed; bottom: 20px; left: 20px; z-index: 100; display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-        #utilitarios a{
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .software-card {
+            transition: all 0.3s ease;
+        }
+
+        .software-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #sale-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: none;
+        }
+
+        #utilitarios a {
             display: block;
             margin-top: 9px;
         }
+
+        /* Cores customizadas */
+        .text-tech-blue {
+            color: #2563eb;
+        }
+
+        .bg-tech-blue {
+            background-color: #2563eb;
+        }
+
+        .hover-bg-tech-blue:hover {
+            background-color: #1d4ed8;
+        }
+
+        .bg-tech-light {
+            background-color: #f0f9ff;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
 
-    <nav class="bg-indigo-900 py-4 px-6 sticky top-0 z-50">
+<body class="bg-slate-50 text-slate-800 selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 py-4 px-6 top-0 z-50 shadow-md border-b border-slate-800">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <img src="./images/LogoHeader.png" alt="Logo" class="h-10">
+            <img src="./images/LogoHeader.png" alt="Compras Livre Tec Logo" class="h-10">
+            Compras Livre
             <div class="flex items-center gap-6">
-                <div class="hidden md:flex gap-4 text-white text-xl">
-                    <a href="#"><i class="fab fa-whatsapp"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
+                <div class="hidden md:flex gap-5 text-slate-300 text-xl">
+                    <a href="https://wa.me/5581985315669" class="hover:text-white transition"><i
+                            class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.instagram.com/compraslivre.tec/" class="hover:text-white transition"><i
+                            class="fab fa-instagram"></i></a>
+                    <a href="https://www.youtube.com/@ComprasLivre-tec" class="hover:text-white transition"><i
+                            class="fab fa-youtube"></i></a>
                 </div>
-                <a href="#" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold transition">Área de membros</a>
+                <a href="#"
+                    class="bg-tech-blue hover-bg-tech-blue text-white px-6 py-2.5 rounded-lg font-semibold transition shadow-lg shadow-blue-500/30">Área
+                    de membros</a>
             </div>
         </div>
     </nav>
 
-    <header class="py-10 px-4 bg-white text-center">
-        <p class="text-slate-500 max-w-2xl mx-auto mb-8">Serviço profissional de instalação, configuração e suporte remoto para softwares essenciais do Windows e MAC.</p>
-        
-        <div class="mt-12 max-w-4xl mx-auto">
-            <div class="relative pb-[56.25%] rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-                <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/SEU_VIDEO_ID" frameborder="0" allowfullscreen></iframe>
+    <!-- Hero Section -->
+    <header class="relative bg-white overflow-hidden">
+        <div class="absolute inset-0 bg-tech-light opacity-50"></div>
+        <div class="max-w-7xl mx-auto px-4 py-16 sm:py-24 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="text-center lg:text-left">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-tech-blue text-sm font-semibold mb-6">
+                        <i class="fas fa-headset"></i> Suporte Premium
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight mb-6">
+                        Suporte Técnico de <span class="text-tech-blue">Excelência</span>, Sem Sair de Casa.
+                    </h1>
+                    <p class="text-lg text-slate-600 mb-8 max-w-2xl mx-auto lg:mx-0">
+                        Serviço profissional de instalação, configuração e suporte remoto para softwares essenciais do
+                        Windows e MAC. Atendimento humanizado, rápido e seguro.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="https://wa.me/SEUNUMERO"
+                            class="bg-tech-blue hover-bg-tech-blue text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl shadow-blue-500/30 flex items-center justify-center gap-2">
+                            <i class="fab fa-whatsapp text-xl"></i> Falar com Especialista
+                        </a>
+                        <a href="#utilitarios"
+                            class="bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 px-8 py-4 rounded-xl font-bold text-lg transition flex items-center justify-center gap-2">
+                            Ver Serviços
+                        </a>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-tr from-blue-100 to-blue-50 rounded-3xl transform rotate-3 scale-105 -z-10">
+                    </div>
+                    <img src="./images/empresa/cenario (2).jpg" alt="Atendimento de Suporte Técnico"
+                        class="rounded-3xl shadow-2xl border-4 border-white object-cover w-full h-[400px]">
+                    <!-- Floating Badge -->
+                    <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 animate-bounce"
+                        style="animation-duration: 3s;">
+                        <div class="bg-green-100 text-green-600 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">Atendimento</p>
+                            <p class="text-xs text-slate-500">100% Online</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-    <section class="py-15 px-4 max-w-6xl mx-auto text-center" id="utilitarios">
-        <h2 class="text-3xl font-extrabold mb-12 uppercase">Utilitários</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white p-2 rounded-xl shadow-md border border-gray-100 overflow-hidden">
-                <img src="./images/winrar.webp" class="rounded-t-lg w-full mb-4">
-                <div class="p-4">
-                    <h3 class="font-bold text-xl mb-2 uppercase">Winrar</h3>
-                    <p class="text-sm text-gray-500 mb-6">Não há melhor maneira de compactar arquivos para uma transferência eficiente e segura. para Windows.</p>
-                    <a href="https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-720br.exe" class="bg-indigo-900 text-white px-6 py-2 rounded font-bold text-sm">DOWNLOAD WINDOWS<i class="fas fa-arrow-right ml-1"></i></a>
-                    <a href="https://www.win-rar.com/fileadmin/winrar-versions/rarmacos-arm-720.tar.gz" class="bg-blue-400 text-white px-6 py-2 rounded font-bold text-sm">DOWNLOAD MAC<i class="fas fa-arrow-right ml-1"></i></a>
+    <!-- Authority Trigger -->
+    <section class="border-y border-slate-200 bg-white">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div
+                class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-slate-200">
+                <div class="px-4 py-2">
+                    <div class="text-3xl text-tech-blue mb-2"><i class="fas fa-users"></i></div>
+                    <h3 class="font-bold text-xl text-slate-800">+10.000</h3>
+                    <p class="text-sm text-slate-500 font-medium">Clientes Atendidos</p>
+                </div>
+                <div class="px-4 py-2 pt-6 md:pt-2">
+                    <div class="text-3xl text-tech-blue mb-2"><i class="fas fa-shield-alt"></i></div>
+                    <h3 class="font-bold text-xl text-slate-800">100% Seguro</h3>
+                    <p class="text-sm text-slate-500 font-medium">Acesso Remoto Supervisionado</p>
+                </div>
+                <div class="px-4 py-2 pt-6 md:pt-2">
+                    <div class="text-3xl text-tech-blue mb-2"><i class="fab fa-windows"></i> <i
+                            class="fab fa-apple ml-1"></i></div>
+                    <h3 class="font-bold text-xl text-slate-800">Multi-Plataforma</h3>
+                    <p class="text-sm text-slate-500 font-medium">Especialistas em Windows & MAC</p>
                 </div>
             </div>
-            <div class="bg-white p-2 rounded-xl shadow-md border border-gray-100">
-                <img src="./images/anydesk.webp" class="rounded-t-lg w-full mb-4">
-                <div class="p-4 text-left">
-                    <h3 class="font-bold text-xl mb-2 uppercase">Anydesk</h3>
-                    <p class="text-sm text-gray-500 mb-6">Seu software de desktop remoto para Windows e MAC, essencial para nosso suporte supervisionado e assistido por você 100% seguro.</p>
-                    <a href="https://anydesk.com/pt/downloads/thank-you?dv=win_exe" class="bg-indigo-900 text-white px-6 py-2 rounded font-bold text-sm">DOWNLOAD WINDOWS<i class="fas fa-arrow-right ml-1"></i></a>
-                    <a href="https://anydesk.com/pt/downloads/thank-you?dv=mac_dmg" class="bg-blue-400 text-white px-6 py-2 rounded font-bold text-sm">DOWNLOAD MAC<i class="fas fa-arrow-right ml-1"></i></a>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="order-2 lg:order-1 relative">
+                    <div class="absolute -inset-4 bg-tech-light rounded-3xl transform -rotate-2 -z-10"></div>
+                    <img src="./images/empresa/cenario (3).jpg" alt="Equipe de Suporte"
+                        class="rounded-3xl shadow-xl w-full h-[450px] object-cover">
                 </div>
-            </div>
-            <div class="bg-white p-2 rounded-xl shadow-md border border-gray-100">
-                <img src="https://via.placeholder.com/400x200/000000/FFFFFF?text=Rufus" class="rounded-t-lg w-full mb-4">
-                <div class="p-4">
-                    <h3 class="font-bold text-xl mb-2 uppercase"></h3>
-                    <p class="text-sm text-gray-500 mb-6">Crie e formate unidades USB de inicialização facilmente.</p>
-                    <div class="flex gap-2 justify-center">
-                        <a href="#" class="bg-indigo-900 text-white px-4 py-2 rounded font-bold text-xs uppercase">Download</a>
-                        <a href="#" class="bg-blue-400 text-white px-4 py-2 rounded font-bold text-xs uppercase"><i class="fas fa-video mr-1"></i> Como usar</a>
+                <div class="order-1 lg:order-2">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6 relative inline-block">
+                        Sobre a <span class="text-tech-blue">Compras Livre</span>
+                        <span class="absolute bottom-0 left-0 w-1/2 h-1 bg-tech-blue rounded-full"></span>
+                    </h2>
+                    <div class="text-slate-600 space-y-5 text-lg leading-relaxed">
+                        <p>
+                            Somos uma empresa especializada em Suporte, atendendo a todo Brasil, especificamente
+                            realizando serviços de suporte para pessoas físicas e empresas.
+                        </p>
+                        <p>
+                            Há pouco tempo adotamos a forma de trabalho <strong>100% Online</strong>, com o suporte via
+                            acesso remoto.
+                        </p>
+                        <p>
+                            Com isso trazendo comodidade e segurança para os nossos clientes, pois assim <strong>não é
+                                necessário que você saia de casa</strong> ou receba técnicos desconhecidos, você
+                            acompanha tudo pela tela do seu computador.
+                        </p>
+                    </div>
+                    <div class="mt-8">
+                        <a href="#depoimentos"
+                            class="text-tech-blue font-bold flex items-center gap-2 hover:text-blue-800 transition">
+                            Ver o que nossos clientes dizem <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
-            <div class="bg-white p-2 rounded-xl shadow-md border border-gray-100 overflow-hidden">
-                <img src="./images/wise_program_uninstaller.webp" class="rounded-t-lg w-full mb-4">
-                <div class="p-4">
-                    <h3 class="font-bold text-xl mb-2 uppercase">Wise Cleaner</h3>
-                    <p class="text-sm text-gray-500 mb-6">Limpe e desinstale completamente programas indesejados para Windows.</p>
-                    <a href="https://www.wisecleaner.com/index.php?r=download-product/latest-version&product=wise-program-uninstaller" class="bg-indigo-900 text-white px-6 py-2 rounded font-bold text-sm">DOWNLOAD <i class="fas fa-arrow-right ml-1"></i></a>
-                </div>
-            </div>
-            <div class="bg-white p-2 rounded-xl shadow-md border border-gray-100">
-                <img src="https://via.placeholder.com/400x200/dc2626/FFFFFF?text=AnyDesk" class="rounded-t-lg w-full mb-4">
-                <div class="p-4 text-left">
-                    <h3 class="font-bold text-xl mb-2 uppercase">AnyDesk</h3>
-                    <p class="text-sm text-gray-500 mb-6">Seu software de desktop remoto para Windows, essencial para nosso suporte.</p>
-                    <a href="#" class="bg-indigo-900 text-white px-6 py-2 rounded font-bold text-sm">DOWNLOAD <i class="fas fa-arrow-right ml-1"></i></a>
-                </div>
-            </div>
-            <div class="bg-white p-2 rounded-xl shadow-md border border-gray-100">
-                <img src="https://via.placeholder.com/400x200/000000/FFFFFF?text=Rufus" class="rounded-t-lg w-full mb-4">
-                <div class="p-4">
-                    <h3 class="font-bold text-xl mb-2 uppercase">Rufus</h3>
-                    <p class="text-sm text-gray-500 mb-6">Crie e formate unidades USB de inicialização facilmente.</p>
-                    <div class="flex gap-2 justify-center">
-                        <a href="#" class="bg-indigo-900 text-white px-4 py-2 rounded font-bold text-xs uppercase">Download</a>
-                        <a href="#" class="bg-blue-400 text-white px-4 py-2 rounded font-bold text-xs uppercase"><i class="fas fa-video mr-1"></i> Como usar</a>
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 
-    <section class="py-20 bg-slate-100">
-        <div class="max-w-6xl mx-auto px-4 text-center">
-            <h2 class="text-3xl font-extrabold mb-4 uppercase">Softwares que Instalamos</h2>
-            <p class="text-gray-500 mb-12">Suporte completo de instalação e ativação para os softwares mais usados no mercado.</p>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="software-card bg-white p-4 rounded-2xl flex flex-col items-center">
-                    <img src="https://via.placeholder.com/150x150/f3f4f6/000000?text=Office+2024" class="w-32 h-32 object-contain mb-4">
-                    <h4 class="font-bold text-lg">Microsoft Office</h4>
-                    <p class="text-xs text-gray-400 mb-6">Word, Excel, PPT e Outlook</p>
-                    <a href="https://wa.me/SEUNUMERO?text=Quero%20Suporte%20de%20instalação%20para%20Microsoft%20Office" class="bg-green-500 hover:bg-green-600 text-white w-full py-2 rounded font-bold text-sm transition">Quero Suporte <i class="fab fa-whatsapp"></i></a>
-                </div>
-                <div class="software-card bg-white p-4 rounded-2xl flex flex-col items-center">
-                    <img src="https://via.placeholder.com/150x150/f3f4f6/000000?text=CorelDRAW" class="w-32 h-32 object-contain mb-4">
-                    <h4 class="font-bold text-lg">CorelDRAW 2024</h4>
-                    <p class="text-xs text-gray-400 mb-6">Design Gráfico Profissional</p>
-                    <a href="https://wa.me/SEUNUMERO?text=Quero%20Suporte%20de%20instalação%20para%20CorelDraw" class="bg-green-500 hover:bg-green-600 text-white w-full py-2 rounded font-bold text-sm transition">Quero Suporte <i class="fab fa-whatsapp"></i></a>
-                </div>
-                <div class="software-card bg-white p-4 rounded-2xl flex flex-col items-center">
-                    <img src="https://via.placeholder.com/150x150/f3f4f6/000000?text=SketchUp" class="w-32 h-32 object-contain mb-4">
-                    <h4 class="font-bold text-lg">SketchUp Pro</h4>
-                    <p class="text-xs text-gray-400 mb-6">Modelagem 3D e Projetos</p>
-                    <a href="https://wa.me/SEUNUMERO?text=Quero%20Suporte%20de%20instalação%20para%20SketchUp" class="bg-green-500 hover:bg-green-600 text-white w-full py-2 rounded font-bold text-sm transition">Quero Suporte <i class="fab fa-whatsapp"></i></a>
-                </div>
-                <div class="software-card bg-white p-4 rounded-2xl flex flex-col items-center">
-                    <img src="https://via.placeholder.com/150x150/f3f4f6/000000?text=Proteus+9" class="w-32 h-32 object-contain mb-4">
-                    <h4 class="font-bold text-lg">Proteus 9</h4>
-                    <p class="text-xs text-gray-400 mb-6">Simulação de Circuitos</p>
-                    <a href="https://wa.me/SEUNUMERO?text=Quero%20Suporte%20de%20instalação%20para%20Proteus" class="bg-green-500 hover:bg-green-600 text-white w-full py-2 rounded font-bold text-sm transition">Quero Suporte <i class="fab fa-whatsapp"></i></a>
-                </div>
-            </div>
+    <!-- Utilidades Section -->
+    <section class="py-20 px-4 max-w-7xl mx-auto text-center" id="utilitarios">
+        <div class="mb-12">
+            <h2 class="text-3xl font-extrabold text-slate-900 uppercase tracking-tight">Utilitários Essenciais</h2>
+            <p class="text-slate-500 mt-3 max-w-2xl mx-auto">Ferramentas recomendadas por nossa equipe para manter seu
+                computador sempre em dia.</p>
         </div>
-    </section>
 
-    <section class="py-20 px-4 bg-indigo-900 text-white">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
-            <div class="md:w-1/2">
-                <h2 class="text-3xl font-extrabold mb-6 uppercase">Seja um Afiliado e Ganhe Dinheiro</h2>
-                <p class="text-indigo-200 mb-8 text-lg">Indique nossos serviços de instalação e suporte para sua rede de contatos e ganhe uma comissão fixa por cada venda realizada através do seu link!</p>
-                <ul class="space-y-4 mb-8">
-                    <li><i class="fas fa-check-circle text-green-400 mr-2"></i> Comissão por cada instalação bem-sucedida</li>
-                    <li><i class="fas fa-check-circle text-green-400 mr-2"></i> Painel exclusivo para acompanhar seus ganhos</li>
-                    <li><i class="fas fa-check-circle text-green-400 mr-2"></i> Pagamentos semanais via PIX</li>
-                </ul>
-                <a href="#" class="bg-green-500 text-white px-10 py-4 rounded-xl font-bold text-xl uppercase shadow-lg inline-block">Quero me Afiliar</a>
-            </div>
-            <div class="md:w-1/3 bg-white/10 p-8 rounded-3xl border border-white/20 text-center">
-                <i class="fas fa-hand-holding-usd text-6xl mb-4 text-green-400"></i>
-                <p class="text-sm uppercase tracking-tighter text-indigo-200">Ganhos médios de afiliados</p>
-                <h4 class="text-4xl font-bold mt-2">R$ 1.500+</h4>
-                <p class="text-xs text-indigo-300 mt-2">estimativa mensal por indicação</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-16 px-4 max-w-6xl mx-auto text-center">
-        <div class="flex justify-center mb-4"><i class="fas fa-shield-alt text-red-600 text-2xl"></i></div>
-        <h2 class="text-3xl font-bold mb-2 uppercase">Sua compra é 100% Segura</h2>
-        <p class="text-gray-500 mb-10">Tecnologias avançadas para garantir sua privacidade.</p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 items-center flex flex-col">
-                <i class="fas fa-lock text-indigo-600 text-4xl mb-4"></i>
-                <h3 class="font-bold text-indigo-700 text-xl mb-2">Dados Criptografados</h3>
-                <p class="text-gray-500 text-sm">Informações protegidas por SSL de ponta a ponta.</p>
+            <div
+                class="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 flex flex-col h-full">
+                <div class="bg-slate-50 rounded-xl p-4 mb-4 flex items-center justify-center h-40">
+                    <img src="./images/produtos/winrar.webp"
+                        class="max-h-full max-w-full object-contain mix-blend-multiply">
+                </div>
+                <div class="text-left flex-grow">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">Winrar</h3>
+                    <p class="text-sm text-slate-500 mb-6">A melhor maneira de compactar arquivos para uma transferência
+                        eficiente e segura. Para Windows.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2 mt-auto pt-4 border-t border-slate-100">
+                    <a href="https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-720br.exe"
+                        class="bg-slate-900 hover:bg-slate-800 text-white flex-1 py-2 rounded-lg font-bold text-sm text-center transition">Baixar
+                        <i class="fas fa-download ml-1"></i></a>
+                    <a href="/vid?w="
+                        class="bg-tech-light text-tech-blue hover:bg-blue-100 flex-1 py-2 rounded-lg font-bold text-sm text-center transition border border-blue-200"><i
+                            class="fas fa-play-circle mr-1"></i> Tutorial</a>
+                </div>
             </div>
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 items-center flex flex-col">
-                <i class="fas fa-bolt text-indigo-600 text-4xl mb-4"></i>
-                <h3 class="font-bold text-indigo-700 text-xl mb-2">Aprovação Instantânea</h3>
-                <p class="text-gray-500 text-sm">Acesso liberado imediatamente após o pagamento.</p>
+
+            <div
+                class="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 flex flex-col h-full ring-2 ring-tech-blue/20">
+                <div class="bg-slate-50 rounded-xl p-4 mb-4 flex items-center justify-center h-40">
+                    <img src="./images/produtos/anydesk.webp"
+                        class="max-h-full max-w-full object-contain mix-blend-multiply">
+                </div>
+                <div class="text-left flex-grow">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">Anydesk</h3>
+                    <p class="text-sm text-slate-500 mb-6">Software de desktop remoto para Windows e MAC, essencial para
+                        nosso suporte supervisionado 100% seguro.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2 mt-auto pt-4 border-t border-slate-100">
+                    <a href="https://anydesk.com/pt/downloads/thank-you?dv=win_exe"
+                        class="bg-tech-blue hover-bg-tech-blue text-white flex-1 py-2 rounded-lg font-bold text-sm text-center transition">Baixar
+                        <i class="fas fa-download ml-1"></i></a>
+                    <a href="/vid?w="
+                        class="bg-tech-light text-tech-blue hover:bg-blue-100 flex-1 py-2 rounded-lg font-bold text-sm text-center transition border border-blue-200"><i
+                            class="fas fa-play-circle mr-1"></i> Tutorial</a>
+                </div>
             </div>
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 items-center flex flex-col">
-                <i class="fas fa-crown text-indigo-600 text-4xl mb-4"></i>
-                <h3 class="font-bold text-indigo-700 text-xl mb-2">Garantia de Satisfação</h3>
-                <p class="text-gray-500 text-sm">Suporte dedicado para garantir que tudo funcione.</p>
+
+            <div
+                class="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 flex flex-col h-full">
+                <div class="bg-slate-50 rounded-xl p-4 mb-4 flex items-center justify-center h-40">
+                    <img src="./images/produtos/wise_program_uninstaller.webp"
+                        class="max-h-full max-w-full object-contain mix-blend-multiply">
+                </div>
+                <div class="text-left flex-grow">
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">Wise Cleaner</h3>
+                    <p class="text-sm text-slate-500 mb-6">Limpe e desinstale completamente programas indesejados para
+                        manter seu Windows rápido e otimizado.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2 mt-auto pt-4 border-t border-slate-100">
+                    <a href="https://www.wisecleaner.com/index.php?r=download-product/latest-version&product=wise-program-uninstaller"
+                        class="bg-slate-900 hover:bg-slate-800 text-white flex-1 py-2 rounded-lg font-bold text-sm text-center transition">Baixar
+                        <i class="fas fa-download ml-1"></i></a>
+                    <a href="/vid?w="
+                        class="bg-tech-light text-tech-blue hover:bg-blue-100 flex-1 py-2 rounded-lg font-bold text-sm text-center transition border border-blue-200"><i
+                            class="fas fa-play-circle mr-1"></i> Tutorial</a>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="py-20 bg-white">
-        <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-3xl font-bold mb-10">Dúvidas Frequentes</h2>
-            <div class="space-y-4">
-                <div class="faq-item p-4">
-                    <h3 class="font-bold text-lg mb-2">É crackeado?</h3>
-                    <p class="text-gray-500 text-sm">- Não, você recebe uma licença válida ou suporte de ativação original conforme o plano escolhido.</p>
-                </div>
-                <div class="faq-item p-4">
-                    <h3 class="font-bold text-lg mb-2">Tem Garantia?</h3>
-                    <p class="text-gray-500 text-sm">- Suporte e reenvio em caso de falha de entrega ou problemas técnicos na instalação.</p>
-                </div>
-                <div class="faq-item p-4">
-                    <h3 class="font-bold text-lg mb-2">Funciona no Macbook?</h3>
-                    <p class="text-gray-500 text-sm">- Sim, possuímos suporte para Windows e Mac em softwares compatíveis.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-16 bg-slate-50 overflow-hidden">
+    <!-- Securty Section -->
+    <section class="py-16 bg-white border-t border-slate-100 text-center">
         <div class="max-w-6xl mx-auto px-4">
-            <h2 class="text-2xl font-bold mb-8 uppercase">Quem compra, aprova!</h2>
-            <div class="swiper mySwiper">
-                <div class="swiper-wrapper">
-                    <div class="swiper-slide bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4">
-                        <img src="https://i.pravatar.cc/150?u=ana" class="w-16 h-16 rounded-full border-2 border-purple-500">
-                        <div>
-                            <p class="font-bold">Ana E.</p>
-                            <div class="text-yellow-400 text-xs mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <p class="text-gray-600 text-sm leading-relaxed">Muito bom, entrega rápida e o suporte de instalação foi essencial.</p>
-                            <span class="inline-block mt-2 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">Design</span>
-                        </div>
+            <h2 class="text-3xl font-bold mb-2 uppercase text-slate-900">Aquisição 100% Segura</h2>
+            <p class="text-slate-500 mb-12">Profissionalismo acima de tudo para garantir sua privacidade e satisfação.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div
+                    class="p-6 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-xl transition duration-300 border border-slate-100 flex flex-col items-center">
+                    <div
+                        class="w-16 h-16 bg-blue-100 text-tech-blue rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner">
+                        <i class="fas fa-lock"></i>
                     </div>
-                    <div class="swiper-slide bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-start gap-4">
-                        <img src="https://i.pravatar.cc/150?u=allan" class="w-16 h-16 rounded-full border-2 border-purple-500">
-                        <div>
-                            <p class="font-bold">Allan T.</p>
-                            <div class="text-yellow-400 text-xs mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <p class="text-gray-600 text-sm leading-relaxed">No começo fiquei com medo, mas agora uso diariamente e recomendo.</p>
-                            <span class="inline-block mt-2 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">VideoMaker</span>
-                        </div>
+                    <h3 class="font-bold text-slate-800 text-xl mb-3">Dados Criptografados</h3>
+                    <p class="text-slate-500 text-sm">Todas as informações são protegidas por SSL de ponta a ponta
+                        durante o processo.</p>
+                </div>
+
+                <div
+                    class="p-6 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-xl transition duration-300 border border-slate-100 flex flex-col items-center">
+                    <div
+                        class="w-16 h-16 bg-blue-100 text-tech-blue rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner">
+                        <i class="fas fa-bolt"></i>
                     </div>
+                    <h3 class="font-bold text-slate-800 text-xl mb-3">Suporte Imediato</h3>
+                    <p class="text-slate-500 text-sm">Acesso ao atendimento especializado logo após a confirmação do
+                        pagamento.</p>
+                </div>
+
+                <div
+                    class="p-6 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-xl transition duration-300 border border-slate-100 flex flex-col items-center">
+                    <div
+                        class="w-16 h-16 bg-blue-100 text-tech-blue rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-xl mb-3">Garantia de Satisfação</h3>
+                    <p class="text-slate-500 text-sm">Equipe dedicada para garantir que seu software funcione
+                        perfeitamente.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <div id="sale-notification" class="bg-white border border-gray-200 shadow-2xl rounded-lg p-4 flex items-center gap-4 max-w-xs">
-        <div class="bg-green-100 text-green-600 p-3 rounded-full"><i class="fas fa-shopping-cart"></i></div>
+    <!-- Mais Instalados -->
+    <section class="py-20 bg-slate-50 border-t border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-extrabold mb-4 uppercase text-slate-900">Softwares Mais Buscados</h2>
+            <p class="text-slate-500 mb-12 max-w-2xl mx-auto">Suporte completo de instalação e ativação para as
+                ferramentas mais requisitadas por profissionais.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card 1 -->
+                <div
+                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <div class="h-32 flex items-center justify-center mb-4">
+                        <img src="./images/produtos/office/office.webp"
+                            class="max-h-full object-contain mix-blend-multiply">
+                    </div>
+                    <h4 class="font-bold text-lg text-slate-800">Microsoft Office 2019-2024</h4>
+                    <p class="text-xs text-slate-500 mb-6 flex-grow">Word, Excel, PowerPoint e Outlook</p>
+                    <a href="/produto/MLB2026030303"
+                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
+                        Solicitar
+                    </a>
+                </div>
+                <!-- Card 2 -->
+                <div
+                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <div class="h-32 flex items-center justify-center mb-4">
+                        <img src="./images/produtos/corelDraw.jpg"
+                            class="max-h-full object-contain mix-blend-multiply rounded-lg">
+                    </div>
+                    <h4 class="font-bold text-lg text-slate-800">CorelDRAW Suite v. 26</h4>
+                    <p class="text-xs text-slate-500 mb-6 flex-grow">Design Gráfico Profissional e Ilustração</p>
+                    <a href="/produto/MLB2025030301"
+                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
+                        Solicitar
+                    </a>
+                </div>
+                <!-- Card 3 -->
+                <div
+                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <div class="h-32 flex items-center justify-center mb-4">
+                        <img src="./images/produtos/acrobat26.jpg"
+                            class="max-h-full object-contain mix-blend-multiply rounded-lg">
+                    </div>
+                    <h4 class="font-bold text-lg text-slate-800">Acrobat Pro 2026</h4>
+                    <p class="text-xs text-slate-500 mb-6 flex-grow">Edição e Gerenciamento Avançado de PDFs</p>
+                    <a href="/produto/ACROBAT"
+                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
+                        Solicitar
+                    </a>
+                </div>
+                <!-- Card 4 -->
+                <div
+                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                    <div class="h-32 flex items-center justify-center mb-4">
+                        <img src="./images/produtos/proteus9.jpg"
+                            class="max-h-full object-contain mix-blend-multiply rounded-lg">
+                    </div>
+                    <h4 class="font-bold text-lg text-slate-800">Proteus 9</h4>
+                    <p class="text-xs text-slate-500 mb-6 flex-grow">Simulação de Circuitos e Projetos Eletrônicos</p>
+                    <a href="/produto/PROTEUS"
+                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
+                        Solicitar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Depoimentos / Social Proof -->
+    <section class="py-20 bg-white" id="depoimentos">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4 text-slate-900">O que dizem sobre nós</h2>
+                <p class="text-slate-500">Confira a experiência de quem já utilizou nosso suporte remoto.</p>
+            </div>
+
+            <div class="swiper testimonialsSwiper pb-12">
+                <div class="swiper-wrapper">
+                    <!-- Depoimento 1 -->
+                    <div class="swiper-slide h-auto">
+                        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 h-full flex flex-col relative">
+                            <i class="fas fa-quote-left text-4xl text-blue-100 absolute top-6 right-6"></i>
+                            <div class="text-yellow-400 text-sm mb-4"><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i></div>
+                            <p class="text-slate-600 italic mb-6 flex-grow">"Excelente! O técnico foi super paciente,
+                                acessou meu computador e resolveu o problema de instalação do Office que eu tentava há
+                                dias. Muito prático não precisar sair de casa!"</p>
+                            <div class="flex items-center gap-4 mt-auto">
+                                <img src="https://i.pravatar.cc/150?img=1"
+                                    class="w-12 h-12 rounded-full border-2 border-white shadow-sm">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">Carlos Mendes</p>
+                                    <p class="text-xs text-slate-500">Empresário</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Depoimento 2 -->
+                    <div class="swiper-slide h-auto">
+                        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 h-full flex flex-col relative">
+                            <i class="fas fa-quote-left text-4xl text-blue-100 absolute top-6 right-6"></i>
+                            <div class="text-yellow-400 text-sm mb-4"><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i></div>
+                            <p class="text-slate-600 italic mb-6 flex-grow">"Conheci pelo YouTube e resolvi testar.
+                                Melhor decisão! Eles instalaram o pacote Adobe completo no meu Mac rapidamente.
+                                Transmite muita segurança."</p>
+                            <div class="flex items-center gap-4 mt-auto">
+                                <img src="https://i.pravatar.cc/150?img=5"
+                                    class="w-12 h-12 rounded-full border-2 border-white shadow-sm">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">Mariana Silva</p>
+                                    <p class="text-xs text-slate-500">Designer Gráfica</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Depoimento 3 -->
+                    <div class="swiper-slide h-auto">
+                        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 h-full flex flex-col relative">
+                            <i class="fas fa-quote-left text-4xl text-blue-100 absolute top-6 right-6"></i>
+                            <div class="text-yellow-400 text-sm mb-4"><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i></div>
+                            <p class="text-slate-600 italic mb-6 flex-grow">"Serviço de primeira. Uso os programas para
+                                faculdade de engenharia e precisava com urgência. Em menos de 1 hora já estava tudo
+                                funcionando. Recomendo demais!"</p>
+                            <div class="flex items-center gap-4 mt-auto">
+                                <img src="https://i.pravatar.cc/150?img=11"
+                                    class="w-12 h-12 rounded-full border-2 border-white shadow-sm">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">Lucas Oliveira</p>
+                                    <p class="text-xs text-slate-500">Estudante de Engenharia</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Depoimento 4 -->
+                    <div class="swiper-slide h-auto">
+                        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 h-full flex flex-col relative">
+                            <i class="fas fa-quote-left text-4xl text-blue-100 absolute top-6 right-6"></i>
+                            <div class="text-yellow-400 text-sm mb-4"><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i></div>
+                            <p class="text-slate-600 italic mb-6 flex-grow">"Eu tinha receio de dar acesso remoto ao meu
+                                PC, mas a equipe explicou tudo e pude acompanhar o processo pela tela. Foi tudo muito
+                                profissional e transparente."</p>
+                            <div class="flex items-center gap-4 mt-auto">
+                                <img src="https://i.pravatar.cc/150?img=9"
+                                    class="w-12 h-12 rounded-full border-2 border-white shadow-sm">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">Fernanda Costa</p>
+                                    <p class="text-xs text-slate-500">Professora</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-pagination mt-8"></div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <a href="https://www.youtube.com/@ComprasLivre-tec" target="_blank"
+                    class="inline-flex items-center gap-2 text-slate-600 hover:text-red-600 transition font-medium bg-slate-50 px-6 py-3 rounded-full border border-slate-200">
+                    <i class="fab fa-youtube text-red-600 text-xl"></i> Veja mais avaliações reais em nosso canal do
+                    YouTube
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Affiliate / Banner com cenario 3 -->
+    <section class="py-20 relative overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="./images/empresa/cenario (1).jpg" alt="Background Tech" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-slate-900/70 mix-blend-multiply"></div>
+        </div>
+
+        <div
+            class="max-w-6xl mx-auto px-4 relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 text-white">
+            <div class="md:w-1/2">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-blue-300 text-sm font-semibold mb-6 backdrop-blur-sm border border-white/20">
+                    <i class="fas fa-chart-line"></i> Programa de Parceiros
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold mb-6 leading-tight">Seja um Afiliado e Ganhe com Nossos
+                    Serviços</h2>
+                <p class="text-slate-300 mb-8 text-lg">Indique nosso suporte técnico 100% online para sua rede e ganhe
+                    comissões atrativas por cada venda através do seu link.</p>
+                <ul class="space-y-4 mb-8 text-slate-200">
+                    <li class="flex items-center"><i class="fas fa-check-circle text-green-400 mr-3 text-lg"></i>
+                        Comissão garantida por instalação</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-green-400 mr-3 text-lg"></i> Painel
+                        exclusivo para afiliados</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-green-400 mr-3 text-lg"></i>
+                        Pagamentos semanais via PIX</li>
+                </ul>
+                <a href="#"
+                    class="bg-tech-blue hover-bg-tech-blue text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl shadow-blue-500/30 inline-block">
+                    Quero ser Afiliado
+                </a>
+            </div>
+            <div
+                class="md:w-1/3 bg-white/10 p-8 rounded-3xl border border-white/20 text-center backdrop-blur-md shadow-2xl">
+                <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-hand-holding-usd text-4xl text-green-400"></i>
+                </div>
+                <p class="text-sm uppercase tracking-wider text-slate-300 font-semibold">Estimativa Mensal</p>
+                <h4 class="text-5xl font-extrabold mt-3 text-white">R$ 1.500<span
+                        class="text-2xl text-green-400">+</span></h4>
+                <p class="text-sm text-slate-400 mt-4 leading-relaxed">Ganho médio de afiliados ativos realizando
+                    indicações frequentes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">Dúvidas Frequentes</h2>
+                <p class="text-slate-500 mt-2">Respostas rápidas para as principais dúvidas dos nossos clientes.</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="faq-item p-6">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2 flex items-center gap-2"><i
+                            class="fas fa-question-circle text-tech-blue"></i> Como funciona o suporte online?</h3>
+                    <p class="text-slate-600 ml-6">Nós utilizamos softwares seguros (como Anydesk) para acessar seu
+                        computador e realizar toda a instalação ou manutenção. Você acompanha tudo na sua tela, sem
+                        precisar fazer nada.</p>
+                </div>
+                <div class="faq-item p-6">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2 flex items-center gap-2"><i
+                            class="fas fa-question-circle text-tech-blue"></i> É crackeado?</h3>
+                    <p class="text-slate-600 ml-6">Não, você recebe uma licença válida ou suporte de ativação original
+                        conforme o plano escolhido. Prezamos pela segurança do seu sistema.</p>
+                </div>
+                <div class="faq-item p-6">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2 flex items-center gap-2"><i
+                            class="fas fa-question-circle text-tech-blue"></i> Tem Garantia?</h3>
+                    <p class="text-slate-600 ml-6">Sim! Oferecemos suporte completo e garantia de funcionamento. Se
+                        houver falhas técnicas na instalação, nossa equipe refaz o processo.</p>
+                </div>
+                <div class="faq-item p-6 border-b-0">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2 flex items-center gap-2"><i
+                            class="fas fa-question-circle text-tech-blue"></i> Funciona no Macbook?</h3>
+                    <p class="text-slate-600 ml-6">Com certeza. Possuímos especialistas em macOS e prestamos suporte
+                        para diversos softwares compatíveis com computadores Apple.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sale Notification -->
+    <div id="sale-notification"
+        class="bg-white border border-slate-200 shadow-2xl rounded-xl p-4 items-center gap-4 max-w-sm transform transition-all translate-y-0 opacity-100">
+        <div
+            class="bg-green-100 text-green-600 w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-lg">
+            <i class="fas fa-check"></i>
+        </div>
         <div>
-            <p class="text-xs font-bold text-gray-800" id="sale-product"></p>
-            <p class="text-[10px] text-gray-500"><span id="sale-email"></span> • <span id="sale-time"></span> atrás</p>
+            <p class="text-sm font-bold text-slate-800 leading-tight mb-1" id="sale-product"></p>
+            <p class="text-xs text-slate-500"><span id="sale-email" class="font-medium"></span> comprou há <span
+                    id="sale-time" class="font-medium text-slate-700"></span></p>
         </div>
     </div>
 
-    <footer class="bg-slate-900 text-gray-400 py-12 border-t border-slate-800">
-        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-            <p class="text-sm">© 2026 - Compras Livre Tec</p>
-            <div class="flex gap-6 items-center">
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <img src="./images/LogoHeader.png" alt="Logo" class="h-8 grayscale opacity-70">
+                <p class="text-sm">© 2026 - Compras Livre Tec. Todos os direitos reservados.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-6 items-center">
                 <div class="flex gap-4 text-xl">
-                    <a href="#" class="hover:text-white"><i class="fab fa-whatsapp"></i></a>
-                    <a href="#" class="hover:text-white"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="hover:text-white"><i class="fab fa-youtube"></i></a>
+                    <a href="https://wa.me/5581985315669" class="hover:text-white transition"><i
+                            class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.instagram.com/compraslivre.tec/" class="hover:text-white transition"><i
+                            class="fab fa-instagram"></i></a>
+                    <a href="https://www.youtube.com/@ComprasLivre-tec" class="hover:text-white transition"><i
+                            class="fab fa-youtube"></i></a>
                 </div>
-                <div class="text-xs flex gap-4 uppercase font-bold tracking-widest">
-                    <a href="#">Termos</a>
-                    <a href="#">Privacidade</a>
+                <div class="w-px h-4 bg-slate-700 hidden sm:block"></div>
+                <div class="text-xs flex gap-6 uppercase font-bold tracking-widest">
+                    <a href="#" class="hover:text-white transition">Termos de Uso</a>
+                    <a href="#" class="hover:text-white transition">Privacidade</a>
                 </div>
             </div>
         </div>
@@ -262,15 +612,31 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script>
-        const swiper = new Swiper(".mySwiper", {
-            slidesPerView: 1, spaceBetween: 20, loop: true, autoplay: { delay: 4000 },
-            breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }
+        // Swiper para Depoimentos
+        const swiper = new Swiper(".testimonialsSwiper", {
+            slidesPerView: 1,
+            spaceBetween: 24,
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            breakpoints: {
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 }
+            }
         });
 
+        // Notificações de Venda (Gatilho de Urgência/Prova Social)
         const salesData = [
-            { product: "Instalação Office 2024", time: "2 min", email: "jo****as@gmail.com" },
-            { product: "CorelDRAW Profissional", time: "5 min", email: "ma****os@hotmail.com" },
-            { product: "Suporte Técnico AnyDesk", time: "8 min", email: "ca****lo@outlook.com" }
+            { product: "Suporte - Office 2024", time: "2 min", email: "jo****as@gmail.com" },
+            { product: "Instalação CorelDRAW", time: "5 min", email: "ma****os@hotmail.com" },
+            { product: "Manutenção Remota", time: "8 min", email: "ca****lo@outlook.com" },
+            { product: "Suporte - Adobe Acrobat", time: "12 min", email: "fe****da@gmail.com" }
         ];
 
         function showNotification() {
@@ -278,11 +644,33 @@
             document.getElementById('sale-product').innerText = sale.product;
             document.getElementById('sale-email').innerText = sale.email;
             document.getElementById('sale-time').innerText = sale.time;
+
             const notify = document.getElementById('sale-notification');
             notify.style.display = 'flex';
-            setTimeout(() => { notify.style.display = 'none'; }, 4000);
+            notify.style.opacity = '0';
+            notify.style.transform = 'translateY(20px)';
+
+            // Fade in animation
+            setTimeout(() => {
+                notify.style.transition = 'all 0.5s ease';
+                notify.style.opacity = '1';
+                notify.style.transform = 'translateY(0)';
+            }, 50);
+
+            // Hide after 5 seconds
+            setTimeout(() => {
+                notify.style.opacity = '0';
+                notify.style.transform = 'translateY(20px)';
+                setTimeout(() => { notify.style.display = 'none'; }, 500);
+            }, 5000);
         }
-        setInterval(showNotification, Math.floor(Math.random() * (20000 - 5000 + 1) + 5000));
+
+        // Iniciar notificações após alguns segundos
+        setTimeout(() => {
+            showNotification();
+            setInterval(showNotification, Math.floor(Math.random() * (25000 - 15000 + 1) + 15000));
+        }, 3000);
     </script>
 </body>
+
 </html>

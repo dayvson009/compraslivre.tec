@@ -1,170 +1,104 @@
-## PIX MVP - Node.js + Express + PostgreSQL + Mercado Pago
+# ComprasLivre.tec - Funil de Vendas & Entrega Digital
 
-Aplicação mínima para gerar cobranças PIX, receber webhook de confirmação e liberar acesso a conteúdo com credenciais. Front-end em EJS com:
-- Lista de produtos
-- Página de produto com formulário de e-mail e geração de PIX
-- Checkout com QR e polling de status
-- Página de obrigado com senha gerada
-- Área de membros (login por e-mail + senha) exibindo o link do produto
+Este projeto é uma infraestrutura completa de vendas e automação de entrega para produtos digitais, utilizando Node.js, Express, PostgreSQL e integração com Mercado Pago (PIX).
 
+## 🚀 Funcionalidades Principais
+- **Funil de Vendas de Alta Performance**: Fluxo otimizado de Produto -> Checkout -> Upsell -> Tutorial.
+- **Pagamento via PIX**: Integração nativa com Mercado Pago para geração e confirmação instantânea.
+- **Automação de Entrega**: Envio automático de dados para o Google Forms após a confirmação do pagamento.
+- **Order Bump & Upsell**: Estratégias de escalabilidade integradas no checkout e pós-venda.
+- **Painel Administrativo**: Gestão completa de produtos, preços, depoimentos (pinions) e FAQs via interface protegida.
+- **Sistema de Polling & Webhook**: Verificação dupla para garantir que nenhum pagamento aprovado seja perdido.
 
-### 1) Requisitos
-- Node.js 18+
-- PostgreSQL 12+
-- Conta Mercado Pago (com PIX habilitado para produção) ou usuário de teste (sandbox)
-- Opcional (dev): ngrok para expor webhooks
+## 🛠️ Requisitos
+- **Node.js**: Versão 18 ou superior.
+- **PostgreSQL**: Banco de dados relacional.
+- **Mercado Pago**: Token de acesso (Produção ou Sandbox).
 
-
-### 2) Instalação
+## 📦 Instalação
+1. Clone o repositório.
+2. Instale as dependências:
 ```bash
 npm install
-# Se ainda não instalou as libs do projeto:
-# npm i express mercadopago dotenv ejs pg body-parser
 ```
 
-
-### 3) Banco de dados (PostgreSQL)
-Se ainda não tem postegres VPS:
-
-> apt update
-> apt install postgresql postgresql-contrib -y
-
-Entrar no Postgres:
-
-> sudo -u postgres psql
-
-Criar banco e usuário:
-
-> CREATE DATABASE compraslivretec;
-> CREATE USER compras_user WITH PASSWORD 'SENHA_FORTE_AQUI';
-> GRANT ALL PRIVILEGES ON DATABASE compraslivretec TO compras_user;
-> \q
-> \c compraslivretec
-> GRANT ALL ON SCHEMA public TO compras_user;
-> ALTER SCHEMA public OWNER TO compras_user;
-> \q
-
-
-Criando tabela:
-
-> psql -U compras_user -d compraslivretec -h localhost
-```sql 
-  CREATE TABLE payments (
-    id SERIAL PRIMARY KEY,
-    payment_id VARCHAR(255),
-    amount NUMERIC(10,2),
-    description TEXT,
-    status VARCHAR(50),
-    target_url TEXT,
-    access_token TEXT,
-    email VARCHAR(255),
-    access_password TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    paid_at TIMESTAMP,
-    product_url TEXT
-);
-```
-
-
-### 4) Mercado Pago - credenciais
-- Sandbox: crie um usuário de teste (retorna `APP_USR-...`) e use o `access_token` desse usuário no `.env`.
-- Produção: use o `access_token` da sua conta aprovada, com PIX habilitado (KYC/compliance ok).
-
-Importante:
-- Em produção, envie dados reais do pagador; em muitos casos o CPF não é obrigatório, mas o e-mail precisa ser válido.
-- O webhook precisa estar acessível publicamente por HTTPS.
-
-
-### 5) Variáveis de ambiente (.env)
-Crie um arquivo `.env` na raiz:
+## ⚙️ Configuração (Arquivo .env)
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
 ```ini
 # Servidor
 PORT=3000
-BASE_URL_PUBLICA=https://seu-dominio-ou-ngrok.tld
+BASE_URL_PUBLICA=https://seu-dominio.com
+SESSION_SECRET=uma_chave_aleatoria_e_segura
 
 # Mercado Pago
-MP_ACCESS_TOKEN=APP_USR_xxx   # Produção ou usuário de teste
-# MP_PAYER_EMAIL=opcional@teste.com
+MP_ACCESS_TOKEN=APP_USR-seu-token-aqui
+MP_REQUIRE_CPF=false # true se quiser exigir CPF no checkout
 
-# PostgreSQL (use DATABASE_URL OU os campos individuais)
-#DATABASE_URL=postgres://usuario:senha@host:5432/pixdb
+# Admin (Acesso ao Painel)
+ADMIN_LOGIN=admin@compraslivre.com
+ADMIN_PASS=SuaSenhaForteAqui
+
+# Banco de Dados PostgreSQL
 PGHOST=localhost
 PGPORT=5432
-PGUSER=postgres
+PGUSER=seu_usuario
 PGPASSWORD=sua_senha
-PGDATABASE=pixdb
+PGDATABASE=compraslivre
+# Ou use a URL completa:
+# DATABASE_URL=postgres://usuario:senha@host:5432/banco
 
-# SSL (apenas se necessário em cloud)
-# PGSSLMODE=require
+# Automação (Poller)
+POLLER_ENABLED=true
+POLLER_INTERVAL_MS=15000
 ```
 
+## 🗄️ Banco de Dados
+O sistema inicializa o esquema automaticamente ao iniciar, mas caso precise criar a tabela manualmente, use o seguinte SQL:
 
-### 6) Executando
+```sql
+CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    payment_id TEXT UNIQUE,
+    amount INTEGER NOT NULL,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    target_url TEXT NOT NULL,
+    access_token TEXT UNIQUE NOT NULL,
+    email TEXT,
+    whatsapp TEXT,
+    product_name TEXT,
+    access_password TEXT,
+    product_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    paid_at TIMESTAMP
+);
+
+CREATE INDEX idx_payments_status_created ON payments (status, created_at DESC);
+```
+
+## 🖥️ Painel Administrativo
+O painel administrativo pode ser acessado via `/admin/login`.
+- **Dashboard**: Visualize todos os produtos cadastrados.
+- **Novo Produto**: Cadastre softwares com descrição rica (HTML), miniaturas, FAQs e depoimentos.
+- **Upsell/Orderbump**: Configure estrategicamente qual produto será oferecido como complemento em cada venda.
+- **Preço Upsell**: Defina preços promocionais exclusivos para produtos quando oferecidos no funil de pós-venda.
+
+## 📦 Estrutura de Produtos
+Os produtos são armazenados e gerenciados dinamicamente no arquivo `products.json`. O sistema lê este arquivo em tempo real, permitindo atualizações sem necessidade de reiniciar o servidor.
+
+## 🌐 Webhook (Mercado Pago)
+Para aprovação automática, configure a URL de notificação no painel do Mercado Pago:
+`POST https://seu-dominio.com/webhook/mercadopago`
+
+## 🚀 Executando
 ```bash
+# Modo Produção
 npm start
-# ou
-node app.js
+
+# Modo Desenvolvimento
+npm run dev
 ```
 
-- Acesse `http://localhost:3000/` para ver a lista de produtos.
-- Clique em um produto, informe o e-mail e gere o PIX.
-- O checkout mostra QR e chave “copia e cola” e faz polling do status.
-
-
-### 7) Webhook (obrigatório para aprovar automaticamente)
-1. Exponha a aplicação publicamente (durante desenvolvimento):
-```bash
-ngrok http 3000
-```
-2. No painel do Mercado Pago, configure o webhook para:
-```
-POST {BASE_URL_PUBLICA}/webhook/mercadopago
-```
-3. Quando o pagamento for aprovado, o webhook marca o registro como `paid` e gera a senha (`access_password`). O front redireciona para `/obrigado/:token`.
-
-
-### 8) Teste em PRODUÇÃO (passo a passo)
-1. Garanta que sua conta Mercado Pago esteja aprovada e com PIX habilitado.
-2. Ajuste `.env` com o `MP_ACCESS_TOKEN` de produção e `BASE_URL_PUBLICA` do seu domínio HTTPS.
-3. Garanta que o banco Postgres de produção está acessível e configure as variáveis (ou `DATABASE_URL`).
-4. Faça deploy da aplicação em um servidor/serviço (PM2, Docker, VPS, PaaS etc.).
-5. Configure o webhook no painel do Mercado Pago para `POST {BASE_URL_PUBLICA}/webhook/mercadopago`.
-6. Abra `{BASE_URL_PUBLICA}/`, selecione um produto e gere um PIX usando um e-mail real. Pague com o app do seu banco.
-7. Ao aprovar, você será redirecionado para `/obrigado/:token`; anote a senha.
-8. Acesse `{BASE_URL_PUBLICA}/membros`, faça login com e-mail + senha e verifique se o link do produto (`product_url`) aparece.
-
-
-### 9) Personalizações úteis
-- Produtos: editáveis no array `products` em `app.js` (id, name, description, price, urlProduto).
-- Views EJS em `views/`:
-  - `products.ejs` (lista)
-  - `product_detail.ejs` (form e-mail)
-  - `checkout.ejs` (QR e status)
-  - `obrigado.ejs` (senha)
-  - `membros_login.ejs` e `membros_area.ejs`
-
-
-### 10) Solução de problemas
-- 401 Unauthorized (MP): credencial de produção sem conta habilitada para PIX, ou uso incorreto de tokens. Revise `MP_ACCESS_TOKEN` e habilitação PIX.
-- Webhook não dispara: verifique se `BASE_URL_PUBLICA` está correto, se o endpoint está público/HTTPS e se a URL foi configurada no painel.
-- Pagamento não atualiza para paid: confira logs do servidor e a resposta do `payment.get` no webhook. Pode haver atraso breve do provedor.
-- Banco: verifique a conexão do Postgres e se a tabela `payments` existe. O app cria automaticamente no start.
-
-
-### 11) Fluxo resumido
-- `GET /` → lista produtos
-- `GET /produto/:id` → página do produto com form de e-mail
-- `POST /buy/:id` → cria pagamento PIX e renderiza `checkout`
-- `POST /webhook/mercadopago` → recebe eventos; confirma aprovação e gera senha
-- `GET /obrigado/:token` → exibe parabéns e credenciais
-- `GET/POST /membros` → login e listagem de `product_url`
-
-
-### 12) Segurança (próximos passos)
-- Validar assinatura do webhook (quando disponível) e verificar o `topic/type` adequadamente.
-- Rate limiting e logs estruturados.
-- Persistir usuários/assinaturas em tabelas próprias se necessário.
-- Sessões na área de membros e expiração de senhas temporárias, conforme sua necessidade.
-
-
+---
+© 2026 Compras Livre Tec. Todos os direitos reservados.

@@ -1,195 +1,778 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
+
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title><%= product.name %></title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-	<style>
-		:root {
-    --primary: #5d46f4;
-    --primary-hover: #4a38c7;
-    --bg: #f8fafc;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= product.name %>
+    </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-body { 
-    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-    margin: 0; 
-    padding: 20px; 
-    color: var(--text-main); 
-    background-color: var(--bg);
-    line-height: 1.5;
-}
+        :root {
+            --primary-green: #3483fa;
+            --dark-green: #2968c8;
+            --light-green: #E8F5E9;
+            --bg-gray: #EDEDED;
+            --text-main: #333333;
+            --text-secondary: #666666;
+            --border-color: #DDDDDD;
+            --white: #FFFFFF;
+        }
 
-.container {
-    max-width: 900px;
-    margin: 40px auto;
-}
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-gray);
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+        }
 
-.back-link { 
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-muted); 
-    text-decoration: none; 
-    font-size: 14px;
-    margin-bottom: 20px;
-    transition: color 0.2s;
-}
+        /* --- HEADER AJUSTADO --- */
+        header {
+            background-color: #3483FA;
+            padding: 10px 5%;
+            border-bottom: 5px solid #FFEB45;
+        }
 
-.back-link:hover { color: var(--primary); }
+        .header-container {
+            display: flex;
+            flex-direction: column;
+            /* Para empilhar busca e menu */
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1184px;
+            margin: 0 auto;
+        }
 
-h1 { font-size: 1.8rem; margin-bottom: 30px; font-weight: 800; }
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
 
-.grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 24px; 
-}
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+        }
 
-@media (max-width: 768px) {
-    .grid { grid-template-columns: 1fr; }
-}
 
-.card { 
-    background: white;
-    border: 1px solid #e2e8f0; 
-    border-radius: 16px; 
-    padding: 24px; 
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
+        .logo-text {
+            color: #ffeb45;
+            font-size: 22px;
+            text-decoration: none;
+        }
 
-.card-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700; 
-    margin-bottom: 16px; 
-    font-size: 1.1rem;
-    color: var(--text-main);
-}
+        .cep-box {
+            font-size: 12px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
 
-.price-tag {
-    background: #f1f0ff;
-    color: var(--primary);
-    padding: 12px;
-    border-radius: 12px;
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        .search-box {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            width: 50%;
+            border: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
 
-label { font-weight: 600; display: block; margin-top: 16px; font-size: 14px; color: var(--text-main); }
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
 
-input[type="email"], input[type="text"] { 
-    width: 100%; 
-    padding: 12px; 
-    border: 2px solid #e2e8f0; 
-    border-radius: 10px; 
-    margin-top: 6px; 
-    box-sizing: border-box;
-    font-size: 16px;
-    transition: border-color 0.2s;
-}
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            margin-left: 40px;
+        }
 
-input:focus {
-    outline: none;
-    border-color: var(--primary);
-}
+        .nav-links a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 13px;
+        }
 
-button { 
-    width: 100%;
-    background: var(--primary); 
-    color: white; 
-    padding: 14px; 
-    border: 0; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    margin-top: 20px; 
-    font-weight: 700;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: background 0.2s, transform 0.1s;
-}
+        .nav-links a:hover {
+            color: #FFEB45;
+        }
 
-button:hover { background: var(--primary-hover); }
-button:active { transform: scale(0.98); }
+        /* --- CONTAINER PRINCIPAL --- */
+        .container {
+            max-width: 1184px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 16px;
+            padding: 0 10px;
+        }
 
-.small { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .product-main {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 16px;
+        }
 
-.secure-badge {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #10b981;
-    font-size: 13px;
-    font-weight: 600;
-}
-	</style>
+        /* GALERIA COM JS */
+        .gallery-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .thumbnails {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .thumb {
+            width: 50px;
+            height: 50px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .thumb.active {
+            border: 2px solid var(--primary-green);
+        }
+
+        .main-image {
+            flex-grow: 1;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-image img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 4px;
+        }
+
+        /* CARROSSEL RELACIONADOS */
+        .related-container {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 15px 0;
+            scrollbar-width: none;
+        }
+
+        .related-card {
+            min-width: 160px;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            max-width: 30%;
+        }
+
+        .related-card img {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        /* PROVA SOCIAL E PERGUNTAS */
+        .section-title {
+            font-size: 18px;
+            margin: 30px 0 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .review-item {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .review-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .star-svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary-green);
+        }
+
+        .question-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .question-box input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid var(--primary-green);
+            border-radius: 6px;
+        }
+
+        /* PAINEL DIREITO */
+        .checkout-panel {
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .condition {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .product-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .price-before {
+            font-size: 18px;
+            text-decoration: line-through;
+            font-weight: 300;
+            margin: 15px 0 0px 0;
+        }
+
+        .price-tag {
+            font-size: 36px;
+            font-weight: 300;
+            margin: 0px 0 5px 0;
+            position: relative
+        }
+
+        .price-tag small {
+            font-size: 18px;
+            top: 8px;
+            position: absolute
+        }
+
+        .installments {
+            color: #00a650;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .small {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        input[type="email"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd4e1;
+            border-radius: 10px;
+            margin-top: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--light-green);
+            color: var(--dark-green);
+        }
+
+        .btn-secondary a {
+            text-decoration: none;
+            color: var(--dark-green);
+        }
+
+        .benefits {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .benefits li {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+
+        .benefits svg {
+            fill: var(--text-secondary);
+            width: 18px;
+            flex-shrink: 0;
+        }
+
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            max-width: 320px;
+        }
+
+        .specs-table tr:nth-child(odd) {
+            background-color: #F5F5F5;
+        }
+
+        .specs-table td {
+            padding: 12px;
+            border: 1px solid #eee;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* ORDER BUMP */
+        .orderbump-box {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .orderbump-box.active {
+            background-color: #f0fdf4;
+            border-color: #22c55e;
+        }
+
+        .orderbump-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #22c55e;
+        }
+
+        .orderbump-content {
+            flex-grow: 1;
+        }
+
+        .orderbump-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .orderbump-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0 0 6px 0;
+        }
+
+        .orderbump-price {
+            font-size: 14px;
+            font-weight: 800;
+            color: #16a34a;
+            margin: 0;
+        }
+
+        .badge-offer {
+            background-color: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                display: flex;
+                flex-direction: column-reverse;
+            }
+
+            .checkout-panel {
+                position: static;
+            }
+
+            .gallery-container {
+                flex-direction: column-reverse;
+            }
+
+            .thumbnails {
+                flex-direction: row;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            .nav-links,
+            .logo-area {
+                display: none;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <div class="container">
-        <a class="back-link" onclick="window.history.go(-1);"><i class="fa-solid fa-arrow-left"></i> Voltar para a loja</a>
-        
-        <h1>Finalizar sua Compra</h1>
 
-        <div class="grid">
-            <div class="card">
-                <div class="card-title">
-                    <i class="fa-solid fa-box-open" style="color: var(--primary)"></i> 
-                    Resumo do Pedido
-                </div>
-				<img src="/images/<%= product.image %>" style="width: 100%;">
-                <p style="color: var(--text-muted);"><%= product.description %></p>
-                
-                <div class="price-tag">
-                    <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Total:</span>
-                    R$ <%= product.price.toFixed(2) %>
-                </div>
+    <header>
+        <div class="header-container">
 
-                <div class="secure-badge">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    Pagamento 100% Processado com Segurança
+            <div class="header-top">
+                <div class="logo-area">
+                    <a href="/" class="logo-text">ComprasLivre</a>
+                </div>
+                <input type="text" class="search-box" placeholder="Busque produtos, marcas e muito mais..."
+                    style="margin: 0 30px;outline: none;">
+
+                <div class="logo-area">
+                    <img src="https://hawleylaneshoes.com/wp-content/uploads/2025/12/ugg-sale-dec2025-ENG.gif"
+                        alt="Meli" style="width: 150px;">
                 </div>
             </div>
-
-            <div class="card">
-                <form method="post" action="/buy/<%= product.id %>">
-                    <div class="card-title">
-                        <i class="fa-solid fa-user-check" style="color: var(--primary)"></i> 
-                        Seus Dados
+            <div class="header-nav">
+                <div class="cep-box">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    Informe seu CEP
+                    <div class="nav-links">
+                        <a href="/">Home</a>
+                        <a href="/">Todos produtos</a>
+                        <a href="/">Ofertas do dia</a>
+                        <a href="/">Mais comprados</a>
+                        <a href="https://wa.me/5581985315669">Contato</a>
                     </div>
-                    
-                    <label for="email">E-mail para entrega</label>
-                    <input id="email" name="email" type="email" placeholder="onde você receberá o produto" required />
-                    
-                    <p class="small" style="margin-top:12px;">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <% if (typeof requireCpf !== 'undefined' && requireCpf) { %>
-                            Sua conta exige CPF para PIX em produção.
-                        <% } else { %>
-                            O acesso será enviado para o e-mail acima logo após a confirmação do PIX.
-                        <% } %>
-                    </p>
-
-                    <button type="submit">
-                        Pagar com PIX
-                        <i class="fa-solid fa-chevron-right" style="font-size: 12px;"></i>
-                    </button>
-                </form>
+                </div>
+                <div class="nav-links">
+                    <a href="/">Voltar</a>
+                </div>
             </div>
         </div>
+    </header>
+
+    <div class="container">
+        <div class="product-main">
+            <a class="back-link" onclick="window.history.go(-1);" style="cursor: pointer;"><i
+                    class="fa-solid fa-arrow-left"></i> Voltar para a loja</a>
+            <br />
+            <br />
+            <div class="gallery-container">
+                <div class="thumbnails">
+                    <% product.thumbs.forEach(img=> {%>
+                        <div class="thumb" style="background-image: url('/images/<%= img %>')"
+                            onclick="updateImage('/images/<%= img %>', this)"></div>
+                        <% });%>
+                </div>
+                <div class="main-image">
+                    <img id="view-img" src="/images/<%= product.image %>" alt="Produto">
+                </div>
+            </div>
+
+            <h3 class="section-title">Produtos relacionados</h3>
+            <div class="related-container">
+                <% relatedProducts.forEach(p=> { %>
+                    <a href="/produto/<%= p.id %>" class="related-card">
+                        <img src="/images/<%= p.image %>">
+                        <p style="font-size: 12px; margin: 5px 0;">
+                            <%= p.name %>
+                        </p>
+                        <span style="font-weight: bold; color: var(--primary-green);">R$ <%= p.price %></span>
+                    </a>
+                    <% }) %>
+            </div>
+
+            <h3>Descrição</h3>
+            <div style="color: var(--text-secondary); line-height: 1.6;">
+                <%- product.description %>
+            </div>
+
+            <h3>Características principais</h3>
+            <table class="specs-table">
+                <tr>
+                    <td class="spec-label">Desenvolvedor</td>
+                    <td>
+                        <%= product.development %>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="spec-label">Nome do software</td>
+                    <td>
+                        <%= product.nameSoft %>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="spec-label">Versão</td>
+                    <td>
+                        <%= product.version %>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="spec-label">Tempo de licença</td>
+                    <td>
+                        <%= product.licence %>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="spec-label">Formato</td>
+                    <td>
+                        <%= product.formart %>
+                    </td>
+                </tr>
+            </table>
+
+            <h3 class="section-title" id="opinioes">Opiniões sobre o produto</h3>
+            <div class="review-item">
+                <% product.pinions.forEach(op=> { %>
+                    <div>
+                        <div>
+                            <% for(var i=0; i < op.rate; i++) { %>
+                                <svg class="star-svg" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                                <% } %>
+                        </div>
+                        <% if(op.image.length> 0){ %>
+                            <img src="/images/<%= op.image %>" class="review-img">
+                            <% } %>
+                                <p style="font-size: 14px; color: var(--text-secondary);">
+                                    <%= op.pinion %>
+                                </p>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <h3 class="section-title">Perguntas e respostas</h3>
+            <form onsubmit="enviarWhatsApp(event)" class="question-box">
+                <input type="text" id="pergunta" placeholder="Escreva sua pergunta..." required>
+                <button type="submit" class="btn-primary"
+                    style="padding: 0 25px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold;">
+                    Perguntar
+                </button>
+            </form>
+            <div style="font-size: 14px;">
+                <% product.questions.forEach(q=> { %>
+                    <p><strong>
+                            <%= q.question %>
+                        </strong><br><span style="color: var(--text-secondary);">
+                            <%= q.resp %>
+                        </span></p>
+                    <% }) %>
+            </div>
+        </div>
+
+        <div class="checkout-panel">
+            <div class="condition">Novo | +250 vendidos</div>
+            <h1 class="product-title">
+                <%= product.name %>
+            </h1>
+
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span>(4.9)</span>
+                <svg class="star-svg" viewBox="0 0 24 24">
+                    <path
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <svg class="star-svg" viewBox="0 0 24 24">
+                    <path
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <svg class="star-svg" viewBox="0 0 24 24">
+                    <path
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <svg class="star-svg" viewBox="0 0 24 24">
+                    <path
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <svg class="star-svg" viewBox="0 0 24 24">
+                    <path
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <a href="#opinioes" style="color: #3483fa; font-size: 14px;">(17 avaliações)</a>
+            </div>
+
+            <div class="price-before">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                    %>
+            </div>
+            <div class="price-tag">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2
+                    }).split(',')[0] %>
+                    <small>,<%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).split(',')[1] %>
+                    </small>
+            </div>
+            <div class="installments">+5% desconto no pix</div>
+
+
+            <form method="post" action="/buy/<%= product.id %>">
+
+                <label for="email">E-mail para entrega</label>
+                <input id="email" name="email" type="email" placeholder="onde você receberá o produto" required />
+
+                <label for="whatsapp">WhatsApp (com DDD)</label>
+                <input id="whatsapp" name="whatsapp" type="text" placeholder="(11) 99999-9999" required />
+
+                <% if (typeof orderbumpProduct !=='undefined' && orderbumpProduct) { %>
+                    <div class="orderbump-box" id="ob-box">
+                        <input type="checkbox" id="orderbumpId" name="orderbumpId" value="<%= orderbumpProduct.id %>"
+                            class="orderbump-checkbox"
+                            onchange="toggleOrderBump(this, <%= product.price %>, <%= orderbumpProduct.price %>)">
+                        <div class="orderbump-content">
+                            <p class="orderbump-title">
+                                <i class="fa-solid fa-bolt text-yellow-500"></i> Leve também: <%=
+                                    orderbumpProduct.nameSoft || orderbumpProduct.name %>
+                                    <span class="badge-offer">Oferta</span>
+                            </p>
+                            <p class="orderbump-desc">Adicione ao seu pacote e economize com essa oferta exclusiva de
+                                <%= orderbumpProduct.licence %>.
+                            </p>
+                            <p class="orderbump-price">+ R$ <%= orderbumpProduct.price.toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2 }) %>
+                            </p>
+                        </div>
+                    </div>
+                    <% } %>
+
+                        <p class="small"
+                            style="margin-top:12px; margin-bottom:15px; background: #e0f2fe; padding: 10px; border-radius: 6px; color: #0369a1;">
+                            <i class="fa-solid fa-shield-halved"></i> <strong>Compra Segura!</strong> O acesso será
+                            enviado IMEDIATAMENTE após a confirmação do PIX.
+                        </p>
+
+                        <button type="submit" class="btn btn-primary" id="btn-comprar">COMPRAR AGORA</button>
+            </form>
+
+            <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20tenho%20d%C3%BAvidas%20sobre%20o%20produto%20<%= encodeURIComponent(product.name) %>"
+                target="_blank" class="btn btn-secondary"
+                style="display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background-color:#25D366; color:white;">
+                <i class="fa-brands fa-whatsapp" style="font-size: 20px;"></i> Fale com Suporte</a>
+
+            <ul class="benefits"
+                style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <li>
+                    <svg viewBox="0 0 24 24" style="fill: #22c55e;">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                    </svg>
+                    <span><strong>Compra Garantida.</strong> Receba o produto que está esperando ou devolvemos o
+                        dinheiro.</span>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" style="fill: #3b82f6;">
+                        <path
+                            d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                    </svg>
+                    <span>
+                        <%= product.licence %> de garantia com <strong>Suporte Incluso</strong>.
+                    </span>
+                </li>
+            </ul>
+        </div>
     </div>
+
+    <script>
+        window.location.hash = "?seller=202452-2025423598756&reco_id=d0bc7325-d0a6-4e93-814f-7c7ec4387922&sid=recos&is_advertising=true&ad_domain=VIPDESKTOP_UP&ad_position=2&ad_click_id=MjQ4MTRhYmUtNzRlMC00YzM3LTg0ODgtOGQ4OGMzMzA0OGQx";
+        function updateImage(url, el) {
+            document.getElementById('view-img').src = url;
+            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function enviarWhatsApp(event) {
+            event.preventDefault(); // Impede o recarregamento da página
+
+            const numero = "5581985315669";
+            const pergunta = document.getElementById('pergunta').value;
+
+            // Codifica o texto para formato de URL (trata espaços e símbolos)
+            const mensagem = encodeURIComponent(pergunta);
+
+            // Redireciona para o WhatsApp
+            window.open(`https://wa.me/${numero}?text=_<%= product.name %>_%0A*Pergunta:*%0A${mensagem}`, '_blank');
+        }
+
+        function toggleOrderBump(checkbox, mainPrice, bumpPrice) {
+            const box = document.getElementById('ob-box');
+            const totalSpan = document.getElementById('total-price');
+
+            if (checkbox.checked) {
+                box.classList.add('active');
+                totalSpan.innerText = (mainPrice + bumpPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            } else {
+                box.classList.remove('active');
+                totalSpan.innerText = mainPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            }
+        }
+
+        // Máscara para WhatsApp
+        document.getElementById('whatsapp').addEventListener('input', function (e) {
+            var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    </script>
+
 </body>
+
 </html>
-
-

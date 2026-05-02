@@ -14,7 +14,9 @@
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "express-session": "^1.19.0",
     "mercadopago": "^2.10.0",
+    "nodemailer": "^8.0.1",
     "pg": "^8.16.3",
     "sqlite3": "^5.1.7"
   }

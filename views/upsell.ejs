@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oferta Exclusiva!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .progress-bar {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .progress-fill {
+            width: 80%;
+            background-color: #22c55e;
+            height: 100%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+
+    <div class="bg-red-600 text-white text-center font-bold py-3 px-4 shadow-md">
+        <span class="animate-pulse">⚠️ ESPERE! NÃO FECHE ESSA PÁGINA. SEU PEDIDO AINDA NÃO ESTÁ COMPLETO!</span>
+    </div>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Obrigado por comprar o <span class="text-blue-600"><%= product.nameSoft || product.name %></span>!</h1>
+            <p class="text-lg text-slate-600">O seu acesso já foi enviado para o seu WhatsApp e E-mail, mas antes de acessar...</p>
+            <h2 class="text-2xl font-bold text-red-600 mt-6">Temos uma OFERTA ÚNICA E EXCLUSIVA para você!</h2>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+            <div class="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center">
+                <div class="w-full md:w-1/2 flex justify-center">
+                    <img src="/images/<%= upsellProduct.image %>" alt="<%= upsellProduct.name %>" class="rounded-xl shadow-lg w-full max-w-sm border border-slate-100">
+                </div>
+                
+                <div class="w-full md:w-1/2 space-y-4">
+                    <h3 class="text-2xl font-black text-slate-800 leading-tight"><%= upsellProduct.name %></h3>
+                    <p class="text-slate-600">Complemente o seu pedido agora com o <strong class="text-slate-800"><%= upsellProduct.nameSoft || upsellProduct.name %></strong> por um valor que você nunca mais verá.</p>
+                    
+                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl mt-4">
+                        <p class="text-slate-500 text-sm line-through">Preço normal: R$ <%= upsellProduct.priceBefore %></p>
+                        <% let finalPrice = upsellProduct.priceUpsell ? upsellProduct.priceUpsell : upsellProduct.price; %>
+                        <p class="text-3xl font-black text-green-600 mt-1">Apenas R$ <%= finalPrice %></p>
+                        <p class="text-xs text-blue-600 font-bold mt-2"><i class="fas fa-tag"></i> Desconto Exclusivo Aplicado</p>
+                    </div>
+
+                    <form action="/buy-upsell/<%= upsellProduct.id %>" method="POST" class="mt-6 w-full">
+                        <input type="hidden" name="email" value="<%= locals.email || 'preenchido@automatico.com' %>">
+                        <input type="hidden" name="whatsapp" value="<%= locals.whatsapp || '' %>">
+                        
+                        <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-green-500/40 transition transform hover:scale-105 flex justify-center items-center gap-2">
+                            <i class="fas fa-check-circle"></i> SIM! QUERO ADICIONAR AO MEU PEDIDO
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4 pt-2">
+                        <a href="/tutorial/<%= product.id %>" class="text-slate-400 hover:text-slate-600 underline text-sm transition">
+                            Não, obrigado. Prefiro apenas o <%= product.nameSoft || product.name %> e perder essa oferta.
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 border-t border-slate-100 p-6 flex flex-wrap justify-center gap-6 text-sm text-slate-500 font-medium">
+                <span class="flex items-center gap-2"><i class="fas fa-shield-alt text-slate-400"></i> Compra 100% Segura</span>
+                <span class="flex items-center gap-2"><i class="fas fa-award text-slate-400"></i> Acesso Vitalício</span>
+                <span class="flex items-center gap-2"><i class="fas fa-headset text-slate-400"></i> Suporte Completo</span>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

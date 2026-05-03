@@ -94,11 +94,66 @@ Para aprovação automática, configure a URL de notificação no painel do Merc
 ## 🚀 Executando
 ```bash
 # Modo Produção
-npm start
+node app.js
 
 # Modo Desenvolvimento
 npm run dev
 ```
+
+## Subindo um novo Projeto a partir desse na VPS e no CloudFlare:
+
+1. Mudar o nome da pasta do projeto para o nome do novo projeto
+2. Mudar a porta no docker-compose.yml para uma porta livre (ex: 4302)
+3. Subir para a vps através do GIT. para /home/dayvson/app
+4. entrar no diretorio do novo projeto:
+    > cd novoapp
+4.1 criar o .env > nano .env
+    e adicionar as variáveis do novo projeto.
+4.2 Criar Api de integração com o Mercado Pago para pegar as credenciais de Produção 
+    e mudar a URL do Webhook no novo projeto para a URL do novo projeto. 
+    Ex: novoapp.seusprogramas.com.br/webhook/mercadopago
+4.3 Rodar o comando build do docker:
+    > docker compose up -d --build
+4.4 rode o 
+    > docker ps
+    para ver se o container subiu corretamente e se o banco de dados está funcionando.
+    Ele precisa mostrar os dois containers rodando corretamente.
+    - novoapp-db
+    - novoapp-app
+4.3 Caso não mostre os dois, rode o comando:
+    > docker compose restart app
+    
+5. Configurar o CloudFlare apontando o domínio para a VPS
+5.1 Vai em DNS >> Registros >> Adicionar Novo Registro
+    Tipo: A
+    Nome: novoapp
+    IPv4: IP da sua VPS
+6. No arquivo nginx.conf adicionar o novo site:
+6.1. No servidor VPS use o comando: 
+    > sudo nano /etc/nginx/sites-available/novoapp
+6.2. Adicione o seguinte conteúdo:
+    server {
+    server_name novoapp.seusprogramas.com.br;
+
+    location / {
+        proxy_pass http://localhost:4302;
+        proxy_http_version 1.1;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+7. Ativar o site no nginx: 
+    > sudo ln -s /etc/nginx/sites-available/novoapp /etc/nginx/sites-enabled/
+    > sudo nginx -t
+    > sudo systemctl reload nginx
+8. Gerar SSL:
+    > sudo certbot --nginx
+8.1 Escolha a opção referente ao seu subdomínio
+9. Pronto o projeto está rodando no servidor VPS e no CloudFlare!
+
 
 ---
 © 2026 Compras Livre Tec. Todos os direitos reservados.

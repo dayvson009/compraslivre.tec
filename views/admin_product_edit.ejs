@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <form action="/admin/produtos/editar/<%= product.id %>" method="POST" class="space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+        <form action="/admin/produtos/editar/<%= product.id %>" method="POST" enctype="multipart/form-data" class="space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
             
             <!-- Sessão 1: Informações Básicas -->
             <div>
@@ -122,8 +122,18 @@
                         <label class="block text-sm font-bold text-slate-700 mb-1">Imagem Principal (Caminho ou URL)</label>
                         <input type="text" name="image" value="<%= product.image || '' %>" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
                     </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Fazer Upload de Nova Imagem</label>
+                        <input type="file" name="productImage" accept="image/*" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                        <p class="text-xs text-blue-500 mt-1"><i class="fas fa-info-circle"></i> A imagem precisa ter pelo menos 500px x 500px para melhor qualidade.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Fazer Upload de Miniaturas (Galeria)</label>
+                        <input type="file" name="thumbImages" multiple accept="image/*" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                        <p class="text-xs text-blue-500 mt-1"><i class="fas fa-info-circle"></i> Máximo de 5 imagens para a galeria.</p>
+                    </div>
                     <div id="thumbs-container" class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Miniaturas (Imagens da Galeria)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Miniaturas Atuais (Caminhos/URLs)</label>
                         <% if(product.thumbs && product.thumbs.length > 0) { %>
                             <% product.thumbs.forEach(function(thumb) { %>
                                 <div class="flex gap-2">
@@ -146,8 +156,8 @@
                 <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-file-alt text-tech-blue mr-2"></i> Textos e Descrição</h2>
                 <div class="grid grid-cols-1 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Descrição do Produto (Suporta HTML)</label>
-                        <textarea name="description" rows="6" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition"><%= product.description || '' %></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Descrição do Produto (Sem tags, use quebras de linha)</label>
+                        <textarea name="description" rows="6" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition"><%= product.description ? product.description.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').trim() : '' %></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Mais Informações (Mostrado após a compra, ex: chave de licença)</label>

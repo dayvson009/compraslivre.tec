@@ -16,6 +16,7 @@
     "express": "^5.1.0",
     "express-session": "^1.19.0",
     "mercadopago": "^2.10.0",
+    "multer": "^2.1.1",
     "nodemailer": "^8.0.1",
     "pg": "^8.16.3",
     "sqlite3": "^5.1.7"

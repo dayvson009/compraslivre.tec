@@ -6,6 +6,25 @@ const { Pool } = require('pg');
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const session = require('express-session');
 const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+
+// Configuração do Multer para upload de imagens
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		const dir = './public/images/produtos';
+		if (!fs.existsSync(dir)) {
+			fs.mkdirSync(dir, { recursive: true });
+		}
+		cb(null, dir);
+	},
+	filename: function (req, file, cb) {
+		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+		cb(null, uniqueSuffix + path.extname(file.originalname));
+	}
+});
+const upload = multer({ storage: storage });
+
 let products = [];
 try {
 	products = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
@@ -252,12 +271,26 @@ app.get('/admin/produtos/novo', requireAuth, (req, res) => {
 	res.render('admin_product_create', { products });
 });
 
-app.post('/admin/produtos', requireAuth, (req, res) => {
+app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'productImage', maxCount: 1 }, { name: 'thumbImages', maxCount: 5 }]), (req, res) => {
 	const {
 		id, name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
-		image, development, nameSoft, version, licence, formart, description,
+		development, nameSoft, version, licence, formart, description,
 		orderbump, upsell
 	} = req.body;
+
+	let imagePath = req.body.image || '';
+	if (req.files && req.files['productImage']) {
+		imagePath = 'produtos/' + req.files['productImage'][0].filename;
+	}
+
+	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
+	if (req.files && req.files['thumbImages']) {
+		req.files['thumbImages'].forEach(file => {
+			thumbPaths.push('produtos/' + file.filename);
+		});
+	}
+	// Limita a 5 miniaturas para não quebrar o layout
+	thumbPaths = thumbPaths.slice(0, 5);
 
 	let parsedQuestions = [];
 	if (req.body.questions && Array.isArray(req.body.questions)) {
@@ -282,8 +315,8 @@ app.post('/admin/produtos', requireAuth, (req, res) => {
 		urlProduto: urlProduto || '',
 		tutorialVideo: tutorialVideo || '',
 		moreInfo: moreInfo || '',
-		image: image || '',
-		thumbs: req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [],
+		image: imagePath || '',
+		thumbs: thumbPaths,
 		development: development || '',
 		nameSoft: nameSoft || '',
 		version: version || '',
@@ -315,15 +348,29 @@ app.get('/admin/produtos/editar/:id', requireAuth, (req, res) => {
 	res.render('admin_product_edit', { product, products });
 });
 
-app.post('/admin/produtos/editar/:id', requireAuth, (req, res) => {
+app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'productImage', maxCount: 1 }, { name: 'thumbImages', maxCount: 5 }]), (req, res) => {
 	const index = products.findIndex(p => p.id === req.params.id);
 	if (index === -1) return res.status(404).send('Produto não encontrado');
 
 	const {
 		name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
-		image, development, nameSoft, version, licence, formart, description,
+		development, nameSoft, version, licence, formart, description,
 		orderbump, upsell
 	} = req.body;
+
+	let imagePath = req.body.image || products[index].image;
+	if (req.files && req.files['productImage']) {
+		imagePath = 'produtos/' + req.files['productImage'][0].filename;
+	}
+
+	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
+	if (req.files && req.files['thumbImages']) {
+		req.files['thumbImages'].forEach(file => {
+			thumbPaths.push('produtos/' + file.filename);
+		});
+	}
+	// Limita a 5 miniaturas para não quebrar o layout
+	thumbPaths = thumbPaths.slice(0, 5);
 
 	let parsedQuestions = [];
 	if (req.body.questions && Array.isArray(req.body.questions)) {
@@ -348,8 +395,8 @@ app.post('/admin/produtos/editar/:id', requireAuth, (req, res) => {
 		urlProduto: urlProduto || '',
 		tutorialVideo: tutorialVideo || '',
 		moreInfo: moreInfo || '',
-		image: image || '',
-		thumbs: req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [],
+		image: imagePath || '',
+		thumbs: thumbPaths,
 		development: development || '',
 		nameSoft: nameSoft || '',
 		version: version || '',

@@ -546,9 +546,7 @@
             </div>
 
             <h3>Descrição</h3>
-            <div style="color: var(--text-secondary); line-height: 1.6;">
-                <%- product.description %>
-            </div>
+            <div style="color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;"><%- product.description %></div>
 
             <h3>Características principais</h3>
             <table class="specs-table">
@@ -631,29 +629,25 @@
                 <%= product.name %>
             </h1>
 
+            <% 
+                let avgRate = 0;
+                let totalReviews = product.pinions ? product.pinions.length : 0;
+                if (totalReviews > 0) {
+                    let sum = product.pinions.reduce((acc, p) => acc + (Number(p.rate) || 0), 0);
+                    avgRate = (sum / totalReviews).toFixed(1);
+                } else {
+                    avgRate = "5.0"; // Default
+                    totalReviews = 25; // Default display
+                }
+            %>
             <div style="display: flex; align-items: center; gap: 5px;">
-                <span>(4.9)</span>
-                <svg class="star-svg" viewBox="0 0 24 24">
-                    <path
-                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-                <svg class="star-svg" viewBox="0 0 24 24">
-                    <path
-                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-                <svg class="star-svg" viewBox="0 0 24 24">
-                    <path
-                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-                <svg class="star-svg" viewBox="0 0 24 24">
-                    <path
-                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-                <svg class="star-svg" viewBox="0 0 24 24">
-                    <path
-                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-                <a href="#opinioes" style="color: #3483fa; font-size: 14px;">(17 avaliações)</a>
+                <span>(<%= avgRate %>)</span>
+                <% for(let i=0; i<5; i++) { %>
+                    <svg class="star-svg" viewBox="0 0 24 24" style="fill: <%= i < Math.floor(avgRate) ? 'var(--primary-green)' : '#ddd' %>">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                <% } %>
+                <a href="#opinioes" style="color: #3483fa; font-size: 14px;">(<%= totalReviews %> avaliações)</a>
             </div>
 
             <div class="price-before">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 })

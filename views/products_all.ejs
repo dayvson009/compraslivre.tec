@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todos os Produtos - ComprasLivre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --tech-blue: #3483fa;
+            --tech-dark: #2d3277;
+        }
+        body {
+            background-color: #f5f5f5;
+        }
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('partials/nav') %>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Seção: Mais Comprados -->
+        <section id="mais-comprados" class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-fire text-orange-500"></i> Mais Comprados
+                </h2>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <% products.slice(0, 5).forEach(product => { %>
+                    <a href="/produto/<%= product.id %>" class="bg-white rounded-lg p-4 product-card border border-slate-100 flex flex-col h-full">
+                        <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="w-full h-40 object-contain mb-4">
+                        <h3 class="text-sm font-medium text-slate-700 line-clamp-2 mb-2"><%= product.name %></h3>
+                        <div class="mt-auto">
+                            <p class="text-xs text-slate-400 line-through">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                            <p class="text-lg font-bold text-slate-900">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                            <p class="text-xs text-green-600 font-bold mt-1">Frete Grátis</p>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        </section>
+
+        <!-- Seção: Ofertas do Dia -->
+        <section id="ofertas" class="mb-12">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl overflow-hidden relative">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i class="fas fa-bolt text-9xl"></i>
+                </div>
+                <div class="relative z-10">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+                        <i class="fas fa-bolt text-yellow-400"></i> Ofertas do Dia
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <% products.filter(p => p.priceBefore > p.price).slice(0, 2).forEach(product => { %>
+                            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 flex flex-col sm:flex-row gap-6 border border-white/20 hover:bg-white/20 transition cursor-pointer" onclick="window.location.href='/produto/<%= product.id %>'">
+                                <div class="bg-white rounded-lg p-4 shrink-0 flex items-center justify-center w-32 h-32 mx-auto sm:mx-0">
+                                    <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="max-w-full max-h-full object-contain">
+                                </div>
+                                <div class="flex flex-col justify-center text-center sm:text-left">
+                                    <span class="bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-1 rounded w-fit mx-auto sm:mx-0 mb-2">OFERTA IMPERDÍVEL</span>
+                                    <h3 class="text-xl font-bold mb-2 line-clamp-1"><%= product.name %></h3>
+                                    <div class="flex items-center justify-center sm:justify-start gap-3">
+                                        <span class="text-white/60 line-through text-sm">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                                        <span class="text-2xl font-black text-white">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                                    </div>
+                                    <button class="mt-4 bg-white text-blue-600 font-bold py-2 px-6 rounded-full hover:bg-yellow-400 hover:text-blue-900 transition">Aproveitar agora</button>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção: Todos os Produtos -->
+        <section id="todos-produtos">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Nosso Catálogo Completo</h2>
+                <span class="text-slate-500 text-sm"><%= products.length %> produtos encontrados</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <% products.forEach(product => { %>
+                    <a href="/produto/<%= product.id %>" class="bg-white rounded-lg p-4 product-card border border-slate-100 flex flex-col h-full">
+                        <div class="relative mb-4">
+                            <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="w-full h-32 object-contain">
+                            <% if (product.priceBefore > product.price) { %>
+                                <span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                    <%= Math.round((1 - product.price / product.priceBefore) * 100) %>% OFF
+                                </span>
+                            <% } %>
+                        </div>
+                        <h3 class="text-xs font-medium text-slate-700 line-clamp-2 mb-2"><%= product.name %></h3>
+                        <div class="mt-auto">
+                            <p class="text-sm font-bold text-slate-900">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                            <div class="flex items-center gap-1 mt-1">
+                                <% for(let i=0; i<5; i++) { %>
+                                    <i class="fas fa-star text-[8px] text-yellow-400"></i>
+                                <% } %>
+                                <span class="text-[10px] text-slate-400">(4.9)</span>
+                            </div>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        </section>
+
+    </main>
+
+    <%- include('partials/footer') %>
+</body>
+
+</html>

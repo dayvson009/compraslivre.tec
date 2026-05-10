@@ -1,0 +1,90 @@
+<!-- views/partials/footer.ejs -->
+<style>
+    #sale-notification {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        display: none;
+        z-index: 9999;
+    }
+</style>
+
+<!-- Sale Notification -->
+<div id="sale-notification"
+    class="bg-white border border-slate-200 shadow-2xl rounded-xl p-4 items-center gap-4 max-w-sm transform transition-all translate-y-0 opacity-100">
+    <div
+        class="bg-green-100 text-green-600 w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-lg">
+        <i class="fas fa-check"></i>
+    </div>
+    <div>
+        <p class="text-sm font-bold text-slate-800 leading-tight mb-1" id="sale-product"></p>
+        <p class="text-xs text-slate-500"><span id="sale-email" class="font-medium"></span> comprou há <span
+                id="sale-time" class="font-medium text-slate-700"></span></p>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-3">
+            <img src="/images/LogoHeader.png" alt="Logo" class="h-8 grayscale opacity-70">
+            <p class="text-sm">© 2026 - Compras Livre Tec. Todos os direitos reservados.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-6 items-center">
+            <div class="flex gap-4 text-xl">
+                <a href="https://wa.me/5581985315669" class="hover:text-white transition"><i
+                        class="fab fa-whatsapp"></i></a>
+                <a href="https://www.instagram.com/compraslivre.tec/" class="hover:text-white transition"><i
+                        class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Notificações de Venda (Gatilho de Urgência/Prova Social)
+    const salesData = [
+        { product: "Suporte - Office 2024", time: "2 min", email: "jo****as@gmail.com" },
+        { product: "Instalação CorelDRAW", time: "5 min", email: "ma****os@hotmail.com" },
+        { product: "Manutenção Remota", time: "8 min", email: "ca****lo@outlook.com" },
+        { product: "Suporte - Adobe Acrobat", time: "12 min", email: "fe****da@gmail.com" }
+    ];
+
+    function showNotification() {
+        const sale = salesData[Math.floor(Math.random() * salesData.length)];
+        const productElem = document.getElementById('sale-product');
+        const emailElem = document.getElementById('sale-email');
+        const timeElem = document.getElementById('sale-time');
+        const notify = document.getElementById('sale-notification');
+
+        if (!productElem || !emailElem || !timeElem || !notify) return;
+
+        productElem.innerText = sale.product;
+        emailElem.innerText = sale.email;
+        timeElem.innerText = sale.time;
+
+        notify.style.display = 'flex';
+        notify.style.opacity = '0';
+        notify.style.transform = 'translateY(20px)';
+
+        // Fade in animation
+        setTimeout(() => {
+            notify.style.transition = 'all 0.5s ease';
+            notify.style.opacity = '1';
+            notify.style.transform = 'translateY(0)';
+        }, 50);
+
+        // Hide after 5 seconds
+        setTimeout(() => {
+            notify.style.opacity = '0';
+            notify.style.transform = 'translateY(20px)';
+            setTimeout(() => { notify.style.display = 'none'; }, 500);
+        }, 5000);
+    }
+
+    // Iniciar notificações após alguns segundos
+    setTimeout(() => {
+        showNotification();
+        setInterval(showNotification, Math.floor(Math.random() * (25000 - 15000 + 1) + 15000));
+    }, 3000);
+</script>

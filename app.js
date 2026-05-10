@@ -25,6 +25,23 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+function getNextProductId() {
+	if (products.length === 0) return 'MLB2026030301';
+	const lastProduct = products[products.length - 1];
+	const lastId = lastProduct.id;
+
+	// Extrai a parte numérica do final do ID
+	const match = lastId.match(/^(.*?)(\d+)$/);
+	if (!match) return 'MLB2026030301';
+
+	const prefix = match[1];
+	const numberStr = match[2];
+	const nextNumber = parseInt(numberStr) + 1;
+
+	// Mantém o preenchimento de zeros à esquerda
+	return prefix + nextNumber.toString().padStart(numberStr.length, '0');
+}
+
 let products = [];
 try {
 	products = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
@@ -236,6 +253,11 @@ app.get('/', (req, res) => {
 	res.render('home', { products: products.filter(p => p.active !== false) });
 });
 
+// Página de todos os produtos
+app.get('/produtos', (req, res) => {
+	res.render('products_all', { products: products.filter(p => p.active !== false) });
+});
+
 // Admin - Login
 app.get('/admin/login', (req, res) => {
 	if (req.session && req.session.admin) {
@@ -268,7 +290,8 @@ app.get('/admin/produtos', requireAuth, (req, res) => {
 
 // Admin - Cadastro de Produtos
 app.get('/admin/produtos/novo', requireAuth, (req, res) => {
-	res.render('admin_product_create', { products });
+	const nextId = getNextProductId();
+	res.render('admin_product_create', { products, nextId });
 });
 
 app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'productImage', maxCount: 1 }, { name: 'thumbImages', maxCount: 5 }]), (req, res) => {

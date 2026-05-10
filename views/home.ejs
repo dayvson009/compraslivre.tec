@@ -79,7 +79,7 @@
                 </div>
                 <a href="#"
                     class="bg-tech-blue hover-bg-tech-blue text-white px-6 py-2.5 rounded-lg font-semibold transition shadow-lg shadow-blue-500/30">Área
-                    de membros</a>
+                    de Membros</a>
             </div>
         </div>
     </nav>
@@ -106,9 +106,9 @@
                             class="bg-tech-blue hover-bg-tech-blue text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl shadow-blue-500/30 flex items-center justify-center gap-2">
                             <i class="fab fa-whatsapp text-xl"></i> Falar com Especialista
                         </a>
-                        <a href="#utilitarios"
+                        <a href="/produtos"
                             class="bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 px-8 py-4 rounded-xl font-bold text-lg transition flex items-center justify-center gap-2">
-                            Ver Serviços
+                            Ver Produtos
                         </a>
                     </div>
                 </div>
@@ -325,62 +325,25 @@
                 ferramentas mais requisitadas por profissionais.</p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card 1 -->
-                <div
-                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-                    <div class="h-32 flex items-center justify-center mb-4">
-                        <img src="./images/produtos/office/office.webp"
-                            class="max-h-full object-contain mix-blend-multiply">
+                <% products.slice(0, 4).forEach(product => { %>
+                    <div class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                        <div class="h-32 flex items-center justify-center mb-4">
+                            <img src="/images/<%= product.image %>" class="max-h-full object-contain mix-blend-multiply rounded-lg">
+                        </div>
+                        <h4 class="font-bold text-lg text-slate-800 line-clamp-1"><%= product.name %></h4>
+                        <p class="text-xs text-slate-500 mb-6 flex-grow"><%= product.development %> • <%= product.version %></p>
+                        <a href="/produto/<%= product.id %>"
+                            class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
+                            Solicitar
+                        </a>
                     </div>
-                    <h4 class="font-bold text-lg text-slate-800">Microsoft Office 2019-2024</h4>
-                    <p class="text-xs text-slate-500 mb-6 flex-grow">Word, Excel, PowerPoint e Outlook</p>
-                    <a href="/produto/MLB2026030303"
-                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
-                        Solicitar
-                    </a>
-                </div>
-                <!-- Card 2 -->
-                <div
-                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-                    <div class="h-32 flex items-center justify-center mb-4">
-                        <img src="./images/produtos/corelDraw.jpg"
-                            class="max-h-full object-contain mix-blend-multiply rounded-lg">
-                    </div>
-                    <h4 class="font-bold text-lg text-slate-800">CorelDRAW Suite v. 26</h4>
-                    <p class="text-xs text-slate-500 mb-6 flex-grow">Design Gráfico Profissional e Ilustração</p>
-                    <a href="/produto/MLB2025030301"
-                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
-                        Solicitar
-                    </a>
-                </div>
-                <!-- Card 3 -->
-                <div
-                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-                    <div class="h-32 flex items-center justify-center mb-4">
-                        <img src="./images/produtos/acrobat26.jpg"
-                            class="max-h-full object-contain mix-blend-multiply rounded-lg">
-                    </div>
-                    <h4 class="font-bold text-lg text-slate-800">Acrobat Pro 2026</h4>
-                    <p class="text-xs text-slate-500 mb-6 flex-grow">Edição e Gerenciamento Avançado de PDFs</p>
-                    <a href="/produto/ACROBAT"
-                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
-                        Solicitar
-                    </a>
-                </div>
-                <!-- Card 4 -->
-                <div
-                    class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-                    <div class="h-32 flex items-center justify-center mb-4">
-                        <img src="./images/produtos/proteus9.jpg"
-                            class="max-h-full object-contain mix-blend-multiply rounded-lg">
-                    </div>
-                    <h4 class="font-bold text-lg text-slate-800">Proteus 9</h4>
-                    <p class="text-xs text-slate-500 mb-6 flex-grow">Simulação de Circuitos e Projetos Eletrônicos</p>
-                    <a href="/produto/PROTEUS"
-                        class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
-                        Solicitar
-                    </a>
-                </div>
+                <% }) %>
+            </div>
+
+            <div class="mt-12">
+                <a href="/produtos" class="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition shadow-xl">
+                    Ver Todos os Produtos <i class="fas fa-th-large"></i>
+                </a>
             </div>
         </div>
     </section>

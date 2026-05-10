@@ -29,85 +29,14 @@
             background-color: var(--bg-gray);
             margin: 0;
             padding: 0;
-            color: var(--text-main);
         }
+    </style>
+</head>
 
-        /* --- HEADER AJUSTADO --- */
-        header {
-            background-color: #3483FA;
-            padding: 10px 5%;
-            border-bottom: 5px solid #FFEB45;
-        }
+<body>
+    <%- include('partials/nav') %>
 
-        .header-container {
-            display: flex;
-            flex-direction: column;
-            /* Para empilhar busca e menu */
-            justify-content: space-between;
-            width: 100%;
-            max-width: 1184px;
-            margin: 0 auto;
-        }
-
-        .header-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .logo-area {
-            display: flex;
-            flex-direction: column;
-        }
-
-
-        .logo-text {
-            color: #ffeb45;
-            font-size: 22px;
-            text-decoration: none;
-        }
-
-        .cep-box {
-            font-size: 12px;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 2px;
-        }
-
-        .search-box {
-            background: white;
-            padding: 8px 15px;
-            border-radius: 4px;
-            width: 50%;
-            border: none;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-            margin-left: 40px;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #fff;
-            font-size: 13px;
-        }
-
-        .nav-links a:hover {
-            color: #FFEB45;
-        }
+    <style>
 
         /* --- CONTAINER PRINCIPAL --- */
         .container {
@@ -473,47 +402,6 @@
             }
         }
     </style>
-</head>
-
-<body>
-
-    <header>
-        <div class="header-container">
-
-            <div class="header-top">
-                <div class="logo-area">
-                    <a href="/" class="logo-text">ComprasLivre</a>
-                </div>
-                <input type="text" class="search-box" placeholder="Busque produtos, marcas e muito mais..."
-                    style="margin: 0 30px;outline: none;">
-
-                <div class="logo-area">
-                    <img src="https://hawleylaneshoes.com/wp-content/uploads/2025/12/ugg-sale-dec2025-ENG.gif"
-                        alt="Meli" style="width: 150px;">
-                </div>
-            </div>
-            <div class="header-nav">
-                <div class="cep-box">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    Informe seu CEP
-                    <div class="nav-links">
-                        <a href="/">Home</a>
-                        <a href="/">Todos produtos</a>
-                        <a href="/">Ofertas do dia</a>
-                        <a href="/">Mais comprados</a>
-                        <a href="https://wa.me/5581985315669">Contato</a>
-                    </div>
-                </div>
-                <div class="nav-links">
-                    <a href="/">Voltar</a>
-                </div>
-            </div>
-        </div>
-    </header>
-
     <div class="container">
         <div class="product-main">
             <a class="back-link" onclick="window.history.go(-1);" style="cursor: pointer;"><i
@@ -767,6 +655,7 @@
         });
     </script>
 
+    <%- include('partials/footer') %>
 </body>
 
 </html>

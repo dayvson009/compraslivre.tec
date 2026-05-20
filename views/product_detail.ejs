@@ -410,13 +410,26 @@
             <br />
             <div class="gallery-container">
                 <div class="thumbnails">
-                    <% product.thumbs.forEach(img=> {%>
-                        <div class="thumb" style="background-image: url('/images/<%= img %>')"
-                            onclick="updateImage('/images/<%= img %>', this)"></div>
-                        <% });%>
+                    <% 
+                    let detailThumbs = [];
+                    if (product.image) {
+                        detailThumbs.push(product.image);
+                    }
+                    if (product.thumbs && product.thumbs.length > 0) {
+                        product.thumbs.forEach(function(t) {
+                            if (t && t.trim() !== "" && t !== product.image) {
+                                detailThumbs.push(t);
+                            }
+                        });
+                    }
+                    %>
+                    <% detailThumbs.forEach(function(img, index) { %>
+                        <div class="thumb <%= index === 0 ? 'active' : '' %>" style="background-image: url('<%= getImageUrl(img) %>')"
+                            onclick="updateImage('<%= getImageUrl(img) %>', this)"></div>
+                    <% }); %>
                 </div>
                 <div class="main-image">
-                    <img id="view-img" src="/images/<%= product.image %>" alt="Produto">
+                    <img id="view-img" src="<%= getImageUrl(product.image || (detailThumbs[0] || '')) %>" alt="Produto">
                 </div>
             </div>
 
@@ -424,7 +437,7 @@
             <div class="related-container">
                 <% relatedProducts.forEach(p=> { %>
                     <a href="/produto/<%= p.id %>" class="related-card">
-                        <img src="/images/<%= p.image %>">
+                        <img src="<%= getImageUrl(p.image) %>">
                         <p style="font-size: 12px; margin: 5px 0;">
                             <%= p.name %>
                         </p>
@@ -483,7 +496,7 @@
                                 <% } %>
                         </div>
                         <% if(op.image.length> 0){ %>
-                            <img src="/images/<%= op.image %>" class="review-img">
+                            <img src="<%= getImageUrl(op.image) %>" class="review-img">
                             <% } %>
                                 <p style="font-size: 14px; color: var(--text-secondary);">
                                     <%= op.pinion %>

@@ -8,6 +8,7 @@ const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const appmaxService = require('./services/appmax');
 
 // Configuração do Multer para upload de imagens
 const storage = multer.diskStorage({
@@ -64,6 +65,21 @@ app.use(session({
 	cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 horas
 }));
 
+// Middleware de helper global para imagens
+app.use((req, res, next) => {
+	res.locals.getImageUrl = function(imagePath) {
+		if (!imagePath) return '/images/default.jpg';
+		imagePath = imagePath.trim();
+		if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:')) {
+			return imagePath;
+		}
+		if (imagePath.startsWith('/images/')) return imagePath;
+		if (imagePath.startsWith('images/')) return '/' + imagePath;
+		return '/images/' + imagePath;
+	};
+	next();
+});
+
 // Middleware de autenticação
 function requireAuth(req, res, next) {
 	if (req.session && req.session.admin) {
@@ -106,6 +122,7 @@ async function initSchema() {
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS product_url TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS whatsapp TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS product_name TEXT;`);
+	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;`);
 	// Índices úteis
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at DESC);`);
 }
@@ -162,7 +179,7 @@ function startPendingPoller() {
 		try {
 			// Busca pendentes recentes
 			const { rows } = await pool.query(
-				`SELECT payment_id FROM payments
+				`SELECT payment_id, payment_method FROM payments
 				  WHERE status='pending' AND created_at >= NOW() - INTERVAL '${lookbackMin} minutes'
 				  ORDER BY created_at DESC
 				  LIMIT $1`,
@@ -171,7 +188,16 @@ function startPendingPoller() {
 			if (!rows || rows.length === 0) return;
 
 			for (const r of rows) {
-				const pid = String(r.payment_id);
+				const pid = r.payment_id ? String(r.payment_id) : null;
+				const method = r.payment_method;
+				
+				if (!pid) continue;
+
+				// Se o gateway global for AppMax ou o método for cartão ou o ID não for numérico (Mercado Pago), ignora
+				if (process.env.CHECKOUT_GATEWAY === 'appmax' || method === 'credit_card' || !/^\d+$/.test(pid)) {
+					continue;
+				}
+
 				try {
 					const details = await withTimeout(
 						payment.get({ id: pid }),
@@ -294,26 +320,23 @@ app.get('/admin/produtos/novo', requireAuth, (req, res) => {
 	res.render('admin_product_create', { products, nextId });
 });
 
-app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'productImage', maxCount: 1 }, { name: 'thumbImages', maxCount: 5 }]), (req, res) => {
+app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), (req, res) => {
 	const {
 		id, name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
 		orderbump, upsell
 	} = req.body;
 
-	let imagePath = req.body.image || '';
-	if (req.files && req.files['productImage']) {
-		imagePath = 'produtos/' + req.files['productImage'][0].filename;
-	}
-
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
+	thumbPaths = thumbPaths.map(t => t.trim()).filter(Boolean);
+
 	if (req.files && req.files['thumbImages']) {
 		req.files['thumbImages'].forEach(file => {
 			thumbPaths.push('produtos/' + file.filename);
 		});
 	}
-	// Limita a 5 miniaturas para não quebrar o layout
-	thumbPaths = thumbPaths.slice(0, 5);
+
+	const imagePath = thumbPaths[0] || '';
 
 	let parsedQuestions = [];
 	if (req.body.questions && Array.isArray(req.body.questions)) {
@@ -371,7 +394,7 @@ app.get('/admin/produtos/editar/:id', requireAuth, (req, res) => {
 	res.render('admin_product_edit', { product, products });
 });
 
-app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'productImage', maxCount: 1 }, { name: 'thumbImages', maxCount: 5 }]), (req, res) => {
+app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), (req, res) => {
 	const index = products.findIndex(p => p.id === req.params.id);
 	if (index === -1) return res.status(404).send('Produto não encontrado');
 
@@ -381,19 +404,16 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'prod
 		orderbump, upsell
 	} = req.body;
 
-	let imagePath = req.body.image || products[index].image;
-	if (req.files && req.files['productImage']) {
-		imagePath = 'produtos/' + req.files['productImage'][0].filename;
-	}
-
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
+	thumbPaths = thumbPaths.map(t => t.trim()).filter(Boolean);
+
 	if (req.files && req.files['thumbImages']) {
 		req.files['thumbImages'].forEach(file => {
 			thumbPaths.push('produtos/' + file.filename);
 		});
 	}
-	// Limita a 5 miniaturas para não quebrar o layout
-	thumbPaths = thumbPaths.slice(0, 5);
+
+	const imagePath = thumbPaths[0] || '';
 
 	let parsedQuestions = [];
 	if (req.body.questions && Array.isArray(req.body.questions)) {
@@ -441,6 +461,14 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'prod
 	}
 });
 
+// Admin - Upload AJAX para Miniaturas/Imagens
+app.post('/admin/upload-ajax', requireAuth, upload.single('imageFile'), (req, res) => {
+	if (!req.file) {
+		return res.status(400).json({ success: false, error: 'Nenhum arquivo enviado' });
+	}
+	res.json({ success: true, path: 'produtos/' + req.file.filename });
+});
+
 // Admin - Alternar Status (Ativo/Inativo)
 app.post('/admin/produtos/status/:id', requireAuth, (req, res) => {
 	const index = products.findIndex(p => p.id === req.params.id);
@@ -484,8 +512,10 @@ app.get('/produto/:id', (req, res) => {
 	if (product.relationProducts && product.relationProducts.length > 0) {
 		relatedProducts = activeProducts.filter(p => product.relationProducts.includes(p.id));
 	} else {
-		// Pega até 4 produtos diferentes do atual automaticamente
-		relatedProducts = activeProducts.filter(p => p.id !== product.id).slice(0, 4);
+		// Pega até 4 produtos diferentes do atual de forma aleatória
+		const otherProducts = activeProducts.filter(p => p.id !== product.id);
+		const shuffled = [...otherProducts].sort(() => 0.5 - Math.random());
+		relatedProducts = shuffled.slice(0, 4);
 	}
 
 	const orderbumpProduct = product.orderbump ? activeProducts.find(p => p.id === product.orderbump) : null;
@@ -579,6 +609,19 @@ app.post('/buy/:id', async (req, res) => {
 			}
 		}
 
+		// Se o gateway configurado for AppMax
+		if (process.env.CHECKOUT_GATEWAY === 'appmax') {
+			const accessToken = generateAccessToken();
+			const finalTarget = `/funil/${accessToken}`;
+			await pool.query(
+				`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name)
+				 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8)`,
+				[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null]
+			);
+			return res.redirect(`/checkout/${accessToken}`);
+		}
+
+		// Fluxo Legado: Mercado Pago
 		const requireCpf = String(process.env.MP_REQUIRE_CPF || '').toLowerCase() === 'true';
 		if (requireCpf && (!cpf || cpf.length < 11)) {
 			return res.status(400).send('CPF é obrigatório para este produto.');
@@ -613,6 +656,185 @@ app.post('/buy/:id', async (req, res) => {
 		return res.status(500).send(`Erro ao criar pagamento PIX: ${message}`);
 	}
 });
+
+// GET /checkout/:token - Renderiza tela de pagamento do AppMax
+app.get('/checkout/:token', async (req, res) => {
+	try {
+		const { token } = req.params;
+		const { rows } = await pool.query(
+			`SELECT * FROM payments WHERE access_token = $1`,
+			[token]
+		);
+		const row = rows[0];
+		if (!row) return res.status(404).send('Token de checkout inválido');
+
+		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		if (!product) return res.status(404).send('Produto não encontrado');
+
+		return res.render('checkout_payment', {
+			payment: row,
+			product,
+			amount: row.amount / 100,
+			token
+		});
+	} catch (err) {
+		console.error('Erro ao carregar checkout:', err);
+		return res.status(500).send('Erro ao carregar checkout');
+	}
+});
+
+// POST /checkout/pix/:token - Cria o pagamento Pix na AppMax via AJAX
+app.post('/checkout/pix/:token', async (req, res) => {
+	try {
+		const { token } = req.params;
+		const { rows } = await pool.query(
+			`SELECT * FROM payments WHERE access_token = $1`,
+			[token]
+		);
+		const row = rows[0];
+		if (!row) return res.status(404).json({ error: 'Checkout não encontrado' });
+
+		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+
+		const amount = row.amount / 100;
+
+		// 1. Cadastra Cliente na AppMax
+		const customerId = await appmaxService.createCustomer({
+			name: row.email.split('@')[0],
+			email: row.email,
+			phone: row.whatsapp || '',
+			document_number: req.body.cpf || ''
+		});
+
+		// 2. Cria o Pedido na AppMax
+		const orderId = await appmaxService.createOrder({
+			customer_id: customerId,
+			product: {
+				id: product.id,
+				name: product.nameSoft || product.name
+			},
+			amount: amount
+		});
+
+		// 3. Processa Pagamento Pix na AppMax
+		const pixResult = await appmaxService.createPixPayment({
+			order_id: orderId,
+			customer_id: customerId,
+			document_number: req.body.cpf || ''
+		});
+
+		// Atualiza o banco de dados local
+		await pool.query(
+			`UPDATE payments SET payment_id = $1, payment_method = 'pix' WHERE access_token = $2`,
+			[pixResult.payment_id.toString(), token]
+		);
+
+		return res.json({
+			success: true,
+			payment_id: pixResult.payment_id,
+			qr_code: pixResult.qr_code,
+			qr_code_base64: pixResult.qr_code_base64,
+			status: pixResult.status,
+			acesso_url: `/acesso/${token}`,
+			status_url: `/status/${pixResult.payment_id}`
+		});
+	} catch (err) {
+		console.error('Erro ao gerar Pix no checkout:', err.message);
+		return res.status(500).json({ error: err.message || 'Erro ao gerar Pix' });
+	}
+});
+
+// POST /checkout/card/:token - Cria pagamento de Cartão de Crédito na AppMax via AJAX
+app.post('/checkout/card/:token', async (req, res) => {
+	try {
+		const { token } = req.params;
+		const {
+			cardName,
+			cardNumber,
+			cardCvv,
+			cardMonth,
+			cardYear,
+			installments,
+			cpf
+		} = req.body;
+
+		const { rows } = await pool.query(
+			`SELECT * FROM payments WHERE access_token = $1`,
+			[token]
+		);
+		const row = rows[0];
+		if (!row) return res.status(404).json({ error: 'Checkout não encontrado' });
+
+		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+
+		const amount = row.amount / 100;
+
+		// 1. Cadastra Cliente na AppMax
+		const customerId = await appmaxService.createCustomer({
+			name: cardName || row.email.split('@')[0],
+			email: row.email,
+			phone: row.whatsapp || '',
+			document_number: cpf || ''
+		});
+
+		// 2. Cria o Pedido na AppMax
+		const orderId = await appmaxService.createOrder({
+			customer_id: customerId,
+			product: {
+				id: product.id,
+				name: product.nameSoft || product.name
+			},
+			amount: amount
+		});
+
+		// 3. Tokeniza o cartão na AppMax
+		const cardToken = await appmaxService.tokenizeCard({
+			name: cardName,
+			number: cardNumber,
+			cvv: cardCvv,
+			month: cardMonth,
+			year: cardYear
+		});
+
+		// 4. Executa Pagamento no Cartão
+		const cardResult = await appmaxService.createCardPayment({
+			order_id: orderId,
+			customer_id: customerId,
+			token: cardToken,
+			cvv: cardCvv,
+			installments: installments,
+			document_number: cpf
+		});
+
+		// Atualiza banco de dados local
+		await pool.query(
+			`UPDATE payments SET payment_id = $1, payment_method = 'credit_card' WHERE access_token = $2`,
+			[cardResult.payment_id.toString(), token]
+		);
+
+		// Se o status retornado for aprovado/autorizado, marca como pago imediatamente e finaliza
+		if (cardResult.status === 'approved' || cardResult.status === 'paid' || cardResult.status === 'authorized') {
+			await handlePaymentApproved(cardResult.payment_id.toString());
+			return res.json({
+				success: true,
+				status: 'paid',
+				acesso_url: `/acesso/${token}`
+			});
+		} else {
+			return res.json({
+				success: false,
+				status: cardResult.status || 'pending',
+				message: 'O pagamento está em análise ou foi recusado pela operadora do cartão.'
+			});
+		}
+	} catch (err) {
+		console.error('Erro ao processar cartão no checkout:', err.message);
+		return res.status(500).json({ error: err.message || 'Erro ao processar pagamento' });
+	}
+});
+
 
 // Rota do funil (Upsell ou Tutorial)
 app.get('/funil/:token', async (req, res) => {
@@ -782,6 +1004,29 @@ app.post('/webhook/mercadopago', async (req, res) => {
 	} catch (err) {
 		console.error('Erro webhook:', err);
 		// Mesmo em erro, responda 200 para evitar loop; registre para reprocessar se necessário
+		return res.status(200).json({ received: true });
+	}
+});
+
+// POST /webhook/appmax - recebe eventos e confirma status da AppMax
+app.post('/webhook/appmax', async (req, res) => {
+	try {
+		console.log('Recebendo webhook da AppMax...', req.body);
+		const body = req.body || {};
+		const status = body.status || (body.data && body.data.status);
+		const paymentId = body.id || body.payment_id || (body.data && body.data.id) || (body.data && body.data.order_id);
+
+		if (paymentId) {
+			const isApproved = ['aprovado', 'approved', 'pago', 'paid', 'autorizado', 'authorized'].includes(String(status).toLowerCase());
+			if (isApproved) {
+				console.log(`Webhook AppMax - Aprovando pagamento ${paymentId}`);
+				await handlePaymentApproved(paymentId.toString());
+			}
+		}
+
+		return res.status(200).json({ received: true });
+	} catch (err) {
+		console.error('Erro no webhook da AppMax:', err);
 		return res.status(200).json({ received: true });
 	}
 });

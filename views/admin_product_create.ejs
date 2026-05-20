@@ -123,34 +123,35 @@
                 <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b pb-2"><i class="fas fa-link text-tech-blue mr-2"></i> Links e Mídias</h2>
                 <div class="grid grid-cols-1 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">URL de Download do Produto</label>
-                        <input type="url" name="urlProduto" placeholder="Link do Google Drive ou semelhante" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
-                    </div>
-                    <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">URL do Vídeo Tutorial</label>
                         <input type="url" name="tutorialVideo" placeholder="Link do YouTube" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
                     </div>
+                    
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Imagem Principal (Caminho ou URL)</label>
-                        <input type="text" name="image" placeholder="Ex: office/office.webp" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Fazer Upload da Imagem</label>
-                        <input type="file" name="productImage" accept="image/*" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
-                        <p class="text-xs text-blue-500 mt-1"><i class="fas fa-info-circle"></i> A imagem precisa ter pelo menos 500px x 500px para melhor qualidade.</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Fazer Upload de Miniaturas (Galeria)</label>
-                        <input type="file" name="thumbImages" multiple accept="image/*" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
-                        <p class="text-xs text-blue-500 mt-1"><i class="fas fa-info-circle"></i> Máximo de 5 imagens para a galeria.</p>
-                    </div>
-                    <div id="thumbs-container" class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Miniaturas Adicionais (Caminhos/URLs)</label>
-                        <div class="flex gap-2">
-                            <input type="text" name="thumbs[]" placeholder="Caminho/URL da miniatura" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Imagens do Produto (Galeria / Miniaturas)</label>
+                        <p class="text-xs text-slate-500 mb-4">A primeira imagem da esquerda (borda azul com etiqueta principal) será a imagem principal do produto no site. Arraste e solte para reordenar.</p>
+                        
+                        <!-- Upload Container de Miniaturas -->
+                        <div class="mb-4">
+                            <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-tech-blue bg-slate-50 hover:bg-blue-50/50 rounded-xl p-6 cursor-pointer transition group">
+                                <i class="fas fa-images text-slate-400 group-hover:text-tech-blue text-3xl mb-2 transition"></i>
+                                <span class="text-sm font-bold text-slate-600 group-hover:text-tech-blue transition">Fazer Upload de Imagens (Galeria)</span>
+                                <span class="text-xs text-slate-400 mt-1">Selecione uma ou mais imagens locais</span>
+                                <input type="file" id="thumbImagesInput" multiple accept="image/*" class="hidden" onchange="handleLocalFilesSelect(this)">
+                            </label>
+                        </div>
+
+                        <!-- Adicionar por URL -->
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="thumbUrlInput" placeholder="Adicionar por caminho ou URL externa (Ex: produtos/meu_produto.webp)" class="flex-grow px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                            <button type="button" onclick="addThumbUrl()" class="px-6 py-2 bg-tech-blue hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-md shadow-blue-500/10"><i class="fas fa-plus mr-1"></i> Adicionar URL</button>
+                        </div>
+
+                        <!-- Preview Container Horizontal -->
+                        <div id="thumbnails-preview-container" class="flex flex-wrap gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl min-h-[140px] items-center">
+                            <!-- Inserido dinamicamente via JS -->
                         </div>
                     </div>
-                    <button type="button" onclick="addThumb()" class="text-sm text-tech-blue font-bold text-left hover:underline w-max"><i class="fas fa-plus"></i> Adicionar outra miniatura</button>
                 </div>
             </div>
 
@@ -303,16 +304,202 @@
             pinionCount++;
         }
 
-        function addThumb() {
-            const container = document.getElementById('thumbs-container');
-            const html = `
-                <div class="flex gap-2 mt-2">
-                    <input type="text" name="thumbs[]" placeholder="Caminho/URL da miniatura" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
-                    <button type="button" onclick="this.parentElement.remove()" class="px-4 bg-red-50 text-red-500 rounded-lg border border-red-200 hover:bg-red-100"><i class="fas fa-trash"></i></button>
+        // --- GERENCIADOR DE MINIATURAS E DRAG & DROP ---
+        
+        let draggedElement = null;
+
+        function initDragAndDrop() {
+            const container = document.getElementById('thumbnails-preview-container');
+            const items = container.querySelectorAll('.thumb-preview-card');
+            
+            items.forEach(item => {
+                item.removeAttribute('draggable');
+                item.setAttribute('draggable', 'true');
+                
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            e.dataTransfer.effectAllowed = 'move';
+            this.style.opacity = '0.5';
+            this.classList.add('scale-95');
+        }
+
+        function handleDragEnd() {
+            draggedElement = null;
+            this.style.opacity = '1';
+            this.classList.remove('scale-95');
+            
+            const container = document.getElementById('thumbnails-preview-container');
+            container.querySelectorAll('.thumb-preview-card').forEach(card => {
+                card.classList.remove('bg-blue-50/50', 'border-blue-300');
+            });
+
+            updateThumbsOrderAndStyles();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (this !== draggedElement) {
+                this.classList.add('bg-blue-50/50', 'border-blue-300');
+            }
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('bg-blue-50/50', 'border-blue-300');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('bg-blue-50/50', 'border-blue-300');
+            
+            if (draggedElement && draggedElement !== this) {
+                const container = document.getElementById('thumbnails-preview-container');
+                const allCards = Array.from(container.querySelectorAll('.thumb-preview-card'));
+                const indexDragged = allCards.indexOf(draggedElement);
+                const indexTarget = allCards.indexOf(this);
+                
+                if (indexDragged < indexTarget) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+            }
+        }
+
+        function updateThumbsOrderAndStyles() {
+            const container = document.getElementById('thumbnails-preview-container');
+            const cards = container.querySelectorAll('.thumb-preview-card');
+            
+            cards.forEach((card, index) => {
+                const wrapper = card.querySelector('.preview-border-wrapper');
+                const badge = card.querySelector('.main-badge');
+                
+                if (index === 0) {
+                    wrapper.className = 'preview-border-wrapper relative border-4 border-tech-blue rounded-lg overflow-hidden w-24 h-24 bg-white flex items-center justify-center transition-all duration-300 shadow-md';
+                    if (badge) badge.style.display = 'block';
+                } else {
+                    wrapper.className = 'preview-border-wrapper relative border border-slate-300 rounded-lg overflow-hidden w-24 h-24 bg-white flex items-center justify-center transition-all duration-300 hover:border-slate-400';
+                    if (badge) badge.style.display = 'none';
+                }
+            });
+        }
+
+        function removeThumbCard(btn) {
+            const card = btn.closest('.thumb-preview-card');
+            if (card) {
+                card.remove();
+                updateThumbsOrderAndStyles();
+            }
+        }
+
+        function createThumbCardHtml(value, isTemp = false) {
+            let imgSrc = value;
+            if (value && !value.startsWith('http') && !value.startsWith('data:')) {
+                imgSrc = '/images/' + value;
+            }
+
+            const tempClass = isTemp ? 'opacity-60 pointer-events-none' : '';
+            const loadingOverlay = isTemp ? `
+                <div class="absolute inset-0 bg-white/70 flex items-center justify-center">
+                    <i class="fas fa-spinner fa-spin text-tech-blue text-xl"></i>
+                </div>
+            ` : '';
+
+            return `
+                <div class="thumb-preview-card cursor-move select-none w-24 flex flex-col items-center gap-1 transition-all ${tempClass}">
+                    <div class="preview-border-wrapper relative border border-slate-300 rounded-lg overflow-hidden w-24 h-24 bg-white flex items-center justify-center">
+                        <img src="${imgSrc}" class="object-cover w-full h-full">
+                        <span class="main-badge absolute top-1 left-1 bg-tech-blue text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow" style="display: none;">Capa</span>
+                        <button type="button" onclick="removeThumbCard(this)" class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow hover:scale-110 transition"><i class="fas fa-times"></i></button>
+                        ${loadingOverlay}
+                    </div>
+                    <input type="hidden" name="thumbs[]" value="${isTemp ? '' : value}">
                 </div>
             `;
-            container.insertAdjacentHTML('beforeend', html);
         }
+
+        function addThumbUrl() {
+            const urlInput = document.getElementById('thumbUrlInput');
+            const value = urlInput.value.trim();
+            if (!value) return;
+
+            const container = document.getElementById('thumbnails-preview-container');
+            const html = createThumbCardHtml(value);
+            container.insertAdjacentHTML('beforeend', html);
+            
+            urlInput.value = '';
+            initDragAndDrop();
+            updateThumbsOrderAndStyles();
+        }
+
+        async function handleLocalFilesSelect(input) {
+            if (!input.files || input.files.length === 0) return;
+            
+            const container = document.getElementById('thumbnails-preview-container');
+            
+            for (let file of input.files) {
+                const tempId = 'temp-' + Date.now() + '-' + Math.round(Math.random() * 1000);
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    const tempHtml = createThumbCardHtml(e.target.result, true);
+                    const tempDiv = document.createElement('div');
+                    tempDiv.id = tempId;
+                    tempDiv.innerHTML = tempHtml.trim();
+                    const cardElement = tempDiv.firstChild;
+                    container.appendChild(cardElement);
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('imageFile', file);
+                        
+                        const response = await fetch('/admin/upload-ajax', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) throw new Error('Falha no upload');
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            const permanentHtml = createThumbCardHtml(data.path);
+                            cardElement.outerHTML = permanentHtml;
+                            initDragAndDrop();
+                            updateThumbsOrderAndStyles();
+                        } else {
+                            cardElement.remove();
+                            alert('Erro ao enviar imagem: ' + data.error);
+                        }
+                    } catch (err) {
+                        cardElement.remove();
+                        alert('Erro na conexão do upload.');
+                    }
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            input.value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDragAndDrop();
+            updateThumbsOrderAndStyles();
+        });
     </script>
 </body>
 </html>

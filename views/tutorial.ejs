@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso - <%= product.name %></title>
+    <title>Acesso - <%= product.name %>
+    </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .video-container {
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 */
+            padding-bottom: 56.25%;
+            /* 16:9 */
             height: 0;
             overflow: hidden;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+
         .video-container iframe {
             position: absolute;
             top: 0;
@@ -23,7 +27,7 @@
             height: 100%;
             border: 0;
         }
-        
+
         /* Carousel lento */
         .slider {
             width: 100%;
@@ -33,18 +37,22 @@
             border-top: 1px solid #e2e8f0;
             margin-top: 40px;
         }
+
         .slide-track {
             display: flex;
             width: calc(250px * 14);
             animation: scroll 40s linear infinite;
         }
+
         .slide-track:hover {
             animation-play-state: paused;
         }
+
         .slide {
             width: 250px;
             padding: 0 15px;
         }
+
         .product-card {
             background: white;
             border: 1px solid #e2e8f0;
@@ -56,29 +64,38 @@
             display: flex;
             flex-direction: column;
         }
+
         .product-card:hover {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             border-color: #cbd5e1;
         }
+
         .product-card img {
             max-width: 100%;
             height: 120px;
             object-fit: contain;
             margin: 0 auto 10px;
         }
-        
+
         @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-250px * 7)); }
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(calc(-250px * 7));
+            }
         }
     </style>
 </head>
+
 <body class="bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen">
 
     <header class="bg-white border-b border-slate-200 py-4 shadow-sm">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-blue-600">ComprasLivre</h1>
-            <a href="https://wa.me/5581985315669" target="_blank" class="flex items-center gap-2 text-sm font-bold bg-green-50 text-green-600 px-4 py-2 rounded-full border border-green-200 hover:bg-green-100 transition">
+            <h1 class="text-xl font-bold text-blue-600"><a href="/">ComprasLivre</a></h1>
+            <a href="https://wa.me/5581985315669" target="_blank"
+                class="flex items-center gap-2 text-sm font-bold bg-green-50 text-green-600 px-4 py-2 rounded-full border border-green-200 hover:bg-green-100 transition">
                 <i class="fab fa-whatsapp text-lg"></i> Falar com Suporte
             </a>
         </div>
@@ -90,45 +107,48 @@
             <p class="text-slate-600">Assista ao vídeo abaixo para aprender como ativar e usar o seu software.</p>
         </div>
 
-        <% 
-            function getYoutubeId(url) {
-                if (!url) return "";
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = url.match(regExp);
-                return (match && match[2].length === 11) ? match[2] : null;
-            }
-            let videoId = getYoutubeId(product.tutorialVideo);
-        %>
+        <% function getYoutubeId(url) { if (!url) return "" ; const
+            regExp=/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/; const match=url.match(regExp);
+            return (match && match[2].length===11) ? match[2] : null; } let videoId=getYoutubeId(product.tutorialVideo);
+            %>
 
-        <% if(videoId) { %>
-            <div class="video-container mb-8">
-                <iframe src="https://www.youtube.com/embed/<%= videoId %>?rel=0" allowfullscreen></iframe>
-            </div>
-        <% } else { %>
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mb-8">
-                <h3 class="font-bold text-yellow-800">Vídeo não disponível</h3>
-                <p class="text-yellow-700">O tutorial em vídeo não foi encontrado. Acesse as informações adicionais abaixo.</p>
-            </div>
-        <% } %>
-
-        <% if(product.moreInfo) { %>
-            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 mt-8 prose max-w-none">
-                <h3 class="text-xl font-bold border-b pb-2 mb-4"><i class="fas fa-info-circle text-blue-500"></i> Informações Adicionais / Licença</h3>
-                <div class="text-slate-700">
-                    <%- product.moreInfo %>
+            <% if(videoId) { %>
+                <div class="video-container mb-8">
+                    <iframe src="https://www.youtube.com/embed/<%= videoId %>?rel=0" allowfullscreen></iframe>
                 </div>
-            </div>
-        <% } %>
-        
-        <div class="mt-8 bg-blue-50 border border-blue-100 p-6 rounded-xl flex flex-col md:flex-row items-center gap-6">
-            <div class="flex-grow">
-                <h3 class="font-bold text-lg text-slate-800">Precisa de Ajuda?</h3>
-                <p class="text-slate-600 text-sm">Se você teve algum problema na instalação ou na chave, nossa equipe de suporte está online para resolver agora mesmo.</p>
-            </div>
-            <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20preciso%20de%20suporte%20com%20meu%20produto%20<%= encodeURIComponent(product.name) %>" target="_blank" class="shrink-0 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow transition flex items-center gap-2">
-                <i class="fab fa-whatsapp text-xl"></i> Suporte Especializado
-            </a>
-        </div>
+                <% } else { %>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mb-8">
+                        <h3 class="font-bold text-yellow-800">Vídeo não disponível</h3>
+                        <p class="text-yellow-700">O tutorial em vídeo não foi encontrado. Acesse as informações
+                            adicionais abaixo.</p>
+                    </div>
+                    <% } %>
+
+                        <% if(product.moreInfo) { %>
+                            <div
+                                class="bg-white p-6 rounded-xl shadow-md border border-slate-200 mt-8 prose max-w-none">
+                                <h3 class="text-xl font-bold border-b pb-2 mb-4"><i
+                                        class="fas fa-info-circle text-blue-500"></i> Informações Adicionais / Licença
+                                </h3>
+                                <div class="text-slate-700">
+                                    <%- product.moreInfo %>
+                                </div>
+                            </div>
+                            <% } %>
+
+                                <div
+                                    class="mt-8 bg-blue-50 border border-blue-100 p-6 rounded-xl flex flex-col md:flex-row items-center gap-6">
+                                    <div class="flex-grow">
+                                        <h3 class="font-bold text-lg text-slate-800">Precisa de Ajuda?</h3>
+                                        <p class="text-slate-600 text-sm">Se você teve algum problema na instalação ou
+                                            na chave, nossa equipe de suporte está online para resolver agora mesmo.</p>
+                                    </div>
+                                    <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20preciso%20de%20suporte%20com%20meu%20produto%20<%= encodeURIComponent(product.name) %>"
+                                        target="_blank"
+                                        class="shrink-0 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow transition flex items-center gap-2">
+                                        <i class="fab fa-whatsapp text-xl"></i> Suporte Especializado
+                                    </a>
+                                </div>
     </main>
 
     <!-- Produtos Relacionados (Carrossel Lento) -->
@@ -138,28 +158,38 @@
         </div>
         <div class="slide-track">
             <!-- Duplicamos os slides para criar o loop infinito -->
-            <% const carouselProducts = products.filter(p => p.id !== product.id).slice(0, 7); %>
-            
-            <% carouselProducts.forEach(p => { %>
-                <div class="slide">
-                    <a href="/produto/<%= p.id %>" class="product-card">
-                        <img src="/images/<%= p.image %>" alt="<%= p.name %>" onerror="this.src='/images/default.jpg'">
-                        <h4 class="text-sm font-bold text-slate-700 mb-1 line-clamp-2"><%= p.nameSoft || p.name %></h4>
-                        <p class="text-green-600 font-bold mt-auto">R$ <%= p.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
-                    </a>
-                </div>
-            <% }); %>
-            
-            <!-- Duplicata para animação -->
-            <% carouselProducts.forEach(p => { %>
-                <div class="slide">
-                    <a href="/produto/<%= p.id %>" class="product-card">
-                        <img src="/images/<%= p.image %>" alt="<%= p.name %>" onerror="this.src='/images/default.jpg'">
-                        <h4 class="text-sm font-bold text-slate-700 mb-1 line-clamp-2"><%= p.nameSoft || p.name %></h4>
-                        <p class="text-green-600 font-bold mt-auto">R$ <%= p.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
-                    </a>
-                </div>
-            <% }); %>
+            <% const carouselProducts=products.filter(p=> p.id !== product.id).slice(0, 7); %>
+
+                <% carouselProducts.forEach(p=> { %>
+                    <div class="slide">
+                        <a href="/produto/<%= p.id %>" class="product-card">
+                            <img src="<%= getImageUrl(p.image) %>" alt="<%= p.name %>"
+                                onerror="this.onerror=null; this.src='/images/LogoHeader.png';">
+                            <h4 class="text-sm font-bold text-slate-700 mb-1 line-clamp-2">
+                                <%= p.nameSoft || p.name %>
+                            </h4>
+                            <p class="text-green-600 font-bold mt-auto">R$ <%= p.price.toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2 }) %>
+                            </p>
+                        </a>
+                    </div>
+                    <% }); %>
+
+                        <!-- Duplicata para animação -->
+                        <% carouselProducts.forEach(p=> { %>
+                            <div class="slide">
+                                <a href="/produto/<%= p.id %>" class="product-card">
+                                    <img src="<%= getImageUrl(p.image) %>" alt="<%= p.name %>"
+                                        onerror="this.onerror=null; this.src='/images/LogoHeader.png';">
+                                    <h4 class="text-sm font-bold text-slate-700 mb-1 line-clamp-2">
+                                        <%= p.nameSoft || p.name %>
+                                    </h4>
+                                    <p class="text-green-600 font-bold mt-auto">R$ <%= p.price.toLocaleString('pt-BR', {
+                                            minimumFractionDigits: 2 }) %>
+                                    </p>
+                                </a>
+                            </div>
+                            <% }); %>
         </div>
     </div>
 
@@ -168,4 +198,5 @@
     </footer>
 
 </body>
+
 </html>

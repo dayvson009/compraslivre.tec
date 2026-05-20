@@ -49,7 +49,7 @@
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
             <div class="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center">
                 <div class="w-full md:w-1/2 flex justify-center">
-                    <img src="/images/<%= upsellProduct.image %>" alt="<%= upsellProduct.name %>" class="rounded-xl shadow-lg w-full max-w-sm border border-slate-100">
+                    <img src="<%= getImageUrl(upsellProduct.image) %>" alt="<%= upsellProduct.name %>" class="rounded-xl shadow-lg w-full max-w-sm border border-slate-100">
                 </div>
                 
                 <div class="w-full md:w-1/2 space-y-4">

@@ -40,7 +40,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <% products.slice(0, 5).forEach(product => { %>
                     <a href="/produto/<%= product.id %>" class="bg-white rounded-lg p-4 product-card border border-slate-100 flex flex-col h-full">
-                        <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="w-full h-40 object-contain mb-4">
+                        <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="w-full h-40 object-contain mb-4">
                         <h3 class="text-sm font-medium text-slate-700 line-clamp-2 mb-2"><%= product.name %></h3>
                         <div class="mt-auto">
                             <p class="text-xs text-slate-400 line-through">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
@@ -66,7 +66,7 @@
                         <% products.filter(p => p.priceBefore > p.price).slice(0, 2).forEach(product => { %>
                             <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 flex flex-col sm:flex-row gap-6 border border-white/20 hover:bg-white/20 transition cursor-pointer" onclick="window.location.href='/produto/<%= product.id %>'">
                                 <div class="bg-white rounded-lg p-4 shrink-0 flex items-center justify-center w-32 h-32 mx-auto sm:mx-0">
-                                    <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="max-w-full max-h-full object-contain">
+                                    <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="max-w-full max-h-full object-contain">
                                 </div>
                                 <div class="flex flex-col justify-center text-center sm:text-left">
                                     <span class="bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-1 rounded w-fit mx-auto sm:mx-0 mb-2">OFERTA IMPERDÍVEL</span>
@@ -94,7 +94,7 @@
                 <% products.forEach(product => { %>
                     <a href="/produto/<%= product.id %>" class="bg-white rounded-lg p-4 product-card border border-slate-100 flex flex-col h-full">
                         <div class="relative mb-4">
-                            <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="w-full h-32 object-contain">
+                            <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="w-full h-32 object-contain">
                             <% if (product.priceBefore > product.price) { %>
                                 <span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                                     <%= Math.round((1 - product.price / product.priceBefore) * 100) %>% OFF

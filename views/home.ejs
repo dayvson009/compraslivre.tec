@@ -328,7 +328,7 @@
                 <% products.slice(0, 4).forEach(product => { %>
                     <div class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
                         <div class="h-32 flex items-center justify-center mb-4">
-                            <img src="/images/<%= product.image %>" class="max-h-full object-contain mix-blend-multiply rounded-lg">
+                            <img src="<%= getImageUrl(product.image) %>" class="max-h-full object-contain mix-blend-multiply rounded-lg">
                         </div>
                         <h4 class="font-bold text-lg text-slate-800 line-clamp-1"><%= product.name %></h4>
                         <p class="text-xs text-slate-500 mb-6 flex-grow"><%= product.development %> • <%= product.version %></p>

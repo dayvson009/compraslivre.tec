@@ -5,13 +5,11 @@
     "priceBefore": 89.99,
     "price": 59.99,
     "urlProduto": "",
-    "tutorialVideo": "https://compraslivretec.siteee.com.br/tutorial?v=N5fM2rfP9E0&t",
+    "tutorialVideo": "https://www.youtube.com/watch?v=N5fM2rfP9E0&t",
     "moreInfo": "Gostaria de tirar mais alguma dúvida? Suporte </b>SoftsTech</b> está aqui pra te ajudar ⬇️",
-    "image": "produtos/corel/corel_mlb.png",
+    "image": "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQtMZ-B9eB-SbgREtnScb08tuxmhowWtvabg0vhHR79S1OPZRkvmq2LFUovuWdyQFlj2kY4Xy2GEwPdEq4srn-gXvAnX3g7EJwgTuviPRkrFggR9Y0kBCteW2CZdxU2nrBsYvyyFno&usqp=CAc",
     "thumbs": [
-      "produtos/corel/corel_mlb.png",
-      "produtos/corel/corelpt.jpeg",
-      "produtos/corel/corel25.png"
+      "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQtMZ-B9eB-SbgREtnScb08tuxmhowWtvabg0vhHR79S1OPZRkvmq2LFUovuWdyQFlj2kY4Xy2GEwPdEq4srn-gXvAnX3g7EJwgTuviPRkrFggR9Y0kBCteW2CZdxU2nrBsYvyyFno&usqp=CAc"
     ],
     "development": "Corel",
     "nameSoft": "CorelDRAW",
@@ -78,11 +76,9 @@
     "urlProduto": "",
     "tutorialVideo": "",
     "moreInfo": "Gostaria de tirar mais alguma dúvida? Suporte </b>SoftsTech</b> está aqui pra te ajudar ⬇️",
-    "image": "produtos/camtasia/fotomlb1.jpg",
+    "image": "https://http2.mlstatic.com/D_NQ_NP_992589-MLB107358993979_022026-O.webp",
     "thumbs": [
-      "produtos/camtasia/fotomlb1.jpg",
-      "produtos/camtasia/camtasia2.webp",
-      "produtos/camtasia/mlbcamtasia3.webp"
+      "https://http2.mlstatic.com/D_NQ_NP_992589-MLB107358993979_022026-O.webp"
     ],
     "development": "TechSmith",
     "nameSoft": "Camtasia",
@@ -143,14 +139,12 @@
     "name": "MICROSOFT OFFICE - 2024 (PROFESSIONAL PLUS 2024 / LICENÇA VITALÍCIA)",
     "priceBefore": 104.99,
     "price": 74.99,
-    "urlProduto": "https://drive.google.com/file/d/1P1cJ90ysW4gVQCPxPs22eX7fNZAXWxBS/view?usp=drive_link",
+    "urlProduto": "",
     "tutorialVideo": "https://compraslivretec.siteee.com.br/tutorial?v=N5fM2rfP9E0&t",
     "moreInfo": "Gostaria de tirar mais alguma dúvida? Suporte </b>SoftsTech</b> está aqui pra te ajudar ⬇️",
-    "image": "produtos/office/office.webp",
+    "image": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcTMWiUv-OfuZCNkPPhEffWWrtRwZo_tiYtlaCizvkGpLbhKKkhROl5KU_0RbOmDlvN8gEzSeU_ev1_vF3hnBAvIciGhMV3NwFvIy-7epSe8iAjaSYWQrccKTBIu3ljbInLRe8oyLmY&usqp=CAc",
     "thumbs": [
-      "produtos/office/office.webp",
-      "produtos/office/office.webp",
-      "produtos/office/office.webp"
+      "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcTMWiUv-OfuZCNkPPhEffWWrtRwZo_tiYtlaCizvkGpLbhKKkhROl5KU_0RbOmDlvN8gEzSeU_ev1_vF3hnBAvIciGhMV3NwFvIy-7epSe8iAjaSYWQrccKTBIu3ljbInLRe8oyLmY&usqp=CAc"
     ],
     "development": "Microsoft",
     "nameSoft": "Office Pro Plus",
@@ -265,7 +259,7 @@
     "moreInfo": "Gostaria de tirar mais alguma dúvida? Suporte </b>SoftsTech</b> está aqui pra te ajudar ⬇️",
     "image": "produtos/1778611954674-913820323.webp",
     "thumbs": [
-      ""
+      "produtos/1778611954674-913820323.webp"
     ],
     "development": "Lab Center Eletronics",
     "nameSoft": "Proteus",

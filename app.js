@@ -284,6 +284,17 @@ app.get('/produtos', (req, res) => {
 	res.render('products_all', { products: products.filter(p => p.active !== false) });
 });
 
+// Termos de Uso
+app.get('/termos', (req, res) => {
+	res.render('termos');
+});
+
+// Política de Privacidade
+app.get('/privacidade', (req, res) => {
+	res.render('privacidade');
+});
+
+
 // Admin - Login
 app.get('/admin/login', (req, res) => {
 	if (req.session && req.session.admin) {

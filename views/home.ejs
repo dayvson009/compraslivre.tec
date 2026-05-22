@@ -102,7 +102,7 @@
                         Windows e MAC. Atendimento humanizado, rápido e seguro.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="https://wa.me/SEUNUMERO"
+                        <a href="https://wa.me/5581985315669"
                             class="bg-tech-blue hover-bg-tech-blue text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl shadow-blue-500/30 flex items-center justify-center gap-2">
                             <i class="fab fa-whatsapp text-xl"></i> Falar com Especialista
                         </a>
@@ -325,23 +325,30 @@
                 ferramentas mais requisitadas por profissionais.</p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <% products.slice(0, 4).forEach(product => { %>
-                    <div class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                <% products.slice(0, 4).forEach(product=> { %>
+                    <div
+                        class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
                         <div class="h-32 flex items-center justify-center mb-4">
-                            <img src="<%= getImageUrl(product.image) %>" class="max-h-full object-contain mix-blend-multiply rounded-lg">
+                            <img src="<%= getImageUrl(product.image) %>"
+                                class="max-h-full object-contain mix-blend-multiply rounded-lg">
                         </div>
-                        <h4 class="font-bold text-lg text-slate-800 line-clamp-1"><%= product.name %></h4>
-                        <p class="text-xs text-slate-500 mb-6 flex-grow"><%= product.development %> • <%= product.version %></p>
+                        <h4 class="font-bold text-lg text-slate-800 line-clamp-1">
+                            <%= product.name %>
+                        </h4>
+                        <p class="text-xs text-slate-500 mb-6 flex-grow">
+                            <%= product.development %> • <%= product.version %>
+                        </p>
                         <a href="/produto/<%= product.id %>"
                             class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
                             Solicitar
                         </a>
                     </div>
-                <% }) %>
+                    <% }) %>
             </div>
 
             <div class="mt-12">
-                <a href="/produtos" class="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition shadow-xl">
+                <a href="/produtos"
+                    class="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition shadow-xl">
                     Ver Todos os Produtos <i class="fas fa-th-large"></i>
                 </a>
             </div>
@@ -566,8 +573,8 @@
                 </div>
                 <div class="w-px h-4 bg-slate-700 hidden sm:block"></div>
                 <div class="text-xs flex gap-6 uppercase font-bold tracking-widest">
-                    <a href="#" class="hover:text-white transition">Termos de Uso</a>
-                    <a href="#" class="hover:text-white transition">Privacidade</a>
+                    <a href="/termos" class="hover:text-white transition">Termos de Uso</a>
+                    <a href="/privacidade" class="hover:text-white transition">Privacidade</a>
                 </div>
             </div>
         </div>

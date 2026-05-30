@@ -67,7 +67,7 @@ app.use(session({
 
 // Middleware de helper global para imagens
 app.use((req, res, next) => {
-	res.locals.getImageUrl = function(imagePath) {
+	res.locals.getImageUrl = function (imagePath) {
 		if (!imagePath) return '/images/default.jpg';
 		imagePath = imagePath.trim();
 		if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:')) {
@@ -88,7 +88,7 @@ function requireAuth(req, res, next) {
 	return res.redirect('/admin/login');
 }
 
-// DB Postgres
+// DB Postgres 
 const pool = new Pool(process.env.DATABASE_URL ? {
 	connectionString: process.env.DATABASE_URL,
 	ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : undefined
@@ -190,7 +190,7 @@ function startPendingPoller() {
 			for (const r of rows) {
 				const pid = r.payment_id ? String(r.payment_id) : null;
 				const method = r.payment_method;
-				
+
 				if (!pid) continue;
 
 				// Se o gateway global for AppMax ou o método for cartão ou o ID não for numérico (Mercado Pago), ignora

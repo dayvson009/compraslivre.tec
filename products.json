@@ -789,43 +789,5 @@
         "resp": ""
       }
     ]
-  },
-  {
-    "id": "MLB2025030320",
-    "name": "CapCut Pro",
-    "priceBefore": 47,
-    "price": 17,
-    "priceUpsell": 15,
-    "urlProduto": "",
-    "tutorialVideo": "",
-    "moreInfo": "",
-    "image": "produtos/1778682248556-404288036.webp",
-    "thumbs": [
-      "produtos/1778682248556-226983512.png",
-      "produtos/1778682248557-881124942.jpg",
-      "produtos/1778682248558-424510445.webp"
-    ],
-    "development": "Capcut",
-    "nameSoft": "",
-    "version": "",
-    "licence": "",
-    "formart": "Digital",
-    "description": "Capcut Pro",
-    "orderbump": "",
-    "upsell": "",
-    "relationProducts": [],
-    "pinions": [
-      {
-        "pinion": "",
-        "rate": "5",
-        "image": ""
-      }
-    ],
-    "questions": [
-      {
-        "question": "",
-        "resp": ""
-      }
-    ]
   }
 ]

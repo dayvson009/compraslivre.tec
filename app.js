@@ -5,10 +5,6 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const session = require('express-session');
-const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
-const appmaxService = require('./services/appmax');
 
 // Configuração do Multer para upload de imagens
 const storage = multer.diskStorage({
@@ -193,8 +189,8 @@ function startPendingPoller() {
 
 				if (!pid) continue;
 
-				// Se o gateway global for AppMax ou o método for cartão ou o ID não for numérico (Mercado Pago), ignora
-				if (process.env.CHECKOUT_GATEWAY === 'appmax' || method === 'credit_card' || !/^\d+$/.test(pid)) {
+				// Se o método for cartão ou o ID não for numérico (Mercado Pago), ignora
+				if (method === 'credit_card' || !pid || !/^\d+$/.test(pid)) {
 					continue;
 				}
 
@@ -235,6 +231,36 @@ function generateAccessToken() {
 
 function generatePassword() {
 	return crypto.randomBytes(6).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+}
+
+// Auxiliar para detectar bandeira do cartão para o Mercado Pago
+function getCardBrand(cardNumber) {
+	const clean = cardNumber.replace(/\D/g, '');
+	if (/^4/.test(clean)) {
+		if (/^(401178|401179|431274|438935|451416|457393|457631|457632)/.test(clean)) {
+			return 'elo';
+		}
+		return 'visa';
+	}
+	if (/^5[1-5]/.test(clean) || /^222[1-9]/.test(clean) || /^22[3-9]/.test(clean) || /^2[3-6]/.test(clean) || /^27[0-1]/.test(clean) || /^2720/.test(clean)) {
+		if (/^(506699|5067|5090|504175)/.test(clean)) {
+			return 'elo';
+		}
+		return 'master';
+	}
+	if (/^3[47]/.test(clean)) {
+		return 'amex';
+	}
+	if (/^(606282|3841)/.test(clean)) {
+		return 'hipercard';
+	}
+	if (/^(506699|5090|504175|636368|636297|5067|4576|4011|438935|457631|457632|431274|627780)/.test(clean)) {
+		return 'elo';
+	}
+	if (/^3(?:0[0-5]|[68])/.test(clean)) {
+		return 'diners';
+	}
+	return 'visa'; // fallback
 }
 
 async function withTimeout(promise, ms, contextLabel) {
@@ -602,7 +628,6 @@ app.post('/buy/:id', async (req, res) => {
 		const { id } = req.params;
 		const email = (req.body && req.body.email) ? String(req.body.email).trim() : '';
 		const whatsapp = (req.body && req.body.whatsapp) ? String(req.body.whatsapp).trim() : '';
-		const cpf = (req.body && req.body.cpf) ? String(req.body.cpf).replace(/\D/g, '') : '';
 		const orderbumpId = (req.body && req.body.orderbumpId) ? String(req.body.orderbumpId) : null;
 
 		const product = products.find(p => p.id === id && p.active !== false);
@@ -620,51 +645,22 @@ app.post('/buy/:id', async (req, res) => {
 			}
 		}
 
-		// Se o gateway configurado for AppMax
-		if (process.env.CHECKOUT_GATEWAY === 'appmax') {
-			const accessToken = generateAccessToken();
-			const finalTarget = `/funil/${accessToken}`;
-			await pool.query(
-				`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name)
-				 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8)`,
-				[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null]
-			);
-			return res.redirect(`/checkout/${accessToken}`);
-		}
-
-		// Fluxo Legado: Mercado Pago
-		const requireCpf = String(process.env.MP_REQUIRE_CPF || '').toLowerCase() === 'true';
-		if (requireCpf && (!cpf || cpf.length < 11)) {
-			return res.status(400).send('CPF é obrigatório para este produto.');
-		}
 		if (!process.env.MP_ACCESS_TOKEN) {
 			return res.status(500).send('Configuração inválida: MP_ACCESS_TOKEN não definido.');
 		}
-		const payer =
-			requireCpf && cpf
-				? { email, identification: { type: 'CPF', number: cpf } }
-				: { email };
-		const data = await createPixAndPersist({
-			amount,
-			description,
-			targetUrl: null,
-			payer,
-			email,
-			productUrl: product.urlProduto,
-			whatsapp,
-			productName: product.nameSoft || product.name
-		});
-		return res.render('checkout', { data, product, amount, description });
+
+		// Redireciona para o checkout unificado (Pix e Cartão)
+		const accessToken = generateAccessToken();
+		const finalTarget = `/funil/${accessToken}`;
+		await pool.query(
+			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name)
+			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8)`,
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null]
+		);
+		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {
-		const status = err && (err.status || err.statusCode);
-		const message = (err && (err.message || err.code)) ||
-			(err && err.cause && err.cause[0] && (err.cause[0].description || err.cause[0].message)) ||
-			'Erro desconhecido';
-		console.error('Erro /buy:', { status, message });
-		if (message && String(message).includes('Timeout')) {
-			return res.status(504).send('Timeout ao criar pagamento PIX. Tente novamente.');
-		}
-		return res.status(500).send(`Erro ao criar pagamento PIX: ${message}`);
+		console.error('Erro /buy:', err);
+		return res.status(500).send(`Erro ao iniciar compra: ${err.message || err}`);
 	}
 });
 
@@ -694,7 +690,7 @@ app.get('/checkout/:token', async (req, res) => {
 	}
 });
 
-// POST /checkout/pix/:token - Cria o pagamento Pix na AppMax via AJAX
+// POST /checkout/pix/:token - Cria o pagamento Pix no Mercado Pago via AJAX
 app.post('/checkout/pix/:token', async (req, res) => {
 	try {
 		const { token } = req.params;
@@ -705,58 +701,69 @@ app.post('/checkout/pix/:token', async (req, res) => {
 		const row = rows[0];
 		if (!row) return res.status(404).json({ error: 'Checkout não encontrado' });
 
-		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
-		if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
-
 		const amount = row.amount / 100;
 
-		// 1. Cadastra Cliente na AppMax
-		const customerId = await appmaxService.createCustomer({
-			name: row.email.split('@')[0],
+		// Cria o Pix no Mercado Pago
+		const transactionAmount = Number(amount.toFixed(2));
+		const idempotency = crypto.randomUUID();
+
+		const payerPayload = {
 			email: row.email,
-			phone: row.whatsapp || '',
-			document_number: req.body.cpf || ''
-		});
+			first_name: row.email.split('@')[0] || 'Cliente',
+			last_name: 'ComprasLivre',
+			identification: {
+				type: 'CPF',
+				number: req.body.cpf ? req.body.cpf.replace(/\D/g, '') : '19119119100'
+			}
+		};
 
-		// 2. Cria o Pedido na AppMax
-		const orderId = await appmaxService.createOrder({
-			customer_id: customerId,
-			product: {
-				id: product.id,
-				name: product.nameSoft || product.name
-			},
-			amount: amount
-		});
+		const requestBody = {
+			transaction_amount: transactionAmount,
+			payment_method_id: 'pix',
+			description: row.description || 'PIX ComprasLivre',
+			payer: payerPayload
+		};
 
-		// 3. Processa Pagamento Pix na AppMax
-		const pixResult = await appmaxService.createPixPayment({
-			order_id: orderId,
-			customer_id: customerId,
-			document_number: req.body.cpf || ''
-		});
+		if (process.env.BASE_URL_PUBLICA) {
+			requestBody.notification_url = `${process.env.BASE_URL_PUBLICA.replace(/\/$/, '')}/webhook/mercadopago`;
+		}
+
+		console.log('Criando pagamento PIX no checkout (Mercado Pago)...', { description: requestBody.description, amount: transactionAmount });
+		const createResp = await payment.create({ body: requestBody }, { idempotencyKey: idempotency });
+
+		const mp = createResp || {};
+		const paymentId = mp.id || (mp.body && mp.body.id);
+		const pix = (mp.point_of_interaction && mp.point_of_interaction.transaction_data) ||
+			(mp.body && mp.body.point_of_interaction && mp.body.point_of_interaction.transaction_data) || {};
+		const qrCode = pix.qr_code;
+		const qrCodeBase64 = pix.qr_code_base64;
+
+		if (!paymentId || !qrCode) {
+			throw new Error('Falha ao gerar PIX no Mercado Pago.');
+		}
 
 		// Atualiza o banco de dados local
 		await pool.query(
 			`UPDATE payments SET payment_id = $1, payment_method = 'pix' WHERE access_token = $2`,
-			[pixResult.payment_id.toString(), token]
+			[paymentId.toString(), token]
 		);
 
 		return res.json({
 			success: true,
-			payment_id: pixResult.payment_id,
-			qr_code: pixResult.qr_code,
-			qr_code_base64: pixResult.qr_code_base64,
-			status: pixResult.status,
+			payment_id: paymentId,
+			qr_code: qrCode,
+			qr_code_base64: qrCodeBase64,
+			status: 'pending',
 			acesso_url: `/acesso/${token}`,
-			status_url: `/status/${pixResult.payment_id}`
+			status_url: `/status/${paymentId}`
 		});
 	} catch (err) {
-		console.error('Erro ao gerar Pix no checkout:', err.message);
+		console.error('Erro ao gerar Pix no checkout:', err.message || err);
 		return res.status(500).json({ error: err.message || 'Erro ao gerar Pix' });
 	}
 });
 
-// POST /checkout/card/:token - Cria pagamento de Cartão de Crédito na AppMax via AJAX
+// POST /checkout/card/:token - Cria pagamento de Cartão de Crédito no Mercado Pago via AJAX
 app.post('/checkout/card/:token', async (req, res) => {
 	try {
 		const { token } = req.params;
@@ -777,71 +784,106 @@ app.post('/checkout/card/:token', async (req, res) => {
 		const row = rows[0];
 		if (!row) return res.status(404).json({ error: 'Checkout não encontrado' });
 
-		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
-		if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
-
 		const amount = row.amount / 100;
 
-		// 1. Cadastra Cliente na AppMax
-		const customerId = await appmaxService.createCustomer({
-			name: cardName || row.email.split('@')[0],
-			email: row.email,
-			phone: row.whatsapp || '',
-			document_number: cpf || ''
-		});
+		// 1. Tokeniza o cartão no Mercado Pago
+		const expirationYear = cardYear.length === 2 ? '20' + cardYear : cardYear;
 
-		// 2. Cria o Pedido na AppMax
-		const orderId = await appmaxService.createOrder({
-			customer_id: customerId,
-			product: {
-				id: product.id,
-				name: product.nameSoft || product.name
+		console.log('[Mercado Pago] Tokenizando cartão...');
+		const cardTokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+				'Content-Type': 'application/json'
 			},
-			amount: amount
+			body: JSON.stringify({
+				card_number: cardNumber.replace(/\s/g, ''),
+				expiration_month: parseInt(cardMonth),
+				expiration_year: parseInt(expirationYear),
+				security_code: cardCvv,
+				cardholder: {
+					name: cardName,
+					identification: {
+						type: 'CPF',
+						number: cpf.replace(/\D/g, '')
+					}
+				}
+			})
 		});
 
-		// 3. Tokeniza o cartão na AppMax
-		const cardToken = await appmaxService.tokenizeCard({
-			name: cardName,
-			number: cardNumber,
-			cvv: cardCvv,
-			month: cardMonth,
-			year: cardYear
-		});
+		const cardTokenData = await cardTokenResponse.json();
+		if (!cardTokenResponse.ok || !cardTokenData.id) {
+			console.error('Erro ao tokenizar cartão:', cardTokenData);
+			const errorMsg = (cardTokenData && cardTokenData.message) || 'Erro ao validar cartão no Mercado Pago';
+			throw new Error(errorMsg);
+		}
 
-		// 4. Executa Pagamento no Cartão
-		const cardResult = await appmaxService.createCardPayment({
-			order_id: orderId,
-			customer_id: customerId,
-			token: cardToken,
-			cvv: cardCvv,
-			installments: installments,
-			document_number: cpf
-		});
+		const cardTokenId = cardTokenData.id;
+		const cardBrand = getCardBrand(cardNumber);
+
+		// 2. Cria o pagamento no Mercado Pago
+		const transactionAmount = Number(amount.toFixed(2));
+		const idempotency = crypto.randomUUID();
+
+		const requestBody = {
+			transaction_amount: transactionAmount,
+			token: cardTokenId,
+			description: row.description || 'Cartão ComprasLivre',
+			installments: parseInt(installments),
+			payment_method_id: cardBrand,
+			payer: {
+				email: row.email,
+				identification: {
+					type: 'CPF',
+					number: cpf.replace(/\D/g, '')
+				}
+			}
+		};
+
+		if (process.env.BASE_URL_PUBLICA) {
+			requestBody.notification_url = `${process.env.BASE_URL_PUBLICA.replace(/\/$/, '')}/webhook/mercadopago`;
+		}
+
+		console.log('Criando pagamento no cartão (Mercado Pago)...', { description: requestBody.description, amount: transactionAmount, cardBrand });
+		const createResp = await payment.create({ body: requestBody }, { idempotencyKey: idempotency });
+
+		const mp = createResp || {};
+		const paymentId = mp.id || (mp.body && mp.body.id);
+		const status = mp.status || (mp.body && mp.body.status);
+
+		if (!paymentId) {
+			throw new Error('Falha ao processar pagamento com cartão no Mercado Pago.');
+		}
 
 		// Atualiza banco de dados local
 		await pool.query(
 			`UPDATE payments SET payment_id = $1, payment_method = 'credit_card' WHERE access_token = $2`,
-			[cardResult.payment_id.toString(), token]
+			[paymentId.toString(), token]
 		);
 
 		// Se o status retornado for aprovado/autorizado, marca como pago imediatamente e finaliza
-		if (cardResult.status === 'approved' || cardResult.status === 'paid' || cardResult.status === 'authorized') {
-			await handlePaymentApproved(cardResult.payment_id.toString());
+		if (status === 'approved' || status === 'authorized') {
+			await handlePaymentApproved(paymentId.toString());
 			return res.json({
 				success: true,
 				status: 'paid',
 				acesso_url: `/acesso/${token}`
 			});
+		} else if (status === 'in_process') {
+			return res.json({
+				success: false,
+				status: 'pending',
+				message: 'O pagamento está em análise pelo Mercado Pago. Assim que for aprovado, seu acesso será liberado.'
+			});
 		} else {
 			return res.json({
 				success: false,
-				status: cardResult.status || 'pending',
-				message: 'O pagamento está em análise ou foi recusado pela operadora do cartão.'
+				status: status || 'rejected',
+				message: 'O pagamento foi recusado. Por favor, verifique os dados do cartão ou tente outro cartão.'
 			});
 		}
 	} catch (err) {
-		console.error('Erro ao processar cartão no checkout:', err.message);
+		console.error('Erro ao processar cartão no checkout:', err.message || err);
 		return res.status(500).json({ error: err.message || 'Erro ao processar pagamento' });
 	}
 });
@@ -1019,28 +1061,7 @@ app.post('/webhook/mercadopago', async (req, res) => {
 	}
 });
 
-// POST /webhook/appmax - recebe eventos e confirma status da AppMax
-app.post('/webhook/appmax', async (req, res) => {
-	try {
-		console.log('Recebendo webhook da AppMax...', req.body);
-		const body = req.body || {};
-		const status = body.status || (body.data && body.data.status);
-		const paymentId = body.id || body.payment_id || (body.data && body.data.id) || (body.data && body.data.order_id);
 
-		if (paymentId) {
-			const isApproved = ['aprovado', 'approved', 'pago', 'paid', 'autorizado', 'authorized'].includes(String(status).toLowerCase());
-			if (isApproved) {
-				console.log(`Webhook AppMax - Aprovando pagamento ${paymentId}`);
-				await handlePaymentApproved(paymentId.toString());
-			}
-		}
-
-		return res.status(200).json({ received: true });
-	} catch (err) {
-		console.error('Erro no webhook da AppMax:', err);
-		return res.status(200).json({ received: true });
-	}
-});
 
 // GET /status/:payment_id - consulta status salvo
 app.get('/status/:payment_id', async (req, res) => {

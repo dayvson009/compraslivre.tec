@@ -5,6 +5,9 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const session = require('express-session');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 
 // Configuração do Multer para upload de imagens
 const storage = multer.diskStorage({

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lojas & Subadmins - Painel Administrativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tech-blue': '#2563eb',
+                        'tech-dark': '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <!-- Header Admin -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-microchip text-tech-blue text-2xl"></i>
+                <span class="font-bold text-xl text-slate-800 tracking-tight">ComprasLivre<span class="text-tech-blue">.tec</span></span>
+                <span class="ml-2 px-2 py-0.5 bg-blue-100 text-tech-blue text-xs font-bold rounded-full">ADMIN</span>
+            </div>
+            <nav class="hidden md:flex gap-6">
+                <a href="/admin/produtos" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-list mr-1"></i> Produtos</a>
+                <a href="/admin/produtos/novo" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-plus mr-1"></i> Cadastrar</a>
+                <a href="/admin/lojas" class="text-sm font-bold text-tech-blue border-b-2 border-tech-blue pb-1"><i class="fas fa-store mr-1"></i> Lojas & Subadmins</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm text-slate-500 hover:text-tech-blue transition"><i class="fas fa-external-link-alt mr-1"></i> Ver Site</a>
+                <div class="w-px h-4 bg-slate-200"></div>
+                <a href="/admin/logout" class="text-sm text-red-500 hover:text-red-700 font-bold transition"><i class="fas fa-sign-out-alt mr-1"></i> Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-12 space-y-12">
+        <!-- Seção de Lojas -->
+        <div>
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900"><i class="fas fa-store text-tech-blue mr-2"></i> Lojas (Tenants)</h2>
+                    <p class="text-sm text-slate-500">Configurações individuais de logos e tokens das lojas.</p>
+                </div>
+                <button onclick="toggleModal('modal-store', true)" class="bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Nova Loja
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow border border-slate-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b">
+                            <th class="p-4 font-semibold">Subdomínio (Slug)</th>
+                            <th class="p-4 font-semibold">Nome da Loja</th>
+                            <th class="p-4 font-semibold">Mercado Pago Token</th>
+                            <th class="p-4 font-semibold text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        <% if(stores && stores.length > 0) { %>
+                            <% stores.forEach(function(store) { %>
+                                <tr class="hover:bg-slate-50/50">
+                                    <td class="p-4 font-mono font-bold text-tech-blue"><%= store.slug %></td>
+                                    <td class="p-4 font-semibold text-slate-800"><%= store.name %></td>
+                                    <td class="p-4 font-mono text-slate-400 text-xs"><%= store.mp_access_token ? store.mp_access_token.slice(0, 15) + '...' : 'Nenhum' %></td>
+                                    <td class="p-4 text-right space-x-2">
+                                        <button onclick='editStore(<%= JSON.stringify(store) %>)' class="text-blue-500 hover:text-blue-700 p-2"><i class="fas fa-edit"></i></button>
+                                        <form action="/admin/lojas/excluir/<%= store.id %>" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir esta loja?');">
+                                            <button type="submit" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="4" class="p-6 text-center text-slate-400">Nenhuma loja cadastrada.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seção de Usuários / Subadmins -->
+        <div>
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900"><i class="fas fa-users-cog text-tech-blue mr-2"></i> Sub-administradores</h2>
+                    <p class="text-sm text-slate-500">Gerencie quem tem acesso aos painéis de cada loja.</p>
+                </div>
+                <button onclick="toggleModal('modal-user', true)" class="bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i> Novo Subadmin
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow border border-slate-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b">
+                            <th class="p-4 font-semibold">E-mail</th>
+                            <th class="p-4 font-semibold">Função (Role)</th>
+                            <th class="p-4 font-semibold">Loja Vinculada</th>
+                            <th class="p-4 font-semibold text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        <% if(users && users.length > 0) { %>
+                            <% users.forEach(function(user) { %>
+                                <tr class="hover:bg-slate-50/50">
+                                    <td class="p-4 font-semibold text-slate-800"><%= user.email %></td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 rounded text-xs font-bold <%= user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' %>">
+                                            <%= user.role.toUpperCase() %>
+                                        </span>
+                                    </td>
+                                    <td class="p-4 font-mono font-bold text-slate-600"><%= user.store_slug || 'Todas (Admin Global)' %></td>
+                                    <td class="p-4 text-right">
+                                        <form action="/admin/usuarios/excluir/<%= user.id %>" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este subadmin?');">
+                                            <button type="submit" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="4" class="p-6 text-center text-slate-400">Nenhum administrador cadastrado.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Nova Loja -->
+    <div id="modal-store" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-900">Cadastrar Nova Loja</h3>
+                <button onclick="toggleModal('modal-store', false)" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form action="/admin/lojas" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Subdomínio (Slug) *</label>
+                    <input type="text" name="slug" required placeholder="Ex: teclivre" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nome da Loja *</label>
+                    <input type="text" name="name" required placeholder="Ex: TecLivre Softs" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mercado Pago Access Token *</label>
+                    <input type="text" name="mp_access_token" required placeholder="Ex: APP_USR-..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">URL da Logo (Opcional)</label>
+                    <input type="text" name="logo_url" placeholder="Ex: /images/minha_logo.png" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <button type="submit" class="w-full bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm shadow transition">Salvar Loja</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Loja -->
+    <div id="modal-edit-store" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-900">Editar Loja</h3>
+                <button onclick="toggleModal('modal-edit-store', false)" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form action="/admin/lojas/editar" method="POST" class="space-y-4">
+                <input type="hidden" name="id" id="edit-store-id">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Subdomínio (Slug) *</label>
+                    <input type="text" name="slug" id="edit-store-slug" required placeholder="Ex: teclivre" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nome da Loja *</label>
+                    <input type="text" name="name" id="edit-store-name" required placeholder="Ex: TecLivre Softs" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mercado Pago Access Token *</label>
+                    <input type="text" name="mp_access_token" id="edit-store-token" required placeholder="Ex: APP_USR-..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">URL da Logo (Opcional)</label>
+                    <input type="text" name="logo_url" id="edit-store-logo" placeholder="Ex: /images/minha_logo.png" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <button type="submit" class="w-full bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm shadow transition">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Novo Usuário -->
+    <div id="modal-user" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-900">Cadastrar Novo Subadmin</h3>
+                <button onclick="toggleModal('modal-user', false)" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form action="/admin/usuarios" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">E-mail *</label>
+                    <input type="email" name="email" required placeholder="Ex: joao@teclivre.com" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Senha *</label>
+                    <input type="password" name="password" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Função (Role) *</label>
+                    <select name="role" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm bg-white">
+                        <option value="subadmin">Sub-administrador</option>
+                        <option value="admin">Administrador Global</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Vincular a qual Loja? *</label>
+                    <select name="store_slug" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm bg-white">
+                        <option value="">Nenhuma (Apenas se for Admin Global)</option>
+                        <% if(stores && stores.length > 0) { %>
+                            <% stores.forEach(function(store) { %>
+                                <option value="<%= store.slug %>"><%= store.name %> (<%= store.slug %>)</option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm shadow transition">Salvar Usuário</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(id, show) {
+            const el = document.getElementById(id);
+            if (show) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function editStore(store) {
+            document.getElementById('edit-store-id').value = store.id;
+            document.getElementById('edit-store-slug').value = store.slug;
+            document.getElementById('edit-store-name').value = store.name;
+            document.getElementById('edit-store-token').value = store.mp_access_token;
+            document.getElementById('edit-store-logo').value = store.logo_url || '';
+            toggleModal('modal-edit-store', true);
+        }
+    </script>
+</body>
+</html>

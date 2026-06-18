@@ -25,10 +25,55 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-function getNextProductId() {
-	if (products.length === 0) return 'MLB2026030301';
-	const lastProduct = products[products.length - 1];
-	const lastId = lastProduct.id;
+function dbProductToJsProduct(row) {
+	if (!row) return null;
+	return {
+		id: row.id,
+		name: row.name,
+		priceBefore: row.price_before ? Number(row.price_before) : 0,
+		price: Number(row.price),
+		priceUpsell: row.price_upsell ? Number(row.price_upsell) : '',
+		urlProduto: row.url_produto || '',
+		tutorialVideo: row.tutorial_video || '',
+		moreInfo: row.more_info || '',
+		image: row.image || '',
+		thumbs: typeof row.thumbs === 'string' ? JSON.parse(row.thumbs) : (row.thumbs || []),
+		development: row.development || '',
+		nameSoft: row.name_soft || '',
+		version: row.version || '',
+		licence: row.licence || '',
+		formart: row.formart || '',
+		description: row.description || '',
+		orderbump: row.orderbump || '',
+		upsell: row.upsell || '',
+		relationProducts: typeof row.relation_products === 'string' ? JSON.parse(row.relation_products) : (row.relation_products || []),
+		pinions: typeof row.pinions === 'string' ? JSON.parse(row.pinions) : (row.pinions || []),
+		questions: typeof row.questions === 'string' ? JSON.parse(row.questions) : (row.questions || []),
+		active: row.active !== false,
+		emailMessage: row.email_message || ''
+	};
+}
+
+async function getAllProducts() {
+	const { rows } = await pool.query('SELECT * FROM products ORDER BY id ASC');
+	return rows.map(dbProductToJsProduct);
+}
+
+async function getActiveProducts() {
+	const { rows } = await pool.query('SELECT * FROM products WHERE active = true ORDER BY id ASC');
+	return rows.map(dbProductToJsProduct);
+}
+
+async function getProductById(id) {
+	if (!id) return null;
+	const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
+	return dbProductToJsProduct(rows[0]);
+}
+
+async function getNextProductId() {
+	const { rows } = await pool.query('SELECT id FROM products ORDER BY id DESC LIMIT 1');
+	if (rows.length === 0) return 'MLB2026030301';
+	const lastId = rows[0].id;
 
 	// Extrai a parte numérica do final do ID
 	const match = lastId.match(/^(.*?)(\d+)$/);
@@ -40,13 +85,6 @@ function getNextProductId() {
 
 	// Mantém o preenchimento de zeros à esquerda
 	return prefix + nextNumber.toString().padStart(numberStr.length, '0');
-}
-
-let products = [];
-try {
-	products = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
-} catch (e) {
-	console.error('Erro ao carregar products.json:', e);
 }
 
 const app = express();
@@ -63,6 +101,53 @@ app.use(session({
 	saveUninitialized: false,
 	cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 horas
 }));
+
+// Middleware de identificação do Tenant/Loja
+app.use(async (req, res, next) => {
+	if (req.path.startsWith('/images') || req.path.startsWith('/js') || req.path.startsWith('/css')) {
+		return next();
+	}
+	try {
+		const host = req.headers.host || '';
+		let slug = host.split('.')[0];
+		const devSlugs = ['localhost', 'seusprogramas', '127', '0'];
+		const isDev = devSlugs.some(ds => slug.toLowerCase().includes(ds));
+		if (isDev || req.query.loja) {
+			slug = req.query.loja || 'compraslivre';
+		}
+		const { rows } = await pool.query('SELECT * FROM stores WHERE slug = $1', [slug.toLowerCase()]);
+		let store = rows[0];
+		if (!store) {
+			const { rows: defaultRows } = await pool.query('SELECT * FROM stores WHERE slug = $1', ['compraslivre']);
+			store = defaultRows[0];
+		}
+		if (!store) {
+			const { rows: firstStoreRows } = await pool.query('SELECT * FROM stores ORDER BY id ASC LIMIT 1');
+			store = firstStoreRows[0];
+		}
+		if (!store) {
+			return res.status(404).send('Loja (Tenant) não configurada.');
+		}
+		req.store = store;
+		res.locals.store = store;
+		next();
+	} catch (e) {
+		console.error('Erro no middleware de tenant:', e);
+		next(e);
+	}
+});
+
+// Middleware para injetar informações de sessão no locals do painel administrativo
+app.use('/admin', (req, res, next) => {
+	if (req.session && req.session.admin) {
+		res.locals.userRole = req.session.userRole || 'subadmin';
+		res.locals.userStoreSlug = req.session.userStoreSlug || '';
+	} else {
+		res.locals.userRole = undefined;
+		res.locals.userStoreSlug = undefined;
+	}
+	next();
+});
 
 // Middleware de helper global para imagens
 app.use((req, res, next) => {
@@ -87,12 +172,25 @@ function requireAuth(req, res, next) {
 	return res.redirect('/admin/login');
 }
 
-// DB Postgres 
+// Middleware de autenticação para Administrador Global
+function requireGlobalAdmin(req, res, next) {
+	if (req.session && req.session.admin && req.session.userRole === 'admin') {
+		return next();
+	}
+	return res.status(403).send('Acesso restrito ao administrador global.');
+}
+
+// DB Postgres
+let pgHost = process.env.PGHOST;
+if (pgHost === 'db' && !fs.existsSync('/.dockerenv') && !process.env.DOCKER_ENV) {
+	pgHost = 'localhost';
+}
+
 const pool = new Pool(process.env.DATABASE_URL ? {
 	connectionString: process.env.DATABASE_URL,
 	ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : undefined
 } : {
-	host: process.env.PGHOST,
+	host: pgHost,
 	port: Number(process.env.PGPORT),
 	user: process.env.PGUSER,
 	password: process.env.PGPASSWORD,
@@ -100,6 +198,63 @@ const pool = new Pool(process.env.DATABASE_URL ? {
 });
 
 async function initSchema() {
+	// 1. Tabela de Lojas (Tenants)
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS stores (
+			id SERIAL PRIMARY KEY,
+			slug TEXT UNIQUE NOT NULL,
+			name TEXT NOT NULL,
+			logo_url TEXT,
+			mp_access_token TEXT NOT NULL,
+			resend_api_key TEXT,
+			resend_from TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
+
+	// 2. Tabela de Usuários (Diferenciando Admin de Subadmin)
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS users (
+			id SERIAL PRIMARY KEY,
+			email TEXT UNIQUE NOT NULL,
+			password TEXT NOT NULL,
+			role TEXT NOT NULL DEFAULT 'subadmin', -- 'admin' ou 'subadmin'
+			store_slug TEXT, -- Se for subadmin, indica a loja dele
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
+
+	// 3. Tabela de Produtos (Migração do products.json)
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS products (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			price_before NUMERIC DEFAULT 0,
+			price NUMERIC NOT NULL,
+			price_upsell NUMERIC,
+			url_produto TEXT,
+			tutorial_video TEXT,
+			more_info TEXT,
+			image TEXT,
+			thumbs JSONB DEFAULT '[]'::jsonb,
+			development TEXT,
+			name_soft TEXT,
+			version TEXT,
+			licence TEXT,
+			formart TEXT,
+			description TEXT,
+			orderbump TEXT,
+			upsell TEXT,
+			relation_products JSONB DEFAULT '[]'::jsonb,
+			pinions JSONB DEFAULT '[]'::jsonb,
+			questions JSONB DEFAULT '[]'::jsonb,
+			active BOOLEAN DEFAULT TRUE,
+			email_message TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
+
+	// 4. Tabela de Pagamentos
 	await pool.query(`
 		CREATE TABLE IF NOT EXISTS payments (
 			id SERIAL PRIMARY KEY,
@@ -116,24 +271,175 @@ async function initSchema() {
 			paid_at TIMESTAMP
 		);
 	`);
+
+	// Alterações incrementais na tabela de pagamentos
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS email TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS access_password TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS product_url TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS whatsapp TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS product_name TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;`);
+	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS store_slug TEXT;`);
+
 	// Índices úteis
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at DESC);`);
+	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_store ON payments (store_slug);`);
+
+	// --- SEED DE DADOS INICIAIS ---
+
+	// Se não existirem lojas, insere a loja padrão do .env
+	const { rows: storeRows } = await pool.query('SELECT count(*) FROM stores');
+	if (parseInt(storeRows[0].count) === 0) {
+		console.log('Sem lojas no banco. Criando loja padrão: compraslivre');
+		await pool.query(
+			`INSERT INTO stores (slug, name, mp_access_token, resend_api_key, resend_from)
+			 VALUES ($1, $2, $3, $4, $5)`,
+			[
+				'compraslivre',
+				'Compras Livre',
+				process.env.MP_ACCESS_TOKEN || 'TEST-XXXXXXXXXX',
+				process.env.RESEND_API_KEY || '',
+				process.env.RESEND_FROM || ''
+			]
+		);
+	}
+
+	// Se não existirem usuários, insere o administrador do .env
+	const { rows: userRows } = await pool.query('SELECT count(*) FROM users');
+	if (parseInt(userRows[0].count) === 0 && process.env.ADMIN_LOGIN && process.env.ADMIN_PASS) {
+		console.log('Sem usuários no banco. Criando administrador padrão.');
+		await pool.query(
+			`INSERT INTO users (email, password, role)
+			 VALUES ($1, $2, $3)`,
+			[process.env.ADMIN_LOGIN, process.env.ADMIN_PASS, 'admin']
+		);
+	}
+
+	// Se não existirem produtos, migrar automaticamente de products.json
+	const { rows: productRows } = await pool.query('SELECT count(*) FROM products');
+	if (parseInt(productRows[0].count) === 0) {
+		console.log('Sem produtos no banco de dados. Iniciando migração do products.json...');
+		try {
+			if (fs.existsSync('./products.json')) {
+				const rawProducts = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
+				for (const p of rawProducts) {
+					await pool.query(
+						`INSERT INTO products (
+							id, name, price_before, price, price_upsell, url_produto, tutorial_video, more_info,
+							image, thumbs, development, name_soft, version, licence, formart, description,
+							orderbump, upsell, relation_products, pinions, questions, active, email_message
+						) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+						ON CONFLICT (id) DO NOTHING`,
+						[
+							p.id,
+							p.name || '',
+							Number(p.priceBefore) || 0,
+							Number(p.price) || 0,
+							p.priceUpsell ? Number(p.priceUpsell) : null,
+							p.urlProduto || '',
+							p.tutorialVideo || '',
+							p.moreInfo || '',
+							p.image || '',
+							JSON.stringify(p.thumbs || []),
+							p.development || '',
+							p.nameSoft || '',
+							p.version || '',
+							p.licence || '',
+							p.formart || '',
+							p.description || '',
+							p.orderbump || '',
+							p.upsell || '',
+							JSON.stringify(p.relationProducts || []),
+							JSON.stringify(p.pinions || []),
+							JSON.stringify(p.questions || []),
+							p.active !== false,
+							p.emailMessage || ''
+						]
+					);
+				}
+				console.log(`Migração concluída com sucesso! ${rawProducts.length} produtos migrados.`);
+			}
+		} catch (e) {
+			console.error('Falha ao migrar products.json para Postgres:', e);
+		}
+	}
 }
 initSchema().catch(err => {
 	console.error('Erro ao inicializar schema Postgres:', err);
 	process.exit(1);
 });
 
-// Helper para processar aprovação de pagamento e enviar para Google Forms
+// Função para enviar e-mail de entrega através do Resend
+async function sendPurchaseEmail(email, purchasedProducts, store) {
+	const resendKey = (store && store.resend_api_key) || process.env.RESEND_API_KEY;
+	const resendFrom = (store && store.resend_from) || process.env.RESEND_FROM;
+
+	if (!resendKey || !resendFrom) {
+		console.warn('Resend API Key ou From não configurados para a loja/global. Ignorando envio de e-mail.');
+		return;
+	}
+
+	try {
+		let emailContent = '';
+		for (const product of purchasedProducts) {
+			const msg = product.emailMessage || product.moreInfo || 'Obrigado por comprar conosco! Seu produto foi liberado.';
+			emailContent += `
+				<div style="margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
+					<h3 style="color: #2563eb; font-size: 18px; margin-top: 0;">${product.name}</h3>
+					<div style="white-space: pre-wrap; font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 15px;">${msg}</div>
+					${product.tutorialVideo ? `<p style="margin-top: 15px;"><a href="${product.tutorialVideo}" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">Assistir Vídeo Tutorial</a></p>` : ''}
+				</div>
+			`;
+		}
+
+		const html = `
+			<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 8px;">
+				<h2 style="color: #0f172a; font-size: 22px; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-top: 0;">Sua compra foi aprovada! 🎉</h2>
+				<p style="font-size: 16px; line-height: 1.5; color: #475569;">Olá! Obrigado por comprar na ${(store && store.name) || 'nossa loja'}.</p>
+				<p style="font-size: 16px; line-height: 1.5; color: #475569;">Aqui estão as instruções de acesso para o seu produto:</p>
+				<div style="margin-top: 25px;">
+					${emailContent}
+				</div>
+				<p style="margin-top: 30px; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+					Se você tiver qualquer dúvida ou precisar de ajuda com a instalação, responda a este e-mail. Nossa equipe está à disposição.
+				</p>
+			</div>
+		`;
+
+		const subject = purchasedProducts.length === 1
+			? `Seu acesso ao produto foi liberado: ${purchasedProducts[0].name}`
+			: `Seus acessos aos produtos foram liberados!`;
+
+		console.log(`Disparando e-mail de compra para ${email} via Resend...`);
+		const response = await fetch('https://api.resend.com/emails', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${resendKey}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				from: resendFrom,
+				to: [email],
+				subject: subject,
+				html: html
+			})
+		});
+
+		const data = await response.json();
+		if (response.ok) {
+			console.log('E-mail enviado com sucesso via Resend:', data);
+		} else {
+			console.error('Falha no envio de e-mail pelo Resend:', data);
+		}
+	} catch (error) {
+		console.error('Erro na requisição para o Resend:', error.message || error);
+	}
+}
+
+// Helper para processar aprovação de pagamento e enviar para Google Forms e Resend
 async function handlePaymentApproved(paymentId) {
 	try {
-		const { rows: checkRows } = await pool.query(`SELECT status, email, product_name FROM payments WHERE payment_id=$1`, [paymentId]);
+		const { rows: checkRows } = await pool.query(`SELECT status, email, product_name, description, store_slug FROM payments WHERE payment_id=$1`, [paymentId]);
 
 		if (checkRows.length > 0 && checkRows[0].status !== 'paid') {
 			await pool.query(
@@ -144,6 +450,8 @@ async function handlePaymentApproved(paymentId) {
 			// Disparar requisição para Google Forms
 			const emailEnvio = checkRows[0].email;
 			const productEnvio = checkRows[0].product_name;
+			const descriptionEnvio = checkRows[0].description;
+			const storeSlugEnvio = checkRows[0].store_slug;
 
 			if (emailEnvio && productEnvio) {
 				console.log('Enviando dados para o Google Forms...', { emailEnvio, productEnvio });
@@ -154,6 +462,27 @@ async function handlePaymentApproved(paymentId) {
 				}).catch(e => console.error('Erro no fetch do forms:', e));
 				console.log('Enviado com sucesso para Google Forms!');
 			}
+
+			// Disparar envio do e-mail de entrega via Resend
+			if (emailEnvio) {
+				const activeProducts = await getActiveProducts();
+				const purchasedProducts = activeProducts.filter(p => {
+					if (p.nameSoft === productEnvio || p.name === productEnvio) return true;
+					if (descriptionEnvio && descriptionEnvio.includes(p.name)) return true;
+					return false;
+				});
+				if (purchasedProducts.length > 0) {
+					let store = null;
+					if (storeSlugEnvio) {
+						const { rows: storeRows } = await pool.query('SELECT name, resend_api_key, resend_from FROM stores WHERE slug = $1', [storeSlugEnvio]);
+						if (storeRows.length > 0) {
+							store = storeRows[0];
+						}
+					}
+					sendPurchaseEmail(emailEnvio, purchasedProducts, store).catch(e => console.error('Erro ao enviar e-mail de compra:', e));
+				}
+			}
+
 			return true;
 		}
 		return false;
@@ -178,7 +507,7 @@ function startPendingPoller() {
 		try {
 			// Busca pendentes recentes
 			const { rows } = await pool.query(
-				`SELECT payment_id, payment_method FROM payments
+				`SELECT payment_id, payment_method, store_slug FROM payments
 				  WHERE status='pending' AND created_at >= NOW() - INTERVAL '${lookbackMin} minutes'
 				  ORDER BY created_at DESC
 				  LIMIT $1`,
@@ -198,10 +527,18 @@ function startPendingPoller() {
 				}
 
 				try {
+					let token = process.env.MP_ACCESS_TOKEN;
+					if (r.store_slug) {
+						const { rows: storeRows } = await pool.query('SELECT mp_access_token FROM stores WHERE slug = $1', [r.store_slug]);
+						if (storeRows.length > 0) {
+							token = storeRows[0].mp_access_token;
+						}
+					}
+					const paymentClient = getPaymentInstance(token);
 					const details = await withTimeout(
-						payment.get({ id: pid }),
+						paymentClient.get({ id: pid }),
 						Number(process.env.MP_GET_TIMEOUT_MS || 10000),
-						'payment.get'
+						'paymentClient.get'
 					);
 					const status = (details && details.status) || (details.body && details.body.status);
 					if (status === 'approved') {
@@ -223,9 +560,12 @@ function startPendingPoller() {
 	console.log(`Pending poller iniciado (intervalo ${intervalMs}ms, lookback ${lookbackMin}min, batch ${batchSize})`);
 }
 startPendingPoller();
-// Mercado Pago SDK
-const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
-const payment = new Payment(mpClient);
+// Mercado Pago SDK Dinâmico por Tenant
+function getPaymentInstance(accessToken) {
+	const tokenToUse = accessToken || process.env.MP_ACCESS_TOKEN || 'TEST-XXXXXXXXXX';
+	const client = new MercadoPagoConfig({ accessToken: tokenToUse });
+	return new Payment(client);
+}
 
 // Util: gera token curto para acesso
 function generateAccessToken() {
@@ -304,13 +644,15 @@ app.get('/config', (req, res) => {
 });
 
 // Home - lista de produtos
-app.get('/', (req, res) => {
-	res.render('home', { products: products.filter(p => p.active !== false) });
+app.get('/', async (req, res) => {
+	const activeProducts = await getActiveProducts();
+	res.render('home', { products: activeProducts });
 });
 
 // Página de todos os produtos
-app.get('/produtos', (req, res) => {
-	res.render('products_all', { products: products.filter(p => p.active !== false) });
+app.get('/produtos', async (req, res) => {
+	const activeProducts = await getActiveProducts();
+	res.render('products_all', { products: activeProducts });
 });
 
 // Termos de Uso
@@ -332,16 +674,24 @@ app.get('/admin/login', (req, res) => {
 	res.render('admin_login', { error: null });
 });
 
-app.post('/admin/login', (req, res) => {
+app.post('/admin/login', async (req, res) => {
 	const { email, password } = req.body;
-	const adminEmail = process.env.ADMIN_LOGIN;
-	const adminPass = process.env.ADMIN_PASS;
+	try {
+		const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+		const user = rows[0];
 
-	if (email === adminEmail && password === adminPass) {
-		req.session.admin = true;
-		return res.redirect('/admin/produtos');
+		if (user && user.password === password) {
+			req.session.admin = true;
+			req.session.userId = user.id;
+			req.session.userRole = user.role;
+			req.session.userStoreSlug = user.store_slug;
+			return res.redirect('/admin/produtos');
+		}
+		res.render('admin_login', { error: 'E-mail ou senha incorretos!', email });
+	} catch (e) {
+		console.error(e);
+		res.render('admin_login', { error: 'Erro no servidor. Tente novamente.', email });
 	}
-	res.render('admin_login', { error: 'E-mail ou senha incorretos!', email });
 });
 
 app.get('/admin/logout', (req, res) => {
@@ -349,22 +699,105 @@ app.get('/admin/logout', (req, res) => {
 	res.redirect('/admin/login');
 });
 
+// Admin - Gerenciamento de Lojas (Tenants) e Subadmins (Apenas Administrador Global)
+app.get('/admin/lojas', requireAuth, requireGlobalAdmin, async (req, res) => {
+	try {
+		const { rows: stores } = await pool.query('SELECT * FROM stores ORDER BY slug ASC');
+		const { rows: users } = await pool.query('SELECT * FROM users ORDER BY email ASC');
+		res.render('admin_stores', { stores, users });
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao carregar lojas e usuários.');
+	}
+});
+
+app.post('/admin/lojas', requireAuth, requireGlobalAdmin, async (req, res) => {
+	const { slug, name, mp_access_token, logo_url } = req.body;
+	try {
+		await pool.query(
+			`INSERT INTO stores (slug, name, mp_access_token, logo_url)
+			 VALUES ($1, $2, $3, $4)
+			 ON CONFLICT (slug) DO UPDATE 
+			 SET name = EXCLUDED.name, mp_access_token = EXCLUDED.mp_access_token, 
+			     logo_url = EXCLUDED.logo_url`,
+			[slug.toLowerCase().trim(), name, mp_access_token, logo_url || null]
+		);
+		res.redirect('/admin/lojas');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao cadastrar loja.');
+	}
+});
+
+app.post('/admin/lojas/editar', requireAuth, requireGlobalAdmin, async (req, res) => {
+	const { id, slug, name, mp_access_token, logo_url } = req.body;
+	try {
+		await pool.query(
+			`UPDATE stores SET slug = $1, name = $2, mp_access_token = $3, logo_url = $4 WHERE id = $5`,
+			[slug.toLowerCase().trim(), name, mp_access_token, logo_url || null, id]
+		);
+		res.redirect('/admin/lojas');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao editar loja.');
+	}
+});
+
+app.post('/admin/lojas/excluir/:id', requireAuth, requireGlobalAdmin, async (req, res) => {
+	try {
+		await pool.query('DELETE FROM stores WHERE id = $1', [req.params.id]);
+		res.redirect('/admin/lojas');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao excluir loja.');
+	}
+});
+
+app.post('/admin/usuarios', requireAuth, requireGlobalAdmin, async (req, res) => {
+	const { email, password, role, store_slug } = req.body;
+	try {
+		await pool.query(
+			`INSERT INTO users (email, password, role, store_slug)
+			 VALUES ($1, $2, $3, $4)
+			 ON CONFLICT (email) DO UPDATE 
+			 SET password = EXCLUDED.password, role = EXCLUDED.role, store_slug = EXCLUDED.store_slug`,
+			[email.trim(), password, role, store_slug || null]
+		);
+		res.redirect('/admin/lojas');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao cadastrar subadmin.');
+	}
+});
+
+app.post('/admin/usuarios/excluir/:id', requireAuth, requireGlobalAdmin, async (req, res) => {
+	try {
+		await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+		res.redirect('/admin/lojas');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao excluir subadmin.');
+	}
+});
+
 // Admin - Dashboard de Produtos
-app.get('/admin/produtos', requireAuth, (req, res) => {
-	res.render('admin_products', { products });
+app.get('/admin/produtos', requireAuth, async (req, res) => {
+	const allProducts = await getAllProducts();
+	res.render('admin_products', { products: allProducts });
 });
 
 // Admin - Cadastro de Produtos
-app.get('/admin/produtos/novo', requireAuth, (req, res) => {
-	const nextId = getNextProductId();
-	res.render('admin_product_create', { products, nextId });
+app.get('/admin/produtos/novo', requireAuth, async (req, res) => {
+	const nextId = await getNextProductId();
+	const allProducts = await getAllProducts();
+	res.render('admin_product_create', { products: allProducts, nextId });
 });
 
-app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), (req, res) => {
+app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), async (req, res) => {
 	const {
 		id, name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell
+		orderbump, upsell, emailMessage
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -392,56 +825,59 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 		parsedPinions = Object.values(req.body.pinions);
 	}
 
-	const newProduct = {
-		id: id || `PROD${Date.now()}`,
-		name: name || '',
-		priceBefore: Number(priceBefore) || 0,
-		price: Number(price) || 0,
-		priceUpsell: priceUpsell ? Number(priceUpsell) : "",
-		urlProduto: urlProduto || '',
-		tutorialVideo: tutorialVideo || '',
-		moreInfo: moreInfo || '',
-		image: imagePath || '',
-		thumbs: thumbPaths,
-		development: development || '',
-		nameSoft: nameSoft || '',
-		version: version || '',
-		licence: licence || '',
-		formart: formart || '',
-		description: description || '',
-		orderbump: orderbump || '',
-		upsell: upsell || '',
-		relationProducts: [],
-		pinions: parsedPinions,
-		questions: parsedQuestions
-	};
-
-	products.push(newProduct);
-
 	try {
-		fs.writeFileSync('./products.json', JSON.stringify(products, null, 2));
+		await pool.query(
+			`INSERT INTO products (
+				id, name, price_before, price, price_upsell, url_produto, tutorial_video, more_info,
+				image, thumbs, development, name_soft, version, licence, formart, description,
+				orderbump, upsell, relation_products, pinions, questions, active, email_message
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+			[
+				id || `PROD${Date.now()}`,
+				name || '',
+				Number(priceBefore) || 0,
+				Number(price) || 0,
+				priceUpsell ? Number(priceUpsell) : null,
+				urlProduto || '',
+				tutorialVideo || '',
+				moreInfo || '',
+				imagePath || '',
+				JSON.stringify(thumbPaths),
+				development || '',
+				nameSoft || '',
+				version || '',
+				licence || '',
+				formart || '',
+				description || '',
+				orderbump || '',
+				upsell || '',
+				JSON.stringify([]),
+				JSON.stringify(parsedPinions),
+				JSON.stringify(parsedQuestions),
+				true,
+				emailMessage || ''
+			]
+		);
 		res.redirect('/admin/produtos/novo?success=1');
 	} catch (e) {
 		console.error(e);
-		res.status(500).send('Erro ao salvar produto');
+		res.status(500).send('Erro ao salvar produto no banco de dados.');
 	}
 });
 
 // Admin - Edição de Produtos
-app.get('/admin/produtos/editar/:id', requireAuth, (req, res) => {
-	const product = products.find(p => p.id === req.params.id);
+app.get('/admin/produtos/editar/:id', requireAuth, async (req, res) => {
+	const product = await getProductById(req.params.id);
 	if (!product) return res.status(404).send('Produto não encontrado');
-	res.render('admin_product_edit', { product, products });
+	const allProducts = await getAllProducts();
+	res.render('admin_product_edit', { product, products: allProducts });
 });
 
-app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), (req, res) => {
-	const index = products.findIndex(p => p.id === req.params.id);
-	if (index === -1) return res.status(404).send('Produto não encontrado');
-
+app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), async (req, res) => {
 	const {
 		name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell
+		orderbump, upsell, emailMessage
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -469,35 +905,42 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 		parsedPinions = Object.values(req.body.pinions);
 	}
 
-	products[index] = {
-		...products[index],
-		name: name || '',
-		priceBefore: Number(priceBefore) || 0,
-		price: Number(price) || 0,
-		priceUpsell: priceUpsell ? Number(priceUpsell) : "",
-		urlProduto: urlProduto || '',
-		tutorialVideo: tutorialVideo || '',
-		moreInfo: moreInfo || '',
-		image: imagePath || '',
-		thumbs: thumbPaths,
-		development: development || '',
-		nameSoft: nameSoft || '',
-		version: version || '',
-		licence: licence || '',
-		formart: formart || '',
-		description: description || '',
-		orderbump: orderbump || '',
-		upsell: upsell || '',
-		pinions: parsedPinions,
-		questions: parsedQuestions
-	};
-
 	try {
-		fs.writeFileSync('./products.json', JSON.stringify(products, null, 2));
+		await pool.query(
+			`UPDATE products SET
+				name = $1, price_before = $2, price = $3, price_upsell = $4, url_produto = $5,
+				tutorial_video = $6, more_info = $7, image = $8, thumbs = $9, development = $10,
+				name_soft = $11, version = $12, licence = $13, formart = $14, description = $15,
+				orderbump = $16, upsell = $17, pinions = $18, questions = $19, email_message = $20
+			 WHERE id = $21`,
+			[
+				name || '',
+				Number(priceBefore) || 0,
+				Number(price) || 0,
+				priceUpsell ? Number(priceUpsell) : null,
+				urlProduto || '',
+				tutorialVideo || '',
+				moreInfo || '',
+				imagePath || '',
+				JSON.stringify(thumbPaths),
+				development || '',
+				nameSoft || '',
+				version || '',
+				licence || '',
+				formart || '',
+				description || '',
+				orderbump || '',
+				upsell || '',
+				JSON.stringify(parsedPinions),
+				JSON.stringify(parsedQuestions),
+				emailMessage || '',
+				req.params.id
+			]
+		);
 		res.redirect('/admin/produtos?success=2');
 	} catch (e) {
 		console.error(e);
-		res.status(500).send('Erro ao editar produto');
+		res.status(500).send('Erro ao editar produto no banco de dados.');
 	}
 });
 
@@ -510,14 +953,9 @@ app.post('/admin/upload-ajax', requireAuth, upload.single('imageFile'), (req, re
 });
 
 // Admin - Alternar Status (Ativo/Inativo)
-app.post('/admin/produtos/status/:id', requireAuth, (req, res) => {
-	const index = products.findIndex(p => p.id === req.params.id);
-	if (index === -1) return res.status(404).send('Produto não encontrado');
-
-	products[index].active = products[index].active === false ? true : false;
-
+app.post('/admin/produtos/status/:id', requireAuth, async (req, res) => {
 	try {
-		fs.writeFileSync('./products.json', JSON.stringify(products, null, 2));
+		await pool.query('UPDATE products SET active = NOT active WHERE id = $1', [req.params.id]);
 		res.redirect('/admin/produtos');
 	} catch (e) {
 		console.error(e);
@@ -526,14 +964,9 @@ app.post('/admin/produtos/status/:id', requireAuth, (req, res) => {
 });
 
 // Admin - Excluir Produto
-app.post('/admin/produtos/excluir/:id', requireAuth, (req, res) => {
-	const index = products.findIndex(p => p.id === req.params.id);
-	if (index === -1) return res.status(404).send('Produto não encontrado');
-
-	products.splice(index, 1);
-
+app.post('/admin/produtos/excluir/:id', requireAuth, async (req, res) => {
 	try {
-		fs.writeFileSync('./products.json', JSON.stringify(products, null, 2));
+		await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
 		res.redirect('/admin/produtos?success=3');
 	} catch (e) {
 		console.error(e);
@@ -542,88 +975,31 @@ app.post('/admin/produtos/excluir/:id', requireAuth, (req, res) => {
 });
 
 // Página de detalhe do produto com formulário de e-mail
-app.get('/produto/:id', (req, res) => {
-	const { id } = req.params;
-	const activeProducts = products.filter(p => p.active !== false);
-	const product = activeProducts.find(p => p.id === id);
-	if (!product) return res.status(404).send('Produto não encontrado');
+app.get('/produto/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const activeProducts = await getActiveProducts();
+		const product = activeProducts.find(p => p.id === id);
+		if (!product) return res.status(404).send('Produto não encontrado');
 
-	let relatedProducts = [];
-	if (product.relationProducts && product.relationProducts.length > 0) {
-		relatedProducts = activeProducts.filter(p => product.relationProducts.includes(p.id));
-	} else {
-		// Pega até 4 produtos diferentes do atual de forma aleatória
-		const otherProducts = activeProducts.filter(p => p.id !== product.id);
-		const shuffled = [...otherProducts].sort(() => 0.5 - Math.random());
-		relatedProducts = shuffled.slice(0, 4);
+		let relatedProducts = [];
+		if (product.relationProducts && product.relationProducts.length > 0) {
+			relatedProducts = activeProducts.filter(p => product.relationProducts.includes(p.id));
+		} else {
+			// Pega até 4 produtos diferentes do atual de forma aleatória
+			const otherProducts = activeProducts.filter(p => p.id !== product.id);
+			const shuffled = [...otherProducts].sort(() => 0.5 - Math.random());
+			relatedProducts = shuffled.slice(0, 4);
+		}
+
+		const orderbumpProduct = product.orderbump ? activeProducts.find(p => p.id === product.orderbump) : null;
+
+		res.render('product_detail', { product, relatedProducts, orderbumpProduct });
+	} catch (err) {
+		console.error(err);
+		res.status(500).send('Erro ao carregar detalhes do produto');
 	}
-
-	const orderbumpProduct = product.orderbump ? activeProducts.find(p => p.id === product.orderbump) : null;
-
-	res.render('product_detail', { product, relatedProducts, orderbumpProduct });
 });
-
-// Helper para criar PIX e persistir
-async function createPixAndPersist({ amount, description, targetUrl, payer, email, productUrl, whatsapp, productName }) {
-	const transactionAmount = Number((amount).toFixed(2));
-	const idempotency = crypto.randomUUID();
-
-	const payerPayload =
-		(payer && typeof payer === 'object')
-			? payer
-			: {
-				email: process.env.MP_PAYER_EMAIL || 'test_user_123456@testuser.com',
-				first_name: 'Test',
-				last_name: 'User',
-				identification: { type: 'CPF', number: '19119119100' }
-			};
-
-	const requestBody = {
-		transaction_amount: transactionAmount,
-		payment_method_id: 'pix',
-		description,
-		payer: payerPayload
-	};
-	if (process.env.BASE_URL_PUBLICA) {
-		requestBody.notification_url = `${process.env.BASE_URL_PUBLICA.replace(/\/$/, '')}/webhook/mercadopago`;
-	}
-
-	console.log('Criando pagamento PIX...', { description, amount: transactionAmount, email, idempotency });
-	const startedAt = Date.now();
-	const createResp = await withTimeout(
-		payment.create({ body: requestBody }, { idempotencyKey: idempotency }),
-		Number(process.env.MP_CREATE_TIMEOUT_MS || 15000),
-		'payment.create'
-	);
-	console.log('Pagamento criado', { ms: Date.now() - startedAt });
-	const mp = createResp || {};
-	const paymentId = mp.id || (mp.body && mp.body.id);
-	const pix = (mp.point_of_interaction && mp.point_of_interaction.transaction_data) ||
-		(mp.body && mp.body.point_of_interaction && mp.body.point_of_interaction.transaction_data) || {};
-	const qrCode = pix.qr_code;
-	const qrCodeBase64 = pix.qr_code_base64;
-
-	if (!paymentId || !qrCode) throw new Error('Falha ao gerar PIX');
-
-	const accessToken = generateAccessToken();
-	const finalTarget = targetUrl || `/funil/${accessToken}`;
-	await pool.query(
-		`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name)
-		 VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9)`,
-		[paymentId.toString(), Math.round(transactionAmount * 100), description, finalTarget, accessToken, email || null, productUrl || null, whatsapp || null, productName || null]
-	);
-
-	return {
-		payment_id: paymentId,
-		qr_code: qrCode,
-		qr_code_base64: qrCodeBase64,
-		token_de_acesso: accessToken,
-		status_url: `/status/${paymentId}`,
-		acesso_url: `/acesso/${accessToken}`,
-		amount: transactionAmount,
-		description
-	};
-}
 
 // Comprar produto e renderizar checkout
 app.post('/buy/:id', async (req, res) => {
@@ -633,7 +1009,8 @@ app.post('/buy/:id', async (req, res) => {
 		const whatsapp = (req.body && req.body.whatsapp) ? String(req.body.whatsapp).trim() : '';
 		const orderbumpId = (req.body && req.body.orderbumpId) ? String(req.body.orderbumpId) : null;
 
-		const product = products.find(p => p.id === id && p.active !== false);
+		const activeProducts = await getActiveProducts();
+		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
 		if (!email) return res.status(400).send('E-mail é obrigatório');
 
@@ -641,24 +1018,20 @@ app.post('/buy/:id', async (req, res) => {
 		let description = product.name;
 
 		if (orderbumpId) {
-			const bumpProduct = products.find(p => p.id === orderbumpId && p.active !== false);
+			const bumpProduct = activeProducts.find(p => p.id === orderbumpId);
 			if (bumpProduct) {
 				amount += bumpProduct.price;
 				description += ' + ' + bumpProduct.name;
 			}
 		}
 
-		if (!process.env.MP_ACCESS_TOKEN) {
-			return res.status(500).send('Configuração inválida: MP_ACCESS_TOKEN não definido.');
-		}
-
 		// Redireciona para o checkout unificado (Pix e Cartão)
 		const accessToken = generateAccessToken();
 		const finalTarget = `/funil/${accessToken}`;
 		await pool.query(
-			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name)
-			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8)`,
-			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null]
+			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug)
+			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9)`,
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug]
 		);
 		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {
@@ -667,7 +1040,7 @@ app.post('/buy/:id', async (req, res) => {
 	}
 });
 
-// GET /checkout/:token - Renderiza tela de pagamento do AppMax
+// GET /checkout/:token - Renderiza tela de pagamento
 app.get('/checkout/:token', async (req, res) => {
 	try {
 		const { token } = req.params;
@@ -678,7 +1051,8 @@ app.get('/checkout/:token', async (req, res) => {
 		const row = rows[0];
 		if (!row) return res.status(404).send('Token de checkout inválido');
 
-		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		const activeProducts = await getActiveProducts();
+		const product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
 		if (!product) return res.status(404).send('Produto não encontrado');
 
 		return res.render('checkout_payment', {
@@ -732,7 +1106,8 @@ app.post('/checkout/pix/:token', async (req, res) => {
 		}
 
 		console.log('Criando pagamento PIX no checkout (Mercado Pago)...', { description: requestBody.description, amount: transactionAmount });
-		const createResp = await payment.create({ body: requestBody }, { idempotencyKey: idempotency });
+		const paymentClient = getPaymentInstance(req.store.mp_access_token);
+		const createResp = await paymentClient.create({ body: requestBody }, { idempotencyKey: idempotency });
 
 		const mp = createResp || {};
 		const paymentId = mp.id || (mp.body && mp.body.id);
@@ -796,7 +1171,7 @@ app.post('/checkout/card/:token', async (req, res) => {
 		const cardTokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens', {
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+				'Authorization': `Bearer ${req.store.mp_access_token}`,
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
@@ -848,7 +1223,8 @@ app.post('/checkout/card/:token', async (req, res) => {
 		}
 
 		console.log('Criando pagamento no cartão (Mercado Pago)...', { description: requestBody.description, amount: transactionAmount, cardBrand });
-		const createResp = await payment.create({ body: requestBody }, { idempotencyKey: idempotency });
+		const paymentClient = getPaymentInstance(req.store.mp_access_token);
+		const createResp = await paymentClient.create({ body: requestBody }, { idempotencyKey: idempotency });
 
 		const mp = createResp || {};
 		const paymentId = mp.id || (mp.body && mp.body.id);
@@ -905,10 +1281,11 @@ app.get('/funil/:token', async (req, res) => {
 		if (row.status !== 'paid') return res.status(402).send('Pagamento ainda não confirmado');
 
 		// Acha o produto comprado
-		const product = products.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		const activeProducts = await getActiveProducts();
+		const product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
 
 		if (product && product.upsell) {
-			const upsellProduct = products.find(p => p.id === product.upsell && p.active !== false);
+			const upsellProduct = activeProducts.find(p => p.id === product.upsell);
 			if (upsellProduct) {
 				return res.render('upsell', { token, upsellProduct, product, email: row.email, whatsapp: row.whatsapp });
 			}
@@ -922,38 +1299,26 @@ app.get('/funil/:token', async (req, res) => {
 });
 
 // Tutorial route (Pública)
-app.get('/tutorial/:id', (req, res) => {
+app.get('/tutorial/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const product = products.find(p => p.id === id && p.active !== false);
+		const activeProducts = await getActiveProducts();
+		const product = activeProducts.find(p => p.id === id);
 
 		if (!product) return res.status(404).send('Produto ou tutorial não encontrado');
 
-		return res.render('tutorial', { product, products: products.filter(p => p.active !== false) });
+		return res.render('tutorial', { product, products: activeProducts });
 	} catch (err) {
 		return res.status(500).send('Erro ao carregar tutorial.');
 	}
 });
 
-// POST /checkout - cria pagamento PIX
+// POST /checkout - cria pagamento PIX externo/manual
 app.post('/checkout', async (req, res) => {
 	try {
 		const { amount, description = 'PIX', targetUrl, payer } = req.body || {};
 		if (!amount || !targetUrl) {
 			return res.status(400).json({ error: 'amount e targetUrl são obrigatórios.' });
-		}
-		if (!process.env.MP_ACCESS_TOKEN) {
-			return res.status(500).json({ error: 'Configuração inválida: MP_ACCESS_TOKEN não definido.' });
-		}
-		// Evita confusão: credencial LIVE com payer de teste
-		if (process.env.MP_ACCESS_TOKEN.startsWith('APP_USR-')) {
-			const cpfBody = payer && payer.identification && payer.identification.number;
-			const isTestCpf = cpfBody === '19119119100';
-			if (!payer || isTestCpf) {
-				return res.status(400).json({
-					error: 'Credencial de PRODUÇÃO detectada. Envie payer real (CPF/E-mail reais) ou use MP_ACCESS_TOKEN de TESTE (TEST-...).'
-				});
-			}
 		}
 		// amount em centavos (BRL) → Mercado Pago espera número decimal
 		const transactionAmount = Number((amount).toFixed(2));
@@ -985,7 +1350,8 @@ app.post('/checkout', async (req, res) => {
 			requestBody.notification_url = `${process.env.BASE_URL_PUBLICA.replace(/\/$/, '')}/webhook/mercadopago`;
 		}
 
-		const createResp = await payment.create({ body: requestBody }, { idempotencyKey: idempotency });
+		const paymentClient = getPaymentInstance(req.store.mp_access_token);
+		const createResp = await paymentClient.create({ body: requestBody }, { idempotencyKey: idempotency });
 
 		const mp = createResp || {};
 		const paymentId = mp.id || (mp.body && mp.body.id);
@@ -1002,9 +1368,9 @@ app.post('/checkout', async (req, res) => {
 
 		const accessToken = generateAccessToken();
 		await pool.query(
-			`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status)
-			 VALUES ($1, $2, $3, $4, $5, 'pending')`,
-			[paymentId.toString(), Math.round(transactionAmount * 100), description, targetUrl, accessToken]
+			`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, store_slug)
+			 VALUES ($1, $2, $3, $4, $5, 'pending', $6)`,
+			[paymentId.toString(), Math.round(transactionAmount * 100), description, targetUrl, accessToken, req.store.slug]
 		);
 
 		return res.json({
@@ -1035,7 +1401,6 @@ app.post('/checkout', async (req, res) => {
 app.post('/webhook/mercadopago', async (req, res) => {
 	try {
 		console.log('Recebendo webhook do Mercado Pago...', req.body);
-		// Mercado Pago envia diferentes formatos. Normalmente vem { type, action, data: { id } } ou { id, topic }
 		const body = req.body || {};
 		const topic = body.topic || body.type;
 		let id = body.data && body.data.id ? body.data.id : body.id;
@@ -1046,8 +1411,16 @@ app.post('/webhook/mercadopago', async (req, res) => {
 		}
 
 		if ((topic === 'payment' || topic === 'payments') && id) {
-			// Obtém detalhes do pagamento para confirmar
-			const details = await payment.get({ id: id.toString() });
+			const { rows: paymentRows } = await pool.query('SELECT store_slug FROM payments WHERE payment_id = $1', [id.toString()]);
+			let token = process.env.MP_ACCESS_TOKEN;
+			if (paymentRows.length > 0 && paymentRows[0].store_slug) {
+				const { rows: storeRows } = await pool.query('SELECT mp_access_token FROM stores WHERE slug = $1', [paymentRows[0].store_slug]);
+				if (storeRows.length > 0) {
+					token = storeRows[0].mp_access_token;
+				}
+			}
+			const paymentClient = getPaymentInstance(token);
+			const details = await paymentClient.get({ id: id.toString() });
 			const status = (details && details.status) || (details.body && details.body.status);
 
 			if (status === 'approved') {
@@ -1059,7 +1432,7 @@ app.post('/webhook/mercadopago', async (req, res) => {
 		return res.status(200).json({ received: true });
 	} catch (err) {
 		console.error('Erro webhook:', err);
-		// Mesmo em erro, responda 200 para evitar loop; registre para reprocessar se necessário
+		// Mesmo em erro, responda 200 para evitar loop
 		return res.status(200).json({ received: true });
 	}
 });

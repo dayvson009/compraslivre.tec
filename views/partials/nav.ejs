@@ -93,7 +93,11 @@
     <div class="header-container">
         <div class="header-top">
             <div class="logo-area">
-                <a href="/" class="logo-text">ComprasLivre</a>
+                <% if (locals.store && store.logo_url) { %>
+                    <a href="/"><img src="<%= store.logo_url %>" alt="<%= store.name %>" style="max-height: 40px;"></a>
+                <% } else { %>
+                    <a href="/" class="logo-text"><%= (locals.store && store.name) ? store.name : 'ComprasLivre' %></a>
+                <% } %>
             </div>
             <input type="text" class="search-box" placeholder="Busque produtos, marcas e muito mais..."
                 style="margin: 0 30px;outline: none;">

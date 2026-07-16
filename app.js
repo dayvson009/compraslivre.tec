@@ -1030,6 +1030,7 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 	} else if (req.body.questions && typeof req.body.questions === 'object') {
 		parsedQuestions = Object.values(req.body.questions);
 	}
+	parsedQuestions = parsedQuestions.filter(q => q && typeof q === 'object' && q.question);
 
 	let parsedPinions = [];
 	if (req.body.pinions && Array.isArray(req.body.pinions)) {
@@ -1037,6 +1038,7 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 	} else if (req.body.pinions && typeof req.body.pinions === 'object') {
 		parsedPinions = Object.values(req.body.pinions);
 	}
+	parsedPinions = parsedPinions.filter(p => p && typeof p === 'object' && p.pinion);
 
 	const catId = categoryId ? parseInt(categoryId) : null;
 	const sysType = systemType || null;
@@ -1117,6 +1119,7 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 	} else if (req.body.questions && typeof req.body.questions === 'object') {
 		parsedQuestions = Object.values(req.body.questions);
 	}
+	parsedQuestions = parsedQuestions.filter(q => q && typeof q === 'object' && q.question);
 
 	let parsedPinions = [];
 	if (req.body.pinions && Array.isArray(req.body.pinions)) {
@@ -1124,6 +1127,7 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 	} else if (req.body.pinions && typeof req.body.pinions === 'object') {
 		parsedPinions = Object.values(req.body.pinions);
 	}
+	parsedPinions = parsedPinions.filter(p => p && typeof p === 'object' && p.pinion);
 
 	const catId = categoryId ? parseInt(categoryId) : null;
 	const sysType = systemType || null;

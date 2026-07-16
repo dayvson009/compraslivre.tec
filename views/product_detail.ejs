@@ -1466,9 +1466,11 @@
     }
 
     let avgRate = 0;
-    let totalReviews = product.pinions ? product.pinions.length : 0;
+    // Filter out null/undefined reviews to avoid breaking calculations
+    let safePinions = (product.pinions || []).filter(Boolean);
+    let totalReviews = safePinions.length;
     if (totalReviews > 0) {
-        let sum = product.pinions.reduce((acc, p) => acc + (Number(p.rate) || 0), 0);
+        let sum = safePinions.reduce((acc, p) => acc + (Number(p.rate) || 0), 0);
         avgRate = (sum / totalReviews).toFixed(1);
     } else {
         avgRate = "5.0";
@@ -1808,13 +1810,13 @@
                 <div class="pd-review-bars">
                     <%
                     let starCounts = [0,0,0,0,0];
-                    if (product.pinions && product.pinions.length > 0) {
-                        product.pinions.forEach(function(p) {
+                    if (safePinions.length > 0) {
+                        safePinions.forEach(function(p) {
                             let r = Math.min(5, Math.max(1, Math.round(Number(p.rate) || 5)));
                             starCounts[r-1]++;
                         });
                     }
-                    let total = Math.max(1, product.pinions ? product.pinions.length : 1);
+                    let total = Math.max(1, safePinions.length);
                     %>
                     <% for(let s=5; s>=1; s--) { %>
                     <% let pct = Math.round((starCounts[s-1] / total) * 100); %>
@@ -1830,8 +1832,8 @@
             </div>
 
             <div class="pd-review-list">
-                <% if (product.pinions && product.pinions.length > 0) { %>
-                <% product.pinions.forEach(function(op, idx) { %>
+                <% if (safePinions.length > 0) { %>
+                <% safePinions.forEach(function(op, idx) { %>
                 <div class="pd-review-item">
                     <div class="pd-review-avatar">
                         <% if (op.image && op.image.length > 0) { %>

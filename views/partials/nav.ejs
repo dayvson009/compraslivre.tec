@@ -1,129 +1,228 @@
 <!-- views/partials/nav.ejs -->
-<style>
-    header {
-        background-color: #3483FA;
-        padding: 10px 5%;
-        border-bottom: 5px solid #FFEB45;
-    }
-
-    .header-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 100%;
-        max-width: 1184px;
-        margin: 0 auto;
-    }
-
-    .header-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    .logo-area {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .logo-text {
-        color: #ffeb45;
-        font-size: 22px;
-        text-decoration: none;
-        font-weight: bold;
-    }
-
-    .cep-box {
-        font-size: 12px;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 2px;
-    }
-
-    .search-box {
-        background: white;
-        padding: 8px 15px;
-        border-radius: 4px;
-        width: 50%;
-        border: none;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .header-nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 10px;
-    }
-
-    .nav-links {
-        display: flex;
-        gap: 15px;
-        margin-left: 40px;
-    }
-
-    .nav-links a {
-        text-decoration: none;
-        color: #fff;
-        font-size: 13px;
-    }
-
-    .nav-links a:hover {
-        color: #FFEB45;
-    }
-
-    @media (max-width: 500px) {
-
-        .nav-links,
-        .logo-area:last-child {
-            display: none;
-        }
-
-        .search-box {
-            width: 100%;
-            margin: 0 !important;
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    if (typeof tailwind !== 'undefined') {
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
         }
     }
-</style>
+</script>
 
-<header>
-    <div class="header-container">
-        <div class="header-top">
-            <div class="logo-area">
-                <% if (locals.store && store.logo_url) { %>
-                    <a href="/"><img src="<%= store.logo_url %>" alt="<%= store.name %>" style="max-height: 40px;"></a>
-                <% } else { %>
-                    <a href="/" class="logo-text"><%= (locals.store && store.name) ? store.name : 'ComprasLivre' %></a>
-                <% } %>
-            </div>
-            <input type="text" class="search-box" placeholder="Busque produtos, marcas e muito mais..."
-                style="margin: 0 30px;outline: none;">
+<%
+    // Tratamento seguro para variáveis que podem vir indefinidas das rotas
+    const searchVal = (typeof filters !== 'undefined' && filters.q) ? filters.q : '';
+    const catVal = (typeof filters !== 'undefined' && filters.category) ? filters.category : '';
+    const sysVal = (typeof filters !== 'undefined' && filters.system) ? filters.system : '';
+%>
 
-            <div class="logo-area">
-                <img src="/images/corel-draw.gif" alt="Meli">
+<header class="w-full font-sans">
+    <!-- Faixa Superior de Informações (Top-bar) -->
+    <div class="bg-slate-900 text-slate-300 py-2.5 border-b border-slate-800 text-[10px] sm:text-xs font-medium">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4 py-1.5">
+            <div class="flex flex-wrap justify-center md:justify-start gap-6 sm:gap-8">
+                <span class="flex items-start gap-2 text-left">
+                    <i class="far fa-paper-plane text-sky-400 mt-0.5 text-sm"></i>
+                    <span class="flex flex-col">
+                        <strong class="text-white text-xs font-bold leading-tight">Entrega imediata</strong>
+                        <span class="text-slate-400 font-normal text-[10px] leading-tight">Receba na hora por e-mail</span>
+                    </span>
+                </span>
+                <span class="hidden sm:inline-block text-slate-800 self-center">|</span>
+                <span class="flex items-start gap-2 text-left">
+                    <i class="far fa-check-circle text-sky-400 mt-0.5 text-sm"></i>
+                    <span class="flex flex-col">
+                        <strong class="text-white text-xs font-bold leading-tight">Licenças 100% originais</strong>
+                        <span class="text-slate-400 font-normal text-[10px] leading-tight">Software original e garantido</span>
+                    </span>
+                </span>
+                <span class="hidden sm:inline-block text-slate-800 self-center">|</span>
+                <span class="flex items-start gap-2 text-left">
+                    <i class="fas fa-headset text-sky-400 mt-0.5 text-sm"></i>
+                    <span class="flex flex-col">
+                        <strong class="text-white text-xs font-bold leading-tight">Suporte especializado</strong>
+                        <span class="text-slate-400 font-normal text-[10px] leading-tight">Atendimento via WhatsApp</span>
+                    </span>
+                </span>
             </div>
-        </div>
-        <div class="header-nav">
-            <div class="cep-box">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                </svg>
-                Informe seu CEP
-                <div class="nav-links">
-                    <a href="/">Home</a>
-                    <a href="/produtos">Todos produtos</a>
-                    <a href="/produtos#ofertas">Ofertas do dia</a>
-                    <a href="/produtos#mais-comprados">Mais comprados</a>
-                    <a href="https://wa.me/5581985315669">Contato</a>
+            
+            <!-- User face rating group -->
+            <div class="flex items-center gap-2.5">
+                <div class="flex -space-x-2 overflow-hidden">
+                    <img class="inline-block h-7 w-7 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&h=64&q=80" alt="Cliente">
+                    <img class="inline-block h-7 w-7 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&h=64&q=80" alt="Cliente">
+                    <img class="inline-block h-7 w-7 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64&q=80" alt="Cliente">
                 </div>
-            </div>
-            <div class="nav-links">
-                <a href="javascript:history.back()">Voltar</a>
+                <div class="flex flex-col text-left leading-none">
+                    <span class="text-[9px] text-slate-400 font-bold mb-0.5">Avaliações dos clientes</span>
+                    <div class="flex items-center gap-1">
+                        <strong class="text-white text-xs font-black">4.9</strong>
+                        <div class="flex gap-0.5 text-amber-400 font-bold">
+                            <i class="fas fa-star text-[8px]"></i>
+                            <i class="fas fa-star text-[8px]"></i>
+                            <i class="fas fa-star text-[8px]"></i>
+                            <i class="fas fa-star text-[8px]"></i>
+                            <i class="fas fa-star text-[8px]"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Menu Principal -->
+    <div class="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+
+            <!-- Logo -->
+            <div class="flex items-center flex-shrink-0">
+                <% if (locals.store && store.logo_url) { %>
+                    <a href="/"><img src="<%= store.logo_url %>" alt="<%= store.name %>"
+                            class="h-10 object-contain"></a>
+                    <% } else { %>
+                        <a href="/"><img src="/images/LogoHeader.png" alt="Compras Livre Tec"
+                                class="h-10 object-contain"
+                                onerror="this.style.display='none'; document.getElementById('logo-fallback-text').style.display='block';"></a>
+                        <a href="/" id="logo-fallback-text"
+                            class="logo-text font-black text-xl text-slate-900 tracking-tight" style="display:none;">
+                            <%= (locals.store && store.name) ? store.name : 'ComprasLivre' %><span
+                                     class="text-blue-600">.tec</span>
+                        </a>
+                        <% } %>
+            </div>
+
+            <!-- Busca Central -->
+            <form action="/produtos" method="GET" class="hidden sm:flex items-center w-full max-w-xs md:max-w-sm m-0">
+                <% if (catVal) { %>
+                    <input type="hidden" name="category" value="<%= catVal %>">
+                <% } %>
+                <% if (sysVal) { %>
+                    <input type="hidden" name="system" value="<%= sysVal %>">
+                <% } %>
+                <div class="relative w-full">
+                    <input type="text" name="q" placeholder="Buscar por software..." value="<%= searchVal %>" class="w-full pl-4 pr-10 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs transition font-semibold" style="border: 2px solid #2563eb;">
+                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition">
+                        <i class="fas fa-search text-xs"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Links de Navegação (Desktop) -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="/"
+                    class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Início</a>
+                <a href="/produtos"
+                    class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Produtos</a>
+                <a href="https://wa.me/5581985315669" target="_blank"
+                    class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Suporte</a>
+            </nav>
+
+            <!-- Ações Direitas (Favoritos, WhatsApp e Hamburger) -->
+            <div class="flex items-center gap-4 sm:gap-6">
+                <!-- Favoritos -->
+                <a href="/produtos?show_favorites=true" id="favorites-nav-btn"
+                    class="hidden md:flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors group">
+                    <i class="far fa-heart text-base text-slate-400 group-hover:text-rose-500 transition-colors"></i>
+                    <span>Favoritos (<span id="favorites-nav-count">0</span>)</span>
+                </a>
+
+                <!-- WhatsApp -->
+                <a href="https://wa.me/5581985315669" target="_blank"
+                    class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 transition-all duration-200 shadow-sm shadow-emerald-500/10 hover:shadow-emerald-500/20">
+                    <i class="fab fa-whatsapp text-sm"></i>
+                    <span class="hidden lg:inline-block">Falar Conosco</span>
+                </a>
+
+                <!-- Hamburger Button (Mobile) -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-600 hover:text-slate-900 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Menu Mobile Recolhível -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-100 bg-white px-4 py-4 space-y-4">
+            <!-- Busca Mobile -->
+            <form action="/produtos" method="GET" class="flex sm:hidden items-center w-full m-0 pb-2">
+                <% if (catVal) { %>
+                    <input type="hidden" name="category" value="<%= catVal %>">
+                <% } %>
+                <% if (sysVal) { %>
+                    <input type="hidden" name="system" value="<%= sysVal %>">
+                <% } %>
+                <div class="relative w-full">
+                    <input type="text" name="q" placeholder="Buscar por software..." value="<%= searchVal %>" class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs transition font-semibold" style="border: 2px solid #2563eb;">
+                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition">
+                        <i class="fas fa-search text-xs"></i>
+                    </button>
+                </div>
+            </form>
+
+            <nav class="flex flex-col space-y-3">
+                <a href="/" class="text-sm font-semibold text-slate-600 hover:text-slate-900 py-1 transition-colors">Início</a>
+                <a href="/produtos" class="text-sm font-semibold text-slate-600 hover:text-slate-900 py-1 transition-colors">Produtos</a>
+                <a href="/produtos?show_favorites=true" class="text-sm font-semibold text-slate-600 hover:text-slate-900 py-1 transition-colors">
+                    Favoritos (<span id="favorites-mobile-count">0</span>)
+                </a>
+                <a href="https://wa.me/5581985315669" target="_blank" class="text-sm font-semibold text-slate-600 hover:text-slate-900 py-1 transition-colors">Suporte</a>
+            </nav>
+        </div>
+    </div>
 </header>
+
+<script>
+    // Toggle Menu Mobile
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.contains('hidden');
+            if (isHidden) {
+                mobileMenu.classList.remove('hidden');
+                mobileMenuBtn.innerHTML = '<i class="fas fa-times text-xl"></i>';
+            } else {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.innerHTML = '<i class="fas fa-bars text-xl"></i>';
+            }
+        });
+    }
+
+    // Atualiza o contador de favoritos no menu
+    function updateNavFavoritesCount() {
+        const countSpan = document.getElementById('favorites-nav-count');
+        const countMobileSpan = document.getElementById('favorites-mobile-count');
+        try {
+            const favs = JSON.parse(localStorage.getItem('favorited_products') || '[]');
+            if (countSpan) countSpan.innerText = favs.length;
+            if (countMobileSpan) countMobileSpan.innerText = favs.length;
+        } catch (e) {
+            if (countSpan) countSpan.innerText = '0';
+            if (countMobileSpan) countMobileSpan.innerText = '0';
+        }
+    }
+
+    // Escuta mudanças no localStorage para atualizar contador
+    window.addEventListener('storage', updateNavFavoritesCount);
+    document.addEventListener('DOMContentLoaded', updateNavFavoritesCount);
+
+    // Intercepta e atualiza caso o favorito seja clicado e já estejamos na página /produtos
+    const favBtn = document.getElementById('favorites-nav-btn');
+    if (favBtn) {
+        favBtn.addEventListener('click', function (e) {
+            if (window.location.pathname === '/produtos') {
+                e.preventDefault();
+                const event = new CustomEvent('filter-favorites');
+                window.dispatchEvent(event);
+            }
+        });
+    }
+</script>

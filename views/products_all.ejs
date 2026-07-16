@@ -1,124 +1,645 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todos os Produtos - ComprasLivre</title>
+    <title>Catálogo de Softwares - ComprasLivre.tec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        :root {
-            --tech-blue: #3483fa;
-            --tech-dark: #2d3277;
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f8ff',
+                            100: '#ebf1ff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                        }
+                    }
+                }
+            }
         }
+    </script>
+    <style>
         body {
-            background-color: #f5f5f5;
+            background-color: #f8fafc;
         }
         .product-card {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
         }
     </style>
 </head>
 
-<body>
+<body class="text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-700">
+    
+    <%
+    function getFilterUrl(newParams) {
+        const q = typeof filters.q !== 'undefined' ? filters.q : '';
+        const category = typeof filters.category !== 'undefined' ? filters.category : '';
+        const system = typeof filters.system !== 'undefined' ? filters.system : '';
+        
+        const params = { q, category, system, ...newParams };
+        const parts = [];
+        if (params.q) parts.push('q=' + encodeURIComponent(params.q));
+        if (params.category) parts.push('category=' + encodeURIComponent(params.category));
+        if (params.system) parts.push('system=' + encodeURIComponent(params.system));
+        return '/produtos' + (parts.length > 0 ? '?' + parts.join('&') : '');
+    }
+    %>
+
     <%- include('partials/nav') %>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        
-        <!-- Seção: Mais Comprados -->
-        <section id="mais-comprados" class="mb-12">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-fire text-orange-500"></i> Mais Comprados
-                </h2>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                <% products.slice(0, 5).forEach(product => { %>
-                    <a href="/produto/<%= product.id %>" class="bg-white rounded-lg p-4 product-card border border-slate-100 flex flex-col h-full">
-                        <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="w-full h-40 object-contain mb-4">
-                        <h3 class="text-sm font-medium text-slate-700 line-clamp-2 mb-2"><%= product.name %></h3>
-                        <div class="mt-auto">
-                            <p class="text-xs text-slate-400 line-through">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
-                            <p class="text-lg font-bold text-slate-900">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
-                            <p class="text-xs text-green-600 font-bold mt-1">Frete Grátis</p>
-                        </div>
-                    </a>
-                <% }) %>
-            </div>
-        </section>
+    <%
+    // Encontra produtos específicos do banco para o banner
+    const bannerCorel = (typeof store !== 'undefined' && store.banner_product_id) ? products.find(p => p.id === store.banner_product_id) : (products.find(p => p.name.toLowerCase().includes('corel')) || products[0]);
+    const sideOffice = products.find(p => p.name.toLowerCase().includes('office'));
+    const sideAdobe = products.find(p => p.name.toLowerCase().includes('adobe') || p.name.toLowerCase().includes('creative cloud'));
+    const sidePromob = products.find(p => p.name.toLowerCase().includes('promob'));
+    const sideProteus = products.find(p => p.name.toLowerCase().includes('proteus'));
 
-        <!-- Seção: Ofertas do Dia -->
-        <section id="ofertas" class="mb-12">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl overflow-hidden relative">
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i class="fas fa-bolt text-9xl"></i>
-                </div>
-                <div class="relative z-10">
-                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
-                        <i class="fas fa-bolt text-yellow-400"></i> Ofertas do Dia
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <% products.filter(p => p.priceBefore > p.price).slice(0, 2).forEach(product => { %>
-                            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 flex flex-col sm:flex-row gap-6 border border-white/20 hover:bg-white/20 transition cursor-pointer" onclick="window.location.href='/produto/<%= product.id %>'">
-                                <div class="bg-white rounded-lg p-4 shrink-0 flex items-center justify-center w-32 h-32 mx-auto sm:mx-0">
-                                    <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="max-w-full max-h-full object-contain">
-                                </div>
-                                <div class="flex flex-col justify-center text-center sm:text-left">
-                                    <span class="bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-1 rounded w-fit mx-auto sm:mx-0 mb-2">OFERTA IMPERDÍVEL</span>
-                                    <h3 class="text-xl font-bold mb-2 line-clamp-1"><%= product.name %></h3>
-                                    <div class="flex items-center justify-center sm:justify-start gap-3">
-                                        <span class="text-white/60 line-through text-sm">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
-                                        <span class="text-2xl font-black text-white">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+    // Fallback caso não ache algum
+    const featuredFallback = products.filter(p => p.id !== (bannerCorel ? bannerCorel.id : '')).slice(0, 4);
+    const fOffice = sideOffice || featuredFallback[0];
+    const fAdobe = sideAdobe || featuredFallback[1];
+    const fPromob = sidePromob || featuredFallback[2];
+    const fProteus = sideProteus || featuredFallback[3];
+    %>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
+        <!-- Banner de Oferta Principal -->
+        <% if (bannerCorel) { %>
+            <% 
+            const bgImage = (locals.store && store.banner_background_image) ? store.banner_background_image : '/images/banner_corel.png';
+            %>
+            <section class="hidden lg:block mb-12 rounded-3xl border border-slate-800 p-6 sm:p-8 md:p-10 text-white relative overflow-hidden shadow-xl bg-cover bg-center" style="background-image: url('<%= bgImage %>')">
+                <!-- Luz de fundo decorativa -->
+                <div class="absolute -right-40 -top-40 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-40 -bottom-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                    <!-- Detalhes do Produto (Col 5) -->
+                    <div class="lg:col-span-5 flex flex-col justify-center text-center lg:text-left">
+                        <span class="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider w-fit mx-auto lg:mx-0 mb-4">
+                            <i class="fas fa-fire"></i> Mais Vendido
+                        </span>
+                        
+                        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2 leading-none">
+                            <%= (locals.store && store.banner_title) ? store.banner_title : bannerCorel.name %>
+                        </h2>
+                        
+                        <p class="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed">
+                            <%= (locals.store && store.banner_subtitle) ? store.banner_subtitle : 'Licença vitalícia • Ativação original\nEntrega imediata no seu e-mail' %>
+                        </p>
+
+                        <!-- Selos de Confiança -->
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-3 text-[10px] text-slate-300 font-semibold mb-6">
+                            <span class="flex items-center gap-1 bg-slate-800/60 px-2.5 py-1 rounded-md border border-slate-700/50">
+                                <i class="fas fa-check text-sky-400 text-[9px]"></i> Licença Vitalícia
+                            </span>
+                            <span class="flex items-center gap-1 bg-slate-800/60 px-2.5 py-1 rounded-md border border-slate-700/50">
+                                <i class="fas fa-check text-sky-400 text-[9px]"></i> Ativação Original
+                            </span>
+                            <span class="flex items-center gap-1 bg-slate-800/60 px-2.5 py-1 rounded-md border border-slate-700/50">
+                                <i class="fas fa-check text-sky-400 text-[9px]"></i> Suporte Especializado
+                            </span>
+                        </div>
+
+                        <!-- Preço & Ação -->
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
+                            <div class="text-center sm:text-left">
+                                <% if (bannerCorel.priceBefore) { %>
+                                    <p class="text-xs text-slate-500 line-through">De R$ <%= bannerCorel.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                                <% } %>
+                                <p class="text-2xl font-black text-emerald-400">
+                                    <span class="text-slate-400 font-normal text-xs mr-0.5">Por</span> 
+                                    R$ <%= bannerCorel.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                </p>
+                            </div>
+                            <a href="/produto/<%= bannerCorel.id %>" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black py-3 px-8 rounded-2xl text-sm transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 flex items-center gap-2">
+                                Comprar agora <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+
+                        <!-- Temporizador -->
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-4 border-t border-slate-800/80">
+                            <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Oferta termina em:</span>
+                            <div class="flex items-center gap-2 font-mono text-sm text-white">
+                                <div class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 min-w-[36px] text-center" id="timer-hours">08</div>
+                                <span class="text-slate-600">:</span>
+                                <div class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 min-w-[36px] text-center" id="timer-minutes">45</div>
+                                <span class="text-slate-600">:</span>
+                                <div class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 min-w-[36px] text-center" id="timer-seconds">32</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Caixa 3D (Col 4) -->
+                    <div class="lg:col-span-4 flex items-center justify-center py-4">
+                        <% if (!bgImage || !bgImage.includes('banner_corel')) { %>
+                            <div class="relative max-w-[240px] group cursor-pointer" onclick="window.location.href='/produto/<%= bannerCorel.id %>'">
+                                <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/35 transition-all duration-300"></div>
+                                <img src="<%= getImageUrl(bannerCorel.image) %>" alt="<%= bannerCorel.name %>" class="relative z-10 max-h-64 object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.6)] transition-transform duration-300 group-hover:scale-105">
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Produtos Flutuantes (Col 3) -->
+                    <div class="lg:col-span-3 flex flex-col gap-3">
+                        
+                        <!-- Office -->
+                        <% if (fOffice) { %>
+                            <div onclick="window.location.href='/produto/<%= fOffice.id %>'" class="bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-3 flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-850 p-1 flex items-center justify-center shrink-0 border border-slate-800">
+                                        <img src="<%= getImageUrl(fOffice.image) %>" alt="" class="max-w-full max-h-full object-contain">
                                     </div>
-                                    <button class="mt-4 bg-white text-blue-600 font-bold py-2 px-6 rounded-full hover:bg-yellow-400 hover:text-blue-900 transition">Aproveitar agora</button>
+                                    <div class="text-left">
+                                        <h4 class="text-xs font-bold text-white line-clamp-1"><%= fOffice.name %></h4>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">A partir de <span class="text-emerald-400 font-bold">R$ <%= fOffice.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-[10px] text-slate-500 group-hover:text-white transition-colors mr-1"></i>
+                            </div>
+                        <% } %>
+
+                        <!-- Adobe -->
+                        <% if (fAdobe) { %>
+                            <div onclick="window.location.href='/produto/<%= fAdobe.id %>'" class="bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-3 flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-850 p-1 flex items-center justify-center shrink-0 border border-slate-800">
+                                        <img src="<%= getImageUrl(fAdobe.image) %>" alt="" class="max-w-full max-h-full object-contain">
+                                    </div>
+                                    <div class="text-left">
+                                        <h4 class="text-xs font-bold text-white line-clamp-1"><%= fAdobe.name %></h4>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">A partir de <span class="text-emerald-400 font-bold">R$ <%= fAdobe.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-[10px] text-slate-500 group-hover:text-white transition-colors mr-1"></i>
+                            </div>
+                        <% } %>
+
+                        <!-- Promob -->
+                        <% if (fPromob) { %>
+                            <div onclick="window.location.href='/produto/<%= fPromob.id %>'" class="bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-3 flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-850 p-1 flex items-center justify-center shrink-0 border border-slate-800">
+                                        <img src="<%= getImageUrl(fPromob.image) %>" alt="" class="max-w-full max-h-full object-contain">
+                                    </div>
+                                    <div class="text-left">
+                                        <h4 class="text-xs font-bold text-white line-clamp-1"><%= fPromob.name %></h4>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">A partir de <span class="text-emerald-400 font-bold">R$ <%= fPromob.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-[10px] text-slate-500 group-hover:text-white transition-colors mr-1"></i>
+                            </div>
+                        <% } %>
+
+                        <!-- Proteus -->
+                        <% if (fProteus) { %>
+                            <div onclick="window.location.href='/produto/<%= fProteus.id %>'" class="bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-3 flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-850 p-1 flex items-center justify-center shrink-0 border border-slate-800">
+                                        <img src="<%= getImageUrl(fProteus.image) %>" alt="" class="max-w-full max-h-full object-contain">
+                                    </div>
+                                    <div class="text-left">
+                                        <h4 class="text-xs font-bold text-white line-clamp-1"><%= fProteus.name %></h4>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">A partir de <span class="text-emerald-400 font-bold">R$ <%= fProteus.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-[10px] text-slate-500 group-hover:text-white transition-colors mr-1"></i>
+                            </div>
+                        <% } %>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Script do Temporizador -->
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    let totalSeconds = (8 * 3600) + (45 * 60) + 32;
+
+                    function updateTimer() {
+                        if (totalSeconds <= 0) {
+                            totalSeconds = (8 * 3600) + (45 * 60) + 32;
+                        }
+
+                        const hours = Math.floor(totalSeconds / 3600);
+                        const minutes = Math.floor((totalSeconds % 3600) / 60);
+                        const seconds = totalSeconds % 60;
+
+                        document.getElementById('timer-hours').innerText = String(hours).padStart(2, '0');
+                        document.getElementById('timer-minutes').innerText = String(minutes).padStart(2, '0');
+                        document.getElementById('timer-seconds').innerText = String(seconds).padStart(2, '0');
+
+                        totalSeconds--;
+                    }
+
+                    updateTimer();
+                    setInterval(updateTimer, 1000);
+                });
+            </script>
+        <% } %>
+
+        <!-- Header Catalogo -->
+        <div class="mb-10 text-center md:text-left">
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
+                Catálogo de Softwares
+            </h1>
+            <p class="mt-2 text-base text-slate-500">
+                Instalação e suporte remoto especializado incluído em todas as licenças.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Barra Lateral de Filtros -->
+            <aside class="space-y-6">
+                
+                <!-- OS Filter -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-desktop text-brand-500"></i> Sistema Operacional
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <a href="<%= getFilterUrl({ system: '' }) %>" 
+                           class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl border text-center transition-all duration-200 <%= !filters.system ? 'bg-brand-50 border-brand-200 text-brand-600 font-semibold shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-slate-50' %>">
+                            <span class="text-xs">Todos</span>
+                        </a>
+                        <a href="<%= getFilterUrl({ system: 'Windows' }) %>" 
+                           class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl border text-center transition-all duration-200 <%= filters.system === 'Windows' ? 'bg-brand-50 border-brand-200 text-brand-600 font-semibold shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-slate-50' %>">
+                            <i class="fab fa-windows text-base mb-1 <%= filters.system === 'Windows' ? 'text-brand-500' : 'text-slate-400' %>"></i>
+                            <span class="text-[10px]">Windows</span>
+                        </a>
+                        <a href="<%= getFilterUrl({ system: 'Mac' }) %>" 
+                           class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl border text-center transition-all duration-200 <%= filters.system === 'Mac' ? 'bg-brand-50 border-brand-200 text-brand-600 font-semibold shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-slate-50' %>">
+                            <i class="fab fa-apple text-base mb-1 <%= filters.system === 'Mac' ? 'text-brand-500' : 'text-slate-400' %>"></i>
+                            <span class="text-[10px]">macOS</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-tags text-brand-500"></i> Categorias
+                    </h3>
+                    <div class="space-y-1.5">
+                        <a href="<%= getFilterUrl({ category: '' }) %>" 
+                           class="flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all duration-200 <%= !filters.category ? 'bg-brand-50 text-brand-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+                            <span>Todas as Categorias</span>
+                        </a>
+                        <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+                            <% categories.forEach(cat => { %>
+                                <a href="<%= getFilterUrl({ category: cat.id }) %>" 
+                                   class="flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all duration-200 <%= filters.category == cat.id ? 'bg-brand-50 text-brand-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+                                    <span><%= cat.name %></span>
+                                </a>
+                            <% }) %>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Precisa de Ajuda Box -->
+                <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 text-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-600 text-base">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">Precisa de ajuda?</h4>
+                    <p class="text-xs text-slate-500 mb-4">Fale com nosso suporte técnico no WhatsApp.</p>
+                    <a href="https://wa.me/5581985315669" target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-sm shadow-emerald-500/10">
+                        <i class="fab fa-whatsapp text-sm"></i> Falar no WhatsApp
+                    </a>
+                </div>
+
+            </aside>
+
+            <!-- Grid de Produtos -->
+            <div class="lg:col-span-3">
+                
+                <!-- Header "Todos os produtos" com Buscar Integrado -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900" id="catalog-title">Todos os produtos</h2>
+                        <p class="text-xs text-slate-400 font-medium mt-0.5" id="products-count-label">Exibindo <%= products.length %> softwares</p>
+                    </div>
+                    
+                    <!-- Form de busca -->
+                    <form action="/produtos" method="GET" class="flex items-center w-full md:max-w-xs m-0">
+                        <% if (filters.category) { %>
+                            <input type="hidden" name="category" value="<%= filters.category %>">
+                        <% } %>
+                        <% if (filters.system) { %>
+                            <input type="hidden" name="system" value="<%= filters.system %>">
+                        <% } %>
+                        <div class="relative w-full">
+                            <input type="text" name="q" placeholder="Buscar por software..." value="<%= filters.q %>" class="w-full pl-4 pr-10 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-xs transition" style="border: 2px solid #2563eb;">
+                            <button type="submit" class="absolute right-3 top-2.5 text-slate-400 hover:text-brand-500 transition" style="margin-top: -4px;">
+                                <i class="fas fa-search text-xs"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <% if (filters.q) { %>
+                    <div class="mb-6 bg-slate-100 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                        <span class="text-sm text-slate-600">
+                            Resultados para "<strong class="text-slate-800"><%= filters.q %></strong>"
+                        </span>
+                        <a href="<%= getFilterUrl({ q: '' }) %>" class="text-xs text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1">
+                            <i class="fas fa-times-circle"></i> Limpar busca
+                        </a>
+                    </div>
+                <% } %>
+
+                <!-- State: Sem favoritos -->
+                <div id="no-favorites-state" class="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm max-w-lg mx-auto my-12" style="display: none;">
+                    <div class="w-16 h-16 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-500">
+                        <i class="far fa-heart text-2xl animate-pulse"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Você não favoritou nada</h3>
+                    <p class="text-sm text-slate-500 mb-6">Explore o catálogo e clique no coração nos produtos que você mais gosta para encontrá-los facilmente aqui.</p>
+                    <button type="button" onclick="showAllProducts()" class="bg-brand-50 hover:bg-brand-100 border border-brand-100 text-brand-600 font-bold py-2.5 px-6 rounded-xl text-xs transition inline-flex items-center gap-2">
+                        Ver Catálogo Completo
+                    </button>
+                </div>
+
+                <% if (products && products.length > 0) { %>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="products-grid">
+                        <% products.forEach(product => { %>
+                            <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md product-card flex flex-col h-full group product-grid-item" data-product-id="<%= product.id %>">
+                                
+                                <!-- Image Area -->
+                                <div class="relative bg-slate-50/50 p-6 flex items-center justify-center h-48 overflow-hidden transition-colors duration-200 group-hover:bg-slate-50">
+                                    <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
+                                    
+                                    <!-- OS Badge -->
+                                    <span class="absolute top-3 left-3 bg-white/95 backdrop-blur border border-slate-200/50 text-[9px] font-bold py-1 px-2.5 rounded-full flex items-center gap-1 shadow-sm text-slate-700">
+                                        <% if (product.systemType === 'Windows') { %>
+                                            <i class="fab fa-windows text-blue-500"></i> Windows
+                                        <% } else if (product.systemType === 'Mac') { %>
+                                            <i class="fab fa-apple text-slate-800"></i> macOS
+                                        <% } else if (product.systemType === 'Ambos') { %>
+                                            <span class="flex items-center gap-0.5"><i class="fab fa-windows text-blue-500"></i><i class="fab fa-apple text-slate-800"></i> Ambos</span>
+                                        <% } else { %>
+                                            <i class="fas fa-laptop text-slate-400"></i> Digital
+                                        <% } %>
+                                    </span>
+
+                                    <!-- Discount Badge -->
+                                    <% if (product.priceBefore > product.price) { %>
+                                        <span class="absolute top-3 right-3 bg-rose-500 text-white text-[9px] font-black py-1 px-2.5 rounded-full shadow-sm">
+                                            -<%= Math.round((1 - product.price / product.priceBefore) * 100) %>%
+                                        </span>
+                                    <% } %>
+                                </div>
+                                
+                                <!-- Info Area -->
+                                <div class="p-5 flex flex-col flex-grow">
+                                    
+                                    <!-- Category and Brand -->
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md">
+                                            <%= product.categoryName || 'Software' %>
+                                        </span>
+                                        <% if (product.development) { %>
+                                            <span class="text-[10px] text-slate-400 font-bold tracking-tight"><%= product.development %></span>
+                                        <% } %>
+                                    </div>
+
+                                    <h3 class="font-bold text-slate-800 text-sm group-hover:text-brand-500 transition-colors line-clamp-2 mb-2.5 h-10 leading-tight">
+                                        <%= product.name %>
+                                    </h3>
+
+                                    <!-- Rating Stars -->
+                                    <div class="flex items-center gap-1 mb-4">
+                                        <div class="flex gap-0.5 text-amber-400 text-[10px]">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <span class="text-[9px] text-slate-400 font-bold">(4.9)</span>
+                                    </div>
+
+                                    <!-- Bullet details -->
+                                    <div class="space-y-1 mb-4 text-[10px] text-slate-500 font-medium">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fas fa-check-circle text-emerald-500"></i> Entrega imediata por e-mail
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fas fa-check-circle text-emerald-500"></i> Licença <%= product.licence || 'Vitalícia' %>
+                                        </div>
+                                    </div>
+
+                                    <!-- Price and Actions -->
+                                    <div class="mt-auto pt-4 border-t border-slate-100">
+                                        
+                                        <!-- Price -->
+                                        <div class="mb-4">
+                                            <% if (product.priceBefore > product.price) { %>
+                                                <p class="text-[11px] text-slate-400 line-through">De R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                                            <% } %>
+                                            <p class="text-base font-black text-slate-900">
+                                                <% if (product.priceBefore > product.price) { %>
+                                                    <span class="text-slate-400 font-normal text-xs mr-0.5">Por</span> 
+                                                <% } %>
+                                                <span class="text-emerald-600 text-lg">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                                            </p>
+                                        </div>
+
+                                        <!-- Actions (Buy + Heart) -->
+                                        <div class="flex gap-2">
+                                            <a href="/produto/<%= product.id %>" class="flex-grow bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-blue-500/10">
+                                                <span>Comprar agora</span> <i class="fas fa-arrow-right text-[8px]"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    onclick="toggleFavorite(event, '<%= product.id %>')" 
+                                                    data-product-id="<%= product.id %>" 
+                                                    class="favorite-btn bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-rose-500 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 shrink-0">
+                                                <i class="far fa-heart text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         <% }) %>
                     </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Seção: Todos os Produtos -->
-        <section id="todos-produtos">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-slate-800">Nosso Catálogo Completo</h2>
-                <span class="text-slate-500 text-sm"><%= products.length %> produtos encontrados</span>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <% products.forEach(product => { %>
-                    <a href="/produto/<%= product.id %>" class="bg-white rounded-lg p-4 product-card border border-slate-100 flex flex-col h-full">
-                        <div class="relative mb-4">
-                            <img src="<%= getImageUrl(product.image) %>" alt="<%= product.name %>" class="w-full h-32 object-contain">
-                            <% if (product.priceBefore > product.price) { %>
-                                <span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                    <%= Math.round((1 - product.price / product.priceBefore) * 100) %>% OFF
-                                </span>
-                            <% } %>
+                <% } else { %>
+                    
+                    <!-- Emptystate -->
+                    <div class="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm max-w-lg mx-auto my-12">
+                        <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+                            <i class="fas fa-search text-xl"></i>
                         </div>
-                        <h3 class="text-xs font-medium text-slate-700 line-clamp-2 mb-2"><%= product.name %></h3>
-                        <div class="mt-auto">
-                            <p class="text-sm font-bold text-slate-900">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
-                            <div class="flex items-center gap-1 mt-1">
-                                <% for(let i=0; i<5; i++) { %>
-                                    <i class="fas fa-star text-[8px] text-yellow-400"></i>
-                                <% } %>
-                                <span class="text-[10px] text-slate-400">(4.9)</span>
-                            </div>
-                        </div>
-                    </a>
-                <% }) %>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Nenhum software encontrado</h3>
+                        <p class="text-sm text-slate-500 mb-6">Tente ajustar seus filtros ou termos de busca para encontrar o que procura.</p>
+                        <a href="/produtos" class="bg-brand-50 hover:bg-brand-100 border border-brand-100 text-brand-600 font-bold py-2.5 px-6 rounded-xl text-xs transition inline-flex items-center gap-2">
+                            <i class="fas fa-sync-alt"></i> Limpar todos os filtros
+                        </a>
+                    </div>
+
+                <% } %>
+
             </div>
-        </section>
+
+        </div>
 
     </main>
 
     <%- include('partials/footer') %>
+
+    <!-- JavaScript para Favoritos Client-Side -->
+    <script>
+        function getFavorites() {
+            try {
+                return JSON.parse(localStorage.getItem('favorited_products') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveFavorites(favs) {
+            localStorage.setItem('favorited_products', JSON.stringify(favs));
+            // Dispara evento local para atualizar menu nav e UI
+            updateFavoritesUI();
+            
+            // Dispara evento storage para atualizar outras abas
+            window.dispatchEvent(new Event('storage'));
+        }
+
+        function toggleFavorite(event, productId) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            let favs = getFavorites();
+            const index = favs.indexOf(productId);
+            
+            if (index > -1) {
+                favs.splice(index, 1);
+            } else {
+                favs.push(productId);
+            }
+            
+            saveFavorites(favs);
+            
+            // Se estamos mostrando apenas favoritos, refiltra imediatamente
+            if (showingFavoritesOnly) {
+                filterByFavorites();
+            }
+        }
+
+        let showingFavoritesOnly = false;
+
+        function filterByFavorites() {
+            showingFavoritesOnly = true;
+            const favs = getFavorites();
+            const cards = document.querySelectorAll('.product-grid-item');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const id = card.getAttribute('data-product-id');
+                if (favs.includes(id)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Altera o título da página e contador
+            const title = document.getElementById('catalog-title');
+            if (title) title.innerText = 'Meus Favoritos';
+            
+            const countLabel = document.getElementById('products-count-label');
+            if (countLabel) countLabel.innerText = `${visibleCount} softwares favoritados`;
+
+            // Trata empty state de favoritos
+            const emptyState = document.getElementById('no-favorites-state');
+            const grid = document.getElementById('products-grid');
+            if (visibleCount === 0) {
+                if (emptyState) emptyState.style.display = 'block';
+                if (grid) grid.style.display = 'none';
+            } else {
+                if (emptyState) emptyState.style.display = 'none';
+                if (grid) grid.style.display = 'grid';
+            }
+        }
+
+        function showAllProducts() {
+            showingFavoritesOnly = false;
+            const cards = document.querySelectorAll('.product-grid-item');
+            cards.forEach(card => {
+                card.style.display = 'block';
+            });
+
+            const title = document.getElementById('catalog-title');
+            if (title) title.innerText = 'Todos os produtos';
+
+            const countLabel = document.getElementById('products-count-label');
+            if (countLabel) countLabel.innerText = 'Exibindo <%= products.length %> softwares';
+
+            const emptyState = document.getElementById('no-favorites-state');
+            const grid = document.getElementById('products-grid');
+            if (emptyState) emptyState.style.display = 'none';
+            if (grid) grid.style.display = 'grid';
+            
+            // Limpa o parâmetro show_favorites do URL
+            const url = new URL(window.location);
+            url.searchParams.delete('show_favorites');
+            window.history.pushState({}, '', url);
+        }
+
+        function updateFavoritesUI() {
+            const favs = getFavorites();
+            const buttons = document.querySelectorAll('.favorite-btn');
+            
+            buttons.forEach(btn => {
+                const id = btn.getAttribute('data-product-id');
+                const icon = btn.querySelector('i');
+                if (favs.includes(id)) {
+                    icon.className = 'fas fa-heart text-rose-500';
+                    btn.classList.add('border-rose-100', 'bg-rose-50/50');
+                } else {
+                    icon.className = 'far fa-heart';
+                    btn.classList.remove('border-rose-100', 'bg-rose-50/50');
+                }
+            });
+            
+            // Atualiza contador do menu
+            const countSpan = document.getElementById('favorites-nav-count');
+            if (countSpan) {
+                countSpan.innerText = favs.length;
+            }
+        }
+
+        // Event listener disparado quando clica em favoritos já estando no catálogo
+        window.addEventListener('filter-favorites', filterByFavorites);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFavoritesUI();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('show_favorites') === 'true') {
+                filterByFavorites();
+            }
+        });
+    </script>
 </body>
 
 </html>

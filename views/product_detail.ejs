@@ -7,342 +7,680 @@
     <title>
         <%= product.name %>
     </title>
+    <meta name="description"
+        content="<%= product.name %> - Compre agora com entrega imediata e suporte especializado.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-green: #3483fa;
-            --dark-green: #2968c8;
-            --light-green: #E8F5E9;
-            --bg-gray: #EDEDED;
-            --text-main: #333333;
-            --text-secondary: #666666;
-            --border-color: #DDDDDD;
-            --white: #FFFFFF;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-gray);
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
     <%- include('partials/nav') %>
 
     <style>
+        /* ============================================
+           PRODUCT DETAIL - PREMIUM REDESIGN
+           ============================================ */
 
-        /* --- CONTAINER PRINCIPAL --- */
-        .container {
-            max-width: 1184px;
-            margin: 20px auto;
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 16px;
-            padding: 0 10px;
+        * {
+            box-sizing: border-box;
         }
 
-        .product-main {
-            background: var(--white);
-            border-radius: 8px;
-            padding: 16px;
+        body {
+            font-family: 'Outfit', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f3f5;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
         }
 
-        /* GALERIA COM JS */
-        .gallery-container {
+        /* --- BREADCRUMB --- */
+        .pd-breadcrumb {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 20px 0;
+            font-size: 13px;
+            color: #94a3b8;
             display: flex;
-            gap: 20px;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
-        .thumbnails {
+        .pd-breadcrumb a {
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .pd-breadcrumb a:hover {
+            color: #3b82f6;
+        }
+
+        .pd-breadcrumb .sep {
+            color: #cbd5e1;
+            font-size: 11px;
+        }
+
+        .pd-breadcrumb .current {
+            color: #475569;
+            font-weight: 500;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        .pd-container {
+            max-width: 1280px;
+            margin: 16px auto 0;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        /* --- GALLERY CARD --- */
+        .pd-gallery-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8ecf0;
+        }
+
+        .pd-gallery {
+            display: flex;
+            gap: 16px;
+        }
+
+        .pd-thumbs {
             display: flex;
             flex-direction: column;
             gap: 8px;
-        }
-
-        .thumb {
-            width: 50px;
-            height: 50px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .thumb.active {
-            border: 2px solid var(--primary-green);
-        }
-
-        .main-image {
-            flex-grow: 1;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
-            min-height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .main-image img {
-            max-width: 100%;
-            max-height: 400px;
-            border-radius: 4px;
-        }
-
-        /* CARROSSEL RELACIONADOS */
-        .related-container {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 15px 0;
-            scrollbar-width: none;
-        }
-
-        .related-card {
-            min-width: 160px;
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            text-decoration: none;
-            color: inherit;
-            max-width: 30%;
-        }
-
-        .related-card img {
-            width: 100%;
-            border-radius: 4px;
-        }
-
-        /* PROVA SOCIAL E PERGUNTAS */
-        .section-title {
-            font-size: 18px;
-            margin: 30px 0 15px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-
-        .review-item {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #f5f5f5;
-        }
-
-        .review-img {
-            width: 80px;
-            height: 80px;
-            border-radius: 6px;
-            object-fit: cover;
-        }
-
-        .star-svg {
-            width: 18px;
-            height: 18px;
-            fill: var(--primary-green);
-        }
-
-        .question-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .question-box input {
-            flex-grow: 1;
-            padding: 12px;
-            border: 1px solid var(--primary-green);
-            border-radius: 6px;
-        }
-
-        /* PAINEL DIREITO */
-        .checkout-panel {
-            background: var(--white);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            padding: 24px;
-            position: sticky;
-            top: 20px;
-            height: fit-content;
-        }
-
-        .condition {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .product-title {
-            font-size: 22px;
-            font-weight: 600;
-            margin: 0 0 10px 0;
-        }
-
-        .price-before {
-            font-size: 18px;
-            text-decoration: line-through;
-            font-weight: 300;
-            margin: 15px 0 0px 0;
-        }
-
-        .price-tag {
-            font-size: 36px;
-            font-weight: 300;
-            margin: 0px 0 5px 0;
-            position: relative
-        }
-
-        .price-tag small {
-            font-size: 18px;
-            top: 8px;
-            position: absolute
-        }
-
-        .installments {
-            color: #00a650;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .small {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        label {
-            font-weight: 600;
-            display: block;
-            margin-top: 16px;
-            font-size: 14px;
-            color: var(--text-main);
-        }
-
-        input[type="email"],
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #cbd4e1;
-            border-radius: 10px;
-            margin-top: 6px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-green);
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            border-radius: 6px;
-            font-weight: bold;
-            text-align: center;
-            text-decoration: none;
-            margin-bottom: 10px;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-green);
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: var(--light-green);
-            color: var(--dark-green);
-        }
-
-        .btn-secondary a {
-            text-decoration: none;
-            color: var(--dark-green);
-        }
-
-        .benefits {
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        .benefits li {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            color: var(--text-secondary);
-        }
-
-        .benefits svg {
-            fill: var(--text-secondary);
-            width: 18px;
             flex-shrink: 0;
         }
 
-        .specs-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            max-width: 320px;
-        }
-
-        .specs-table tr:nth-child(odd) {
-            background-color: #F5F5F5;
-        }
-
-        .specs-table td {
-            padding: 12px;
-            border: 1px solid #eee;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        /* ORDER BUMP */
-        .orderbump-box {
+        .pd-thumb {
+            width: 64px;
+            height: 64px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
             background-color: #f8fafc;
-            border: 2px dashed #cbd5e1;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pd-thumb:hover {
+            border-color: #94a3b8;
+            transform: scale(1.05);
+        }
+
+        .pd-thumb.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .pd-thumb-more {
+            width: 64px;
+            height: 64px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #f1f5f9;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .pd-thumb-more:hover {
+            background: #e2e8f0;
+        }
+
+        .pd-thumb-more span {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .pd-main-image {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 380px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fafbfc;
+        }
+
+        .pd-main-image img {
+            max-width: 100%;
+            max-height: 420px;
+            object-fit: contain;
             border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
+            transition: transform 0.4s ease;
+        }
+
+        .pd-main-image:hover img {
+            transform: scale(1.03);
+        }
+
+        .pd-badge-bestseller {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Gallery benefits bar */
+        .pd-gallery-benefits {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .pd-gallery-benefit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+            padding: 10px 4px;
+        }
+
+        .pd-gallery-benefit i {
+            font-size: 20px;
+            color: #3b82f6;
+        }
+
+        .pd-gallery-benefit .gb-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+            line-height: 1.3;
+        }
+
+        .pd-gallery-benefit .gb-sub {
+            font-size: 10px;
+            color: #94a3b8;
+            line-height: 1.2;
+        }
+
+        /* --- CHECKOUT PANEL --- */
+        .pd-checkout {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            /* position: sticky; */
+            top: 90px;
+            height: fit-content;
+        }
+
+        /* Timer */
+        .pd-timer-box {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border-radius: 14px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.25);
+        }
+
+        .pd-timer-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pd-timer-label i {
+            font-size: 16px;
+            color: #fbbf24;
+        }
+
+        .pd-timer-digits {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pd-timer-unit {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            padding: 6px 10px;
+            text-align: center;
+            min-width: 44px;
+            backdrop-filter: blur(4px);
+        }
+
+        .pd-timer-unit .num {
+            font-size: 20px;
+            font-weight: 800;
+            display: block;
+            line-height: 1;
+        }
+
+        .pd-timer-unit .lbl {
+            font-size: 8px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            letter-spacing: 1px;
+        }
+
+        /* Buy card */
+        .pd-buy-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8ecf0;
+        }
+
+        .pd-condition {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .pd-product-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+        }
+
+        .pd-product-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0 0 12px 0;
+        }
+
+        .pd-rating-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .pd-stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .pd-stars i {
+            font-size: 14px;
+            color: #3b82f6;
+        }
+
+        .pd-stars i.empty {
+            color: #e2e8f0;
+        }
+
+        .pd-rating-num {
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .pd-rating-link {
+            font-size: 13px;
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .pd-rating-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Price section */
+        .pd-price-section {
+            padding: 16px 0;
+            border-top: 1px solid #f1f5f9;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 16px;
+        }
+
+        .pd-price-before {
+            font-size: 14px;
+            color: #94a3b8;
+            text-decoration: line-through;
+            margin: 0 0 4px 0;
+        }
+
+        .pd-price-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .pd-price-current {
+            font-size: 34px;
+            font-weight: 300;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .pd-price-current .cents {
+            font-size: 18px;
+            position: relative;
+            top: -10px;
+        }
+
+        .pd-badge-off {
+            background: #dcfce7;
+            color: #16a34a;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .pd-pix-discount {
+            font-size: 14px;
+            color: #16a34a;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+
+        .pd-delivery-info {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* OS Selector */
+        .pd-os-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 10px 0;
+        }
+
+        .pd-os-options {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .pd-os-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .pd-os-btn:hover {
+            border-color: #94a3b8;
+        }
+
+        .pd-os-btn.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .pd-os-btn i {
+            font-size: 16px;
+        }
+
+        /* Buy button */
+        .pd-btn-buy {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s;
+            font-family: inherit;
+            background: linear-gradient(135deg, #2290c5, #2d6fef);
+            color: white;
+            box-shadow: 0 4px 14px rgba(34, 45, 197, 0.3);
+            letter-spacing: 0.3px;
+        }
+
+        .pd-btn-buy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 45, 197, 0.4);
+        }
+
+        .pd-btn-buy:active {
+            transform: translateY(0);
+        }
+
+        .pd-btn-fav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 13px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            color: #475569;
+            transition: all 0.2s;
+            font-family: inherit;
+            margin-top: 10px;
+        }
+
+        .pd-btn-fav:hover {
+            border-color: #f43f5e;
+            color: #f43f5e;
+        }
+
+        .pd-btn-fav.favorited {
+            border-color: #f43f5e;
+            color: #f43f5e;
+        }
+
+        .pd-btn-fav.favorited i {
+            font-weight: 900;
+        }
+
+        /* Security & Payment */
+        .pd-security-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: #f0fdf4;
+            border-radius: 10px;
+            margin-top: 16px;
+        }
+
+        .pd-security-row i {
+            font-size: 20px;
+            color: #22c55e;
+        }
+
+        .pd-security-row .sec-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #166534;
+        }
+
+        .pd-security-row .sec-sub {
+            font-size: 11px;
+            color: #4ade80;
+        }
+
+        .pd-payment-section {
+            margin-top: 18px;
+        }
+
+        .pd-payment-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin: 0 0 10px 0;
+        }
+
+        .pd-payment-icons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pd-payment-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 34px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            overflow: hidden;
+        }
+
+        .pd-payment-icon img {
+            max-height: 20px;
+        }
+
+        .pd-pay-pix {
+            background: #00bdae;
+            color: white;
+            font-weight: 800;
+            font-size: 10px;
+        }
+
+        .pd-pay-visa {
+            color: #1a1f71;
+            font-weight: 900;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .pd-pay-master {
+            background: #fff;
+        }
+
+        .pd-pay-boleto {
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /* --- FORM FIELDS in buy card --- */
+        .pd-form-group {
+            margin-bottom: 14px;
+        }
+
+        .pd-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .pd-form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #334155;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .pd-form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+        }
+
+        .pd-form-group input::placeholder {
+            color: #94a3b8;
+        }
+
+        /* Order bump */
+        .pd-orderbump {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 16px;
             display: flex;
             align-items: flex-start;
             gap: 12px;
             transition: all 0.3s ease;
+            margin: 16px 0;
         }
 
-        .orderbump-box.active {
-            background-color: #f0fdf4;
+        .pd-orderbump.active {
+            background: #f0fdf4;
             border-color: #22c55e;
+            border-style: solid;
         }
 
-        .orderbump-checkbox {
+        .pd-orderbump input[type="checkbox"] {
             width: 20px;
             height: 20px;
             margin-top: 2px;
             cursor: pointer;
             accent-color: #22c55e;
+            flex-shrink: 0;
         }
 
-        .orderbump-content {
+        .pd-orderbump-content {
             flex-grow: 1;
         }
 
-        .orderbump-title {
+        .pd-orderbump-title {
             font-size: 14px;
             font-weight: 700;
             color: #1e293b;
@@ -352,21 +690,22 @@
             gap: 6px;
         }
 
-        .orderbump-desc {
+        .pd-orderbump-desc {
             font-size: 12px;
             color: #64748b;
             margin: 0 0 6px 0;
+            line-height: 1.4;
         }
 
-        .orderbump-price {
+        .pd-orderbump-price {
             font-size: 14px;
             font-weight: 800;
             color: #16a34a;
             margin: 0;
         }
 
-        .badge-offer {
-            background-color: #ef4444;
+        .pd-badge-offer {
+            background: #ef4444;
             color: white;
             font-size: 10px;
             padding: 2px 6px;
@@ -375,293 +714,1296 @@
             font-weight: 800;
         }
 
-        @media (max-width: 900px) {
-            .container {
-                display: flex;
-                flex-direction: column-reverse;
+        /* Alert box */
+        .pd-safe-alert {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #eff6ff;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin: 14px 0 16px;
+            border: 1px solid #bfdbfe;
+        }
+
+        .pd-safe-alert i {
+            color: #3b82f6;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .pd-safe-alert span {
+            font-size: 12px;
+            color: #1e40af;
+            line-height: 1.4;
+        }
+
+        /* --- RELATED PRODUCTS --- */
+        .pd-related-section {
+            max-width: 1280px;
+            margin: 24px auto 0;
+            padding: 0 20px;
+        }
+
+        .pd-related-card-wrapper {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8ecf0;
+        }
+
+        .pd-related-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .pd-related-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .pd-related-see-all {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3b82f6;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .pd-related-see-all:hover {
+            color: #1d4ed8;
+        }
+
+        .pd-related-grid {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+
+        .pd-related-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        .pd-related-item {
+            min-width: 180px;
+            max-width: 200px;
+            background: #fff;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            padding: 14px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s;
+            flex-shrink: 0;
+        }
+
+        .pd-related-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-color: #e2e8f0;
+        }
+
+        .pd-related-item img {
+            width: 100%;
+            height: 130px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f8fafc;
+        }
+
+        .pd-related-item .ri-name {
+            font-size: 12px;
+            color: #475569;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pd-related-item .ri-licence {
+            font-size: 11px;
+            color: #94a3b8;
+            margin: 0 0 8px 0;
+        }
+
+        .pd-related-item .ri-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 6px 0;
+        }
+
+        .pd-related-item .ri-stars {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pd-related-item .ri-stars i {
+            font-size: 11px;
+            color: #f59e0b;
+        }
+
+        .pd-related-item .ri-stars span {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* --- DESCRIPTION SECTION --- */
+        .pd-desc-section {
+            max-width: 1280px;
+            margin: 24px auto 0;
+        }
+
+        .pd-desc-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8ecf0;
+            overflow: hidden;
+        }
+
+        .pd-desc-header {
+            padding: 20px 24px;
+            border-bottom: 2px solid #3b82f6;
+            display: inline-block;
+            font-size: 15px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .pd-desc-body {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 32px;
+            padding: 28px 24px;
+        }
+
+        .pd-desc-main h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+        }
+
+        .pd-desc-main .desc-tagline {
+            font-size: 15px;
+            color: #64748b;
+            font-style: italic;
+            margin: 0 0 16px 0;
+        }
+
+        .pd-desc-main .desc-text {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            margin: 0 0 20px 0;
+        }
+
+        .pd-desc-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 24px 0;
+        }
+
+        .pd-desc-features li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .pd-desc-features li i {
+            color: #22c55e;
+            font-size: 14px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .pd-ideal-for {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pd-ideal-for h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            margin: 0 0 12px 0;
+        }
+
+        .pd-ideal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pd-ideal-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .pd-ideal-tag i {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Description side benefits */
+        .pd-desc-side {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .pd-side-benefit {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 18px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s;
+        }
+
+        .pd-side-benefit:last-child {
+            border-bottom: none;
+        }
+
+        .pd-side-benefit:hover {
+            background: #fafbfc;
+        }
+
+        .pd-side-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .pd-side-icon.green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pd-side-icon.blue {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .pd-side-icon.purple {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .pd-side-icon.amber {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .pd-side-text h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+        }
+
+        .pd-side-text p {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* --- REVIEWS & FAQ SECTION --- */
+        .pd-reviews-faq-section {
+            max-width: 1280px;
+            margin: 24px auto 40px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .pd-review-card,
+        .pd-faq-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8ecf0;
+        }
+
+        .pd-section-header {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pd-section-header i {
+            color: #f59e0b;
+        }
+
+        /* Reviews summary */
+        .pd-review-summary {
+            display: flex;
+            gap: 28px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .pd-review-big {
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .pd-review-big .big-num {
+            font-size: 48px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+        }
+
+        .pd-review-big .big-stars {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            margin: 6px 0;
+        }
+
+        .pd-review-big .big-stars i {
+            font-size: 16px;
+            color: #3b82f6;
+        }
+
+        .pd-review-big .big-count {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .pd-review-bars {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .pd-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .pd-bar-label {
+            width: 60px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .pd-bar-track {
+            flex-grow: 1;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .pd-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .pd-bar-pct {
+            width: 35px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* Individual reviews */
+        .pd-review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pd-review-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .pd-review-item:last-child {
+            border-bottom: none;
+        }
+
+        .pd-review-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            color: #64748b;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .pd-review-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pd-review-body {
+            flex-grow: 1;
+        }
+
+        .pd-review-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .pd-review-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .pd-review-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #dcfce7;
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .pd-review-time {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-left: auto;
+        }
+
+        .pd-review-text {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.5;
+            margin: 6px 0 0 0;
+        }
+
+        .pd-review-stars {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 2px;
+        }
+
+        .pd-review-stars i {
+            font-size: 12px;
+            color: #f59e0b;
+        }
+
+        .pd-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            border: 2px solid #3b82f6;
+            border-radius: 10px;
+            color: #3b82f6;
+            font-size: 13px;
+            font-weight: 600;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 16px;
+            font-family: inherit;
+            text-decoration: none;
+        }
+
+        .pd-btn-outline:hover {
+            background: #eff6ff;
+        }
+
+        /* FAQ */
+        .pd-faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .pd-faq-item {
+            border-bottom: 1px solid #f1f5f9;
+            overflow: hidden;
+        }
+
+        .pd-faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .pd-faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .pd-faq-question:hover {
+            color: #3b82f6;
+        }
+
+        .pd-faq-question span {
+            font-size: 14px;
+            font-weight: 600;
+            color: inherit;
+            flex-grow: 1;
+        }
+
+        .pd-faq-question i {
+            font-size: 13px;
+            color: #94a3b8;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .pd-faq-item.open .pd-faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .pd-faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        .pd-faq-item.open .pd-faq-answer {
+            max-height: 200px;
+            padding: 0 0 16px 0;
+        }
+
+        /* WhatsApp support btn */
+        .pd-whatsapp-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 13px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            background: #25D366;
+            color: white;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .pd-whatsapp-btn:hover {
+            background: #20bd5a;
+            transform: translateY(-1px);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .pd-container {
+                grid-template-columns: 1fr;
             }
 
-            .checkout-panel {
+            .pd-checkout {
                 position: static;
             }
 
-            .gallery-container {
+            .pd-desc-body {
+                grid-template-columns: 1fr;
+            }
+
+            .pd-reviews-faq-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .pd-container {
+                padding: 0 12px;
+            }
+
+            .pd-related-section,
+            .pd-desc-section {
+                padding: 0 12px;
+            }
+
+            .pd-reviews-faq-section {
+                padding: 0 12px;
+            }
+
+            .pd-gallery {
                 flex-direction: column-reverse;
             }
 
-            .thumbnails {
+            .pd-thumbs {
                 flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .pd-main-image {
+                min-height: 260px;
+            }
+
+            .pd-gallery-benefits {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pd-timer-box {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .pd-price-current {
+                font-size: 28px;
+            }
+
+            .pd-review-summary {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
             }
         }
 
         @media (max-width: 500px) {
+            .pd-breadcrumb {
+                font-size: 11px;
+            }
 
-            .nav-links,
-            .logo-area {
-                display: none;
+            .pd-gallery-benefits {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .pd-os-options {
+                flex-wrap: wrap;
+            }
+
+            .pd-ideal-tags {
+                gap: 6px;
             }
         }
     </style>
-    <div class="container">
-        <div class="product-main">
-            <a class="back-link" onclick="window.history.go(-1);" style="cursor: pointer;"><i
-                    class="fa-solid fa-arrow-left"></i> Voltar para a loja</a>
-            <br />
-            <br />
-            <div class="gallery-container">
-                <div class="thumbnails">
-                    <% 
-                    let detailThumbs = [];
-                    if (product.image) {
-                        detailThumbs.push(product.image);
-                    }
-                    if (product.thumbs && product.thumbs.length > 0) {
-                        product.thumbs.forEach(function(t) {
-                            if (t && t.trim() !== "" && t !== product.image) {
-                                detailThumbs.push(t);
-                            }
-                        });
-                    }
-                    %>
-                    <% detailThumbs.forEach(function(img, index) { %>
-                        <div class="thumb <%= index === 0 ? 'active' : '' %>" style="background-image: url('<%= getImageUrl(img) %>')"
-                            onclick="updateImage('<%= getImageUrl(img) %>', this)"></div>
+
+    <!-- BREADCRUMB -->
+    <div class="pd-breadcrumb">
+        <a href="/">Início</a>
+        <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
+        <% if (product.development) { %>
+        <a href="/produtos"><%= product.development %></a>
+        <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
+        <% } %>
+        <span class="current"><%= product.nameSoft || product.name %></span>
+    </div>
+
+    <!-- PREPARE DATA -->
+    <%
+    let detailThumbs = [];
+    if (product.image) detailThumbs.push(product.image);
+    if (product.thumbs && product.thumbs.length > 0) {
+        product.thumbs.forEach(function(t) {
+            if (t && t.trim() !== "" && t !== product.image) detailThumbs.push(t);
+        });
+    }
+
+    let avgRate = 0;
+    let totalReviews = product.pinions ? product.pinions.length : 0;
+    if (totalReviews > 0) {
+        let sum = product.pinions.reduce((acc, p) => acc + (Number(p.rate) || 0), 0);
+        avgRate = (sum / totalReviews).toFixed(1);
+    } else {
+        avgRate = "5.0";
+        totalReviews = 25;
+    }
+
+    let discountPct = 0;
+    if (product.priceBefore > product.price) {
+        discountPct = Math.round(((product.priceBefore - product.price) / product.priceBefore) * 100);
+    }
+
+    let priceFormatted = product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    let priceParts = priceFormatted.split(',');
+    let priceBeforeFormatted = product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    const reviewNames = ["João Santos", "Mariana Oliveira", "Carlos Lima", "Ana Costa", "Rafael Silva"];
+    const reviewTimes = ["Há 2 dias", "Há 5 dias", "Há 1 semana", "Há 3 dias", "Há 1 dia"];
+    %>
+
+    <!-- MAIN GRID: GALLERY + CHECKOUT -->
+    <div class="pd-container">
+        <!-- LEFT: GALLERY -->
+        <div>
+            <div class="pd-gallery-card">
+                <div class="pd-gallery">
+                    <div class="pd-thumbs" id="pd-thumbs-container">
+                        <% detailThumbs.forEach(function(img, index) { %>
+                        <% if (index < 4) { %>
+                        <div class="pd-thumb <%= index === 0 ? 'active' : '' %>"
+                            style="background-image: url('<%= getImageUrl(img) %>')"
+                            onclick="pdUpdateImage('<%= getImageUrl(img) %>', this)"></div>
+                        <% } %>
+                        <% }); %>
+                        <% if (detailThumbs.length > 4) { %>
+                        <div class="pd-thumb-more" onclick="pdShowAllThumbs()">
+                            +<%= detailThumbs.length - 4 %>
+                            <span>Ver mais</span>
+                        </div>
+                        <% } %>
+                    </div>
+                    <div class="pd-main-image">
+                        <div class="pd-badge-bestseller"><i class="fa-solid fa-fire"></i> MAIS VENDIDO</div>
+                        <img id="pd-view-img" src="<%= getImageUrl(product.image || (detailThumbs[0] || '')) %>"
+                            alt="<%= product.name %>">
+                    </div>
+                </div>
+                <div class="pd-gallery-benefits">
+                    <div class="pd-gallery-benefit">
+                        <i class="fa-regular fa-paper-plane"></i>
+                        <span class="gb-title">Entrega imediata</span>
+                        <span class="gb-sub">por e-mail</span>
+                    </div>
+                    <div class="pd-gallery-benefit">
+                        <i class="fa-solid fa-certificate"></i>
+                        <span class="gb-title">Licença 100% original</span>
+                        <span class="gb-sub">e garantida</span>
+                    </div>
+                    <div class="pd-gallery-benefit">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span class="gb-title">Ativação online</span>
+                        <span class="gb-sub">fácil e rápida</span>
+                    </div>
+                    <div class="pd-gallery-benefit">
+                        <i class="fa-solid fa-headset"></i>
+                        <span class="gb-title">Suporte especializado</span>
+                        <span class="gb-sub">via WhatsApp</span>
+                    </div>
+                </div>                
+            </div>
+            <!-- Related Products inside gallery card -->
+            <% if (relatedProducts && relatedProducts.length > 0) { %>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                <div class="pd-related-header">
+                    <h3 class="pd-related-title">Você também pode se interessar</h3>
+                    <a href="/produtos" class="pd-related-see-all">Ver todos <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="pd-related-grid">
+                    <% relatedProducts.forEach(function(p) { %>
+                    <a href="/produto/<%= p.id %>" class="pd-related-item">
+                        <img src="<%= getImageUrl(p.image) %>" alt="<%= p.name %>">
+                        <p class="ri-name"><%= p.name %></p>
+                        <p class="ri-licence"><%= p.licence || 'Licença Digital' %></p>
+                        <p class="ri-price">R$ <%= p.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+                        <div class="ri-stars">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star-half-stroke"></i>
+                            <span>(<%= Math.floor(Math.random() * 3000 + 500) %>)</span>
+                        </div>
+                    </a>
                     <% }); %>
                 </div>
-                <div class="main-image">
-                    <img id="view-img" src="<%= getImageUrl(product.image || (detailThumbs[0] || '')) %>" alt="Produto">
-                </div>
             </div>
-
-            <h3 class="section-title">Produtos relacionados</h3>
-            <div class="related-container">
-                <% relatedProducts.forEach(p=> { %>
-                    <a href="/produto/<%= p.id %>" class="related-card">
-                        <img src="<%= getImageUrl(p.image) %>">
-                        <p style="font-size: 12px; margin: 5px 0;">
-                            <%= p.name %>
-                        </p>
-                        <span style="font-weight: bold; color: var(--primary-green);">R$ <%= p.price %></span>
-                    </a>
-                    <% }) %>
-            </div>
-
-            <h3>Descrição</h3>
-            <div style="color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;"><%- product.description %></div>
-
-            <h3>Características principais</h3>
-            <table class="specs-table">
-                <tr>
-                    <td class="spec-label">Desenvolvedor</td>
-                    <td>
-                        <%= product.development %>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="spec-label">Nome do software</td>
-                    <td>
-                        <%= product.nameSoft %>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="spec-label">Versão</td>
-                    <td>
-                        <%= product.version %>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="spec-label">Tempo de licença</td>
-                    <td>
-                        <%= product.licence %>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="spec-label">Formato</td>
-                    <td>
-                        <%= product.formart %>
-                    </td>
-                </tr>
-            </table>
-
-            <h3 class="section-title" id="opinioes">Opiniões sobre o produto</h3>
-            <div class="review-item">
-                <% product.pinions.forEach(op=> { %>
-                    <div>
-                        <div>
-                            <% for(var i=0; i < op.rate; i++) { %>
-                                <svg class="star-svg" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                </svg>
-                                <% } %>
-                        </div>
-                        <% if(op.image.length> 0){ %>
-                            <img src="<%= getImageUrl(op.image) %>" class="review-img">
-                            <% } %>
-                                <p style="font-size: 14px; color: var(--text-secondary);">
-                                    <%= op.pinion %>
-                                </p>
+            <% } %>
+            <!-- DESCRIPTION SECTION -->
+            <div class="pd-desc-section">
+                <div class="pd-desc-card">
+                    <div style="padding: 0 24px; border-bottom: 1px solid #f1f5f9;">
+                        <div class="pd-desc-header">Descrição</div>
                     </div>
-                    <% }) %>
-            </div>
+                    <div class="pd-desc-body">
+                        <!-- Left: description content -->
+                        <div class="pd-desc-main">
+                            <h2><%= product.nameSoft || product.name %></h2>
+                            <p class="desc-tagline">Crie sem limites. Desenhe o futuro.</p>
+                            <div class="desc-text"><%- product.description %></div>
 
-            <h3 class="section-title">Perguntas e respostas</h3>
-            <form onsubmit="enviarWhatsApp(event)" class="question-box">
-                <input type="text" id="pergunta" placeholder="Escreva sua pergunta..." required>
-                <button type="submit" class="btn-primary"
-                    style="padding: 0 25px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold;">
-                    Perguntar
-                </button>
-            </form>
-            <div style="font-size: 14px;">
-                <% product.questions.forEach(q=> { %>
-                    <p><strong>
-                            <%= q.question %>
-                        </strong><br><span style="color: var(--text-secondary);">
-                            <%= q.resp %>
-                        </span></p>
-                    <% }) %>
+                            <ul class="pd-desc-features">
+                                <li><i class="fa-solid fa-check-circle"></i> Ferramentas de IA para vetorização e edição de imagens</li>
+                                <li><i class="fa-solid fa-check-circle"></i> Desempenho superior e interface personalizável</li>
+                                <li><i class="fa-solid fa-check-circle"></i> Suporte a múltiplos formatos de arquivo</li>
+                                <li><i class="fa-solid fa-check-circle"></i> Compatível com Windows 10/11 (64 bits)</li>
+                                <li><i class="fa-solid fa-check-circle"></i> Atualizações e correções inclusas</li>
+                            </ul>
+
+                            <!-- Benefits card (replacing Ideal para) -->
+                        <div class="pd-desc-side" style="border: 1px solid #e8ecf0; border-radius: 12px; overflow: hidden; background: #fafbfc;">
+                            <div class="pd-side-benefit" style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #f1f5f9;">
+                                <div class="pd-side-icon green" style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: #dcfce7; color: #16a34a;"><i class="fa-solid fa-infinity"></i></div>
+                                <div class="pd-side-text">
+                                    <h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 3px 0;"><%= product.licence || 'Licença Vitalícia' %></h5>
+                                    <p style="font-size: 12px; color: #64748b; margin: 0; line-height: 1.4;">Pague uma vez, use para sempre, sem mensalidades.</p>
+                                </div>
+                            </div>
+                            <div class="pd-side-benefit" style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #f1f5f9;">
+                                <div class="pd-side-icon blue" style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: #dbeafe; color: #2563eb;"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+                                <div class="pd-side-text">
+                                    <h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 3px 0;">Ativação 100% Online</h5>
+                                    <p style="font-size: 12px; color: #64748b; margin: 0; line-height: 1.4;">Ative em poucos minutos.</p>
+                                </div>
+                            </div>
+                            <div class="pd-side-benefit" style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #f1f5f9;">
+                                <div class="pd-side-icon purple" style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: #ede9fe; color: #7c3aed;"><i class="fa-solid fa-headset"></i></div>
+                                <div class="pd-side-text">
+                                    <h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 3px 0;">Suporte Especializado</h5>
+                                    <p style="font-size: 12px; color: #64748b; margin: 0; line-height: 1.4;">Atendimento via WhatsApp.</p>
+                                </div>
+                            </div>
+                            <div class="pd-side-benefit" style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-bottom: none;">
+                                <div class="pd-side-icon amber" style="width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: #fef3c7; color: #d97706;"><i class="fa-solid fa-rotate-left"></i></div>
+                                <div class="pd-side-text">
+                                    <h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 3px 0;">Garantia de Satisfação</h5>
+                                    <p style="font-size: 12px; color: #64748b; margin: 0; line-height: 1.4;">7 dias para solicitar reembolso.</p>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+
+                        <!-- Right: side benefits card -->
+                        <div class="pd-desc-side">
+                            <div class="pd-side-benefit">
+                                <div class="pd-side-icon green"><i class="fa-solid fa-infinity"></i></div>
+                                <div class="pd-side-text">
+                                    <h5><%= product.licence || 'Licença Vitalícia' %></h5>
+                                    <p>Pague uma vez, use para sempre, sem mensalidades.</p>
+                                </div>
+                            </div>
+                            <div class="pd-side-benefit">
+                                <div class="pd-side-icon blue"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+                                <div class="pd-side-text">
+                                    <h5>Ativação 100% Online</h5>
+                                    <p>Ative em poucos minutos.</p>
+                                </div>
+                            </div>
+                            <div class="pd-side-benefit">
+                                <div class="pd-side-icon purple"><i class="fa-solid fa-headset"></i></div>
+                                <div class="pd-side-text">
+                                    <h5>Suporte Especializado</h5>
+                                    <p>Atendimento via WhatsApp.</p>
+                                </div>
+                            </div>
+                            <div class="pd-side-benefit">
+                                <div class="pd-side-icon amber"><i class="fa-solid fa-rotate-left"></i></div>
+                                <div class="pd-side-text">
+                                    <h5>Garantia de Satisfação</h5>
+                                    <p>7 dias para solicitar reembolso.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="checkout-panel">
-            <div class="condition">Novo | +250 vendidos</div>
-            <h1 class="product-title">
-                <%= product.name %>
-            </h1>
-
-            <% 
-                let avgRate = 0;
-                let totalReviews = product.pinions ? product.pinions.length : 0;
-                if (totalReviews > 0) {
-                    let sum = product.pinions.reduce((acc, p) => acc + (Number(p.rate) || 0), 0);
-                    avgRate = (sum / totalReviews).toFixed(1);
-                } else {
-                    avgRate = "5.0"; // Default
-                    totalReviews = 25; // Default display
-                }
-            %>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <span>(<%= avgRate %>)</span>
-                <% for(let i=0; i<5; i++) { %>
-                    <svg class="star-svg" viewBox="0 0 24 24" style="fill: <%= i < Math.floor(avgRate) ? 'var(--primary-green)' : '#ddd' %>">
-                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                    </svg>
-                <% } %>
-                <a href="#opinioes" style="color: #3483fa; font-size: 14px;">(<%= totalReviews %> avaliações)</a>
+        <!-- RIGHT: CHECKOUT PANEL -->
+        <div class="pd-checkout">
+            <!-- Timer -->
+            <div class="pd-timer-box">
+                <div class="pd-timer-label">
+                    <i class="fa-solid fa-fire-flame-curved"></i>
+                    <span>OFERTA POR<br>TEMPO LIMITADO!</span>
+                </div>
+                <div class="pd-timer-digits">
+                    <div class="pd-timer-unit">
+                        <span class="num" id="pd-timer-h">08</span>
+                        <span class="lbl">HORAS</span>
+                    </div>
+                    <div class="pd-timer-unit">
+                        <span class="num" id="pd-timer-m">45</span>
+                        <span class="lbl">MIN</span>
+                    </div>
+                    <div class="pd-timer-unit">
+                        <span class="num" id="pd-timer-s">32</span>
+                        <span class="lbl">SEG</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="price-before">R$ <%= product.priceBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-                    %>
-            </div>
-            <div class="price-tag">R$ <%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2
-                    }).split(',')[0] %>
-                    <small>,<%= product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).split(',')[1] %>
-                    </small>
-            </div>
-            <div class="installments">+5% desconto no pix</div>
+            <!-- Buy Card -->
+            <div class="pd-buy-card">
+                <p class="pd-condition">Novo | +250 vendidos</p>
+                <h1 class="pd-product-name"><%= product.name %></h1>
+                <p class="pd-product-subtitle"><%= product.licence %> - <%= product.formart || 'Digital' %></p>
 
+                <!-- Rating -->
+                <div class="pd-rating-row">
+                    <div class="pd-stars">
+                        <% for(let i=0; i<5; i++) { %>
+                        <i class="fa-solid fa-star <%= i < Math.floor(avgRate) ? '' : 'empty' %>"></i>
+                        <% } %>
+                    </div>
+                    <span class="pd-rating-num"><%= avgRate %></span>
+                    <a href="#pd-reviews" class="pd-rating-link">(<%= totalReviews %> avaliações)</a>
+                </div>
 
-            <form method="post" action="/buy/<%= product.id %>">
+                <!-- Price -->
+                <div class="pd-price-section">
+                    <p class="pd-price-before">De R$ <%= priceBeforeFormatted %></p>
+                    <div class="pd-price-row">
+                        <p class="pd-price-current">R$ <%= priceParts[0] %><span class="cents">,<%= priceParts[1] %></span></p>
+                        <% if (discountPct > 0) { %>
+                        <span class="pd-badge-off"><%= discountPct %>% OFF</span>
+                        <% } %>
+                    </div>
+                    <p class="pd-pix-discount">+ 5% desconto no pix</p>
+                </div>
 
-                <label for="email">E-mail para entrega</label>
-                <input id="email" name="email" type="email" placeholder="onde você receberá o produto" required />
+                <!-- Purchase form -->
+                <form method="post" action="/buy/<%= product.id %>" id="pd-buy-form">
+                    <div class="pd-form-group">
+                        <label for="email"><i class="fa-regular fa-envelope"></i> E-mail para entrega</label>
+                        <input id="email" name="email" type="email" placeholder="onde você receberá o produto" required>
+                    </div>
+                    <div class="pd-form-group">
+                        <label for="whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp (com DDD)</label>
+                        <input id="whatsapp" name="whatsapp" type="text" placeholder="(11) 99999-9999" required>
+                    </div>
 
-                <label for="whatsapp">WhatsApp (com DDD)</label>
-                <input id="whatsapp" name="whatsapp" type="text" placeholder="(11) 99999-9999" required />
-
-                <% if (typeof orderbumpProduct !=='undefined' && orderbumpProduct) { %>
-                    <div class="orderbump-box" id="ob-box">
+                    <!-- Order Bump -->
+                    <% if (typeof orderbumpProduct !== 'undefined' && orderbumpProduct) { %>
+                    <div class="pd-orderbump" id="ob-box">
                         <input type="checkbox" id="orderbumpId" name="orderbumpId" value="<%= orderbumpProduct.id %>"
-                            class="orderbump-checkbox"
                             onchange="toggleOrderBump(this, <%= product.price %>, <%= orderbumpProduct.price %>)">
-                        <div class="orderbump-content">
-                            <p class="orderbump-title">
-                                <i class="fa-solid fa-bolt text-yellow-500"></i> Leve também: <%=
-                                    orderbumpProduct.nameSoft || orderbumpProduct.name %>
-                                    <span class="badge-offer">Oferta</span>
+                        <div class="pd-orderbump-content">
+                            <p class="pd-orderbump-title">
+                                <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i>
+                                Leve também: <%= orderbumpProduct.nameSoft || orderbumpProduct.name %>
+                                <span class="pd-badge-offer">Oferta</span>
                             </p>
-                            <p class="orderbump-desc">Adicione ao seu pacote e economize com essa oferta exclusiva de
-                                <%= orderbumpProduct.licence %>.
-                            </p>
-                            <p class="orderbump-price">+ R$ <%= orderbumpProduct.price.toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2 }) %>
-                            </p>
+                            <p class="pd-orderbump-desc">Adicione ao seu pacote e economize com essa oferta exclusiva de <%= orderbumpProduct.licence %>.</p>
+                            <p class="pd-orderbump-price">+ R$ <%= orderbumpProduct.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
                         </div>
                     </div>
                     <% } %>
 
-                        <p class="small"
-                            style="margin-top:12px; margin-bottom:15px; background: #e0f2fe; padding: 10px; border-radius: 6px; color: #0369a1;">
-                            <i class="fa-solid fa-shield-halved"></i> <strong>Compra Segura!</strong> O acesso será
-                            enviado IMEDIATAMENTE após a confirmação do PIX.
-                        </p>
+                    <button type="submit" class="pd-btn-buy" id="btn-comprar">Comprar agora <i class="fa-solid fa-arrow-right"></i></button>
+                </form>
 
-                        <button type="submit" class="btn btn-primary" id="btn-comprar">COMPRAR AGORA</button>
+                <!-- Safe alert -->
+                <div class="pd-safe-alert">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span><strong>Compra Segura!</strong> O acesso será enviado IMEDIATAMENTE após a confirmação do PIX.</span>
+                </div>
+
+                <!-- Favorite -->
+                <button class="pd-btn-fav" id="pd-fav-btn" onclick="pdToggleFavorite('<%= product.id %>')">
+                    <i class="fa-regular fa-heart"></i> Adicionar aos favoritos
+                </button>
+
+                <!-- WhatsApp -->
+                <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20tenho%20d%C3%BAvidas%20sobre%20o%20produto%20<%= encodeURIComponent(product.name) %>"
+                    target="_blank" class="pd-whatsapp-btn">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i> Fale com Suporte
+                </a>
+
+                <!-- Security -->
+                <div class="pd-security-row">
+                    <i class="fa-solid fa-shield-check"></i>
+                    <div>
+                        <div class="sec-text">Compra 100% segura</div>
+                        <div class="sec-sub">Seus dados protegidos</div>
+                    </div>
+                </div>
+
+                <!-- Payment methods -->
+                <div class="pd-payment-section">
+                    <p class="pd-payment-title">Formas de pagamento</p>
+                    <div class="pd-payment-icons">
+                        <div class="pd-payment-icon pd-pay-pix">PIX</div>
+                        <div class="pd-payment-icon pd-pay-visa">VISA</div>
+                        <div class="pd-payment-icon">
+                            <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+                                <circle cx="12" cy="10" r="8" fill="#EB001B" />
+                                <circle cx="20" cy="10" r="8" fill="#F79E1B" />
+                                <path d="M16 4.8C17.7 6.2 18.8 8 18.8 10s-1.1 3.8-2.8 5.2C14.3 13.8 13.2 12 13.2 10s1.1-3.8 2.8-5.2z" fill="#FF5F00" />
+                            </svg>
+                        </div>
+                        <div class="pd-payment-icon" style="font-size: 9px; font-weight: 800; color: #006FCF;">AMEX</div>
+                        <div class="pd-payment-icon pd-pay-boleto">
+                            <i class="fa-solid fa-barcode" style="font-size: 16px; color: #475569;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END pd-container -->
+
+    <!-- REVIEWS + FAQ -->
+    <div class="pd-reviews-faq-section">
+        <!-- Reviews -->
+        <div class="pd-review-card" id="pd-reviews">
+            <h3 class="pd-section-header"><i class="fa-solid fa-star"></i> Avaliações de clientes</h3>
+
+            <div class="pd-review-summary">
+                <div class="pd-review-big">
+                    <div class="big-num"><%= avgRate %></div>
+                    <div class="big-stars">
+                        <% for(let i=0; i<5; i++) { %>
+                        <i class="fa-solid fa-star" style="color: <%= i < Math.floor(avgRate) ? '#3b82f6' : '#e2e8f0' %>;"></i>
+                        <% } %>
+                    </div>
+                    <div class="big-count">Baseado em <%= totalReviews %> avaliações</div>
+                </div>
+                <div class="pd-review-bars">
+                    <%
+                    let starCounts = [0,0,0,0,0];
+                    if (product.pinions && product.pinions.length > 0) {
+                        product.pinions.forEach(function(p) {
+                            let r = Math.min(5, Math.max(1, Math.round(Number(p.rate) || 5)));
+                            starCounts[r-1]++;
+                        });
+                    }
+                    let total = Math.max(1, product.pinions ? product.pinions.length : 1);
+                    %>
+                    <% for(let s=5; s>=1; s--) { %>
+                    <% let pct = Math.round((starCounts[s-1] / total) * 100); %>
+                    <div class="pd-bar-row">
+                        <span class="pd-bar-label"><%= s %> estrela<%= s > 1 ? 's' : '' %></span>
+                        <div class="pd-bar-track">
+                            <div class="pd-bar-fill" style="width: <%= pct %>%;"></div>
+                        </div>
+                        <span class="pd-bar-pct"><%= pct %>%</span>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="pd-review-list">
+                <% if (product.pinions && product.pinions.length > 0) { %>
+                <% product.pinions.forEach(function(op, idx) { %>
+                <div class="pd-review-item">
+                    <div class="pd-review-avatar">
+                        <% if (op.image && op.image.length > 0) { %>
+                        <img src="<%= getImageUrl(op.image) %>" alt="Review">
+                        <% } else { %>
+                        <%= reviewNames[idx % reviewNames.length].charAt(0) %>
+                        <% } %>
+                    </div>
+                    <div class="pd-review-body">
+                        <div class="pd-review-meta">
+                            <span class="pd-review-name"><%= reviewNames[idx % reviewNames.length] %></span>
+                            <span class="pd-review-badge">Comprador verificado</span>
+                            <span class="pd-review-time"><%= reviewTimes[idx % reviewTimes.length] %></span>
+                        </div>
+                        <div class="pd-review-stars">
+                            <% for(let i=0; i < Number(op.rate); i++) { %>
+                            <i class="fa-solid fa-star"></i>
+                            <% } %>
+                        </div>
+                        <p class="pd-review-text"><%= op.pinion %></p>
+                    </div>
+                </div>
+                <% }); %>
+                <% } %>
+            </div>
+            <a href="#pd-reviews" class="pd-btn-outline">Ver todas avaliações</a>
+        </div>
+
+        <!-- FAQ -->
+        <div class="pd-faq-card">
+            <h3 class="pd-section-header"><i class="fa-solid fa-circle-question" style="color: #3b82f6;"></i> Perguntas frequentes</h3>
+
+            <div class="pd-faq-list">
+                <% if (product.questions && product.questions.length > 0) { %>
+                <% product.questions.forEach(function(q, idx) { %>
+                <div class="pd-faq-item">
+                    <div class="pd-faq-question" onclick="pdToggleFaq(this)">
+                        <span><%= q.question %></span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="pd-faq-answer"><%= q.resp %></div>
+                </div>
+                <% }); %>
+                <% } %>
+            </div>
+
+            <!-- Ask question via WhatsApp -->
+            <form onsubmit="enviarWhatsApp(event)" style="display: flex; gap: 10px; margin-top: 20px;">
+                <input type="text" id="pergunta" placeholder="Escreva sua pergunta..." required
+                    style="flex-grow: 1; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: #f8fafc; color: #334155; transition: all 0.2s;">
+                <button type="submit"
+                    style="padding: 0 20px; border-radius: 10px; border: none; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; white-space: nowrap;">
+                    Perguntar
+                </button>
             </form>
 
-            <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20tenho%20d%C3%BAvidas%20sobre%20o%20produto%20<%= encodeURIComponent(product.name) %>"
-                target="_blank" class="btn btn-secondary"
-                style="display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background-color:#25D366; color:white;">
-                <i class="fa-brands fa-whatsapp" style="font-size: 20px;"></i> Fale com Suporte</a>
-
-            <ul class="benefits"
-                style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <li>
-                    <svg viewBox="0 0 24 24" style="fill: #22c55e;">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
-                    </svg>
-                    <span><strong>Compra Garantida.</strong> Receba o produto que está esperando ou devolvemos o
-                        dinheiro.</span>
-                </li>
-                <li>
-                    <svg viewBox="0 0 24 24" style="fill: #3b82f6;">
-                        <path
-                            d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
-                    </svg>
-                    <span>
-                        <%= product.licence %> de garantia com <strong>Suporte Incluso</strong>.
-                    </span>
-                </li>
-            </ul>
+            <a href="#pd-reviews" class="pd-btn-outline" style="border-color: #e2e8f0; color: #64748b;">Ver mais perguntas</a>
         </div>
     </div>
 
+    <!-- JAVASCRIPT -->
     <script>
+        // URL Hash for tracking
         window.location.hash = "?seller=202452-2025423598756&reco_id=d0bc7325-d0a6-4e93-814f-7c7ec4387922&sid=recos&is_advertising=true&ad_domain=VIPDESKTOP_UP&ad_position=2&ad_click_id=MjQ4MTRhYmUtNzRlMC00YzM3LTg0ODgtOGQ4OGMzMzA0OGQx";
-        function updateImage(url, el) {
-            document.getElementById('view-img').src = url;
-            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+
+        // ---- GALLERY ----
+        function pdUpdateImage(url, el) {
+            document.getElementById('pd-view-img').src = url;
+            document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
         }
 
-        function enviarWhatsApp(event) {
-            event.preventDefault(); // Impede o recarregamento da página
+        function pdShowAllThumbs() {
+            const thumbMore = document.querySelector('.pd-thumb-more');
+            if (thumbMore) thumbMore.style.display = 'none';
+        }
 
+        // ---- COUNTDOWN TIMER ----
+        (function () {
+            let totalSeconds = Math.floor(Math.random() * 36000) + 7200;
+            const savedEnd = sessionStorage.getItem('pd_timer_end');
+            if (savedEnd) {
+                const remaining = Math.floor((parseInt(savedEnd) - Date.now()) / 1000);
+                if (remaining > 0) {
+                    totalSeconds = remaining;
+                } else {
+                    totalSeconds = Math.floor(Math.random() * 36000) + 7200;
+                    sessionStorage.setItem('pd_timer_end', Date.now() + totalSeconds * 1000);
+                }
+            } else {
+                sessionStorage.setItem('pd_timer_end', Date.now() + totalSeconds * 1000);
+            }
+
+            function updateTimer() {
+                if (totalSeconds <= 0) {
+                    totalSeconds = Math.floor(Math.random() * 36000) + 7200;
+                    sessionStorage.setItem('pd_timer_end', Date.now() + totalSeconds * 1000);
+                }
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = totalSeconds % 60;
+                document.getElementById('pd-timer-h').textContent = String(h).padStart(2, '0');
+                document.getElementById('pd-timer-m').textContent = String(m).padStart(2, '0');
+                document.getElementById('pd-timer-s').textContent = String(s).padStart(2, '0');
+                totalSeconds--;
+            }
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        })();
+
+        // ---- OS SELECTOR ----
+        function pdSelectOS(btn) {
+            document.querySelectorAll('.pd-os-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // ---- FAQ ACCORDION ----
+        function pdToggleFaq(el) {
+            const item = el.closest('.pd-faq-item');
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.pd-faq-item').forEach(i => i.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+
+        // ---- FAVORITES ----
+        function pdToggleFavorite(productId) {
+            const btn = document.getElementById('pd-fav-btn');
+            let favs = JSON.parse(localStorage.getItem('favorited_products') || '[]');
+            const idx = favs.indexOf(productId);
+            if (idx > -1) {
+                favs.splice(idx, 1);
+                btn.classList.remove('favorited');
+                btn.innerHTML = '<i class="fa-regular fa-heart"></i> Adicionar aos favoritos';
+            } else {
+                favs.push(productId);
+                btn.classList.add('favorited');
+                btn.innerHTML = '<i class="fa-solid fa-heart"></i> Nos favoritos';
+            }
+            localStorage.setItem('favorited_products', JSON.stringify(favs));
+            if (typeof updateNavFavoritesCount === 'function') updateNavFavoritesCount();
+        }
+
+        // Check if already favorited on load
+        document.addEventListener('DOMContentLoaded', function () {
+            const favs = JSON.parse(localStorage.getItem('favorited_products') || '[]');
+            if (favs.includes('<%= product.id %>')) {
+                const btn = document.getElementById('pd-fav-btn');
+                btn.classList.add('favorited');
+                btn.innerHTML = '<i class="fa-solid fa-heart"></i> Nos favoritos';
+            }
+        });
+
+        // ---- WHATSAPP QUESTION ----
+        function enviarWhatsApp(event) {
+            event.preventDefault();
             const numero = "5581985315669";
             const pergunta = document.getElementById('pergunta').value;
-
-            // Codifica o texto para formato de URL (trata espaços e símbolos)
             const mensagem = encodeURIComponent(pergunta);
-
-            // Redireciona para o WhatsApp
             window.open(`https://wa.me/${numero}?text=_<%= product.name %>_%0A*Pergunta:*%0A${mensagem}`, '_blank');
         }
 
+        // ---- ORDER BUMP ----
         function toggleOrderBump(checkbox, mainPrice, bumpPrice) {
             const box = document.getElementById('ob-box');
-            const totalSpan = document.getElementById('total-price');
-
             if (checkbox.checked) {
                 box.classList.add('active');
-                totalSpan.innerText = (mainPrice + bumpPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
             } else {
                 box.classList.remove('active');
-                totalSpan.innerText = mainPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
             }
         }
 
-        // Máscara para WhatsApp
+        // ---- WHATSAPP MASK ----
         document.getElementById('whatsapp').addEventListener('input', function (e) {
             var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');

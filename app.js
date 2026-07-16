@@ -50,24 +50,58 @@ function dbProductToJsProduct(row) {
 		pinions: typeof row.pinions === 'string' ? JSON.parse(row.pinions) : (row.pinions || []),
 		questions: typeof row.questions === 'string' ? JSON.parse(row.questions) : (row.questions || []),
 		active: row.active !== false,
-		emailMessage: row.email_message || ''
+		emailMessage: row.email_message || '',
+		categoryId: row.category_id || null,
+		systemType: row.system_type || ''
 	};
 }
 
 async function getAllProducts() {
-	const { rows } = await pool.query('SELECT * FROM products ORDER BY id ASC');
-	return rows.map(dbProductToJsProduct);
+	const { rows } = await pool.query(`
+		SELECT p.*, c.name as category_name 
+		FROM products p
+		LEFT JOIN categories c ON p.category_id = c.id
+		ORDER BY p.id ASC
+	`);
+	return rows.map(row => {
+		const p = dbProductToJsProduct(row);
+		if (p) p.categoryName = row.category_name || '';
+		return p;
+	});
 }
 
 async function getActiveProducts() {
-	const { rows } = await pool.query('SELECT * FROM products WHERE active = true ORDER BY id ASC');
-	return rows.map(dbProductToJsProduct);
+	const { rows } = await pool.query(`
+		SELECT p.*, c.name as category_name 
+		FROM products p
+		LEFT JOIN categories c ON p.category_id = c.id
+		WHERE p.active = true 
+		ORDER BY p.id ASC
+	`);
+	return rows.map(row => {
+		const p = dbProductToJsProduct(row);
+		if (p) p.categoryName = row.category_name || '';
+		return p;
+	});
 }
 
 async function getProductById(id) {
 	if (!id) return null;
-	const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
-	return dbProductToJsProduct(rows[0]);
+	const { rows } = await pool.query(`
+		SELECT p.*, c.name as category_name 
+		FROM products p
+		LEFT JOIN categories c ON p.category_id = c.id
+		WHERE p.id = $1
+	`, [id]);
+	if (rows.length === 0) return null;
+	const p = dbProductToJsProduct(rows[0]);
+	if (p) p.categoryName = rows[0].category_name || '';
+	return p;
+}
+
+async function getAllCategories() {
+	const { rows } = await pool.query('SELECT * FROM categories ORDER BY name ASC');
+	return rows;
 }
 
 async function getNextProductId() {
@@ -224,6 +258,14 @@ async function initSchema() {
 		);
 	`);
 
+	// 2.5 Tabela de Categorias
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS categories (
+			id SERIAL PRIMARY KEY,
+			name TEXT NOT NULL UNIQUE
+		);
+	`);
+
 	// 3. Tabela de Produtos (Migração do products.json)
 	await pool.query(`
 		CREATE TABLE IF NOT EXISTS products (
@@ -253,6 +295,10 @@ async function initSchema() {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
+
+	// Alterações incrementais na tabela de produtos
+	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;`);
+	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS system_type TEXT;`);
 
 	// 4. Tabela de Pagamentos
 	await pool.query(`
@@ -284,8 +330,32 @@ async function initSchema() {
 	// Índices úteis
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at DESC);`);
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_store ON payments (store_slug);`);
+	// Alterações incrementais na tabela de lojas
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS resend_api_key TEXT;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS resend_from TEXT;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_product_id TEXT;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_background_image TEXT;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_title TEXT;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_subtitle TEXT;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_timer_hours INTEGER DEFAULT 8;`);
 
 	// --- SEED DE DADOS INICIAIS ---
+
+	// Se não existirem categorias, insere as categorias padrão
+	const { rows: catCountRows } = await pool.query('SELECT count(*) FROM categories');
+	if (parseInt(catCountRows[0].count) === 0) {
+		console.log('Sem categorias no banco. Criando categorias padrão...');
+		const defaultCats = [
+			'Engenharia e Arquitetura',
+			'Design e Edição',
+			'Escritório',
+			'Marcenaria',
+			'Eletronica'
+		];
+		for (const catName of defaultCats) {
+			await pool.query('INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [catName]);
+		}
+	}
 
 	// Se não existirem lojas, insere a loja padrão do .env
 	const { rows: storeRows } = await pool.query('SELECT count(*) FROM stores');
@@ -651,8 +721,54 @@ app.get('/', async (req, res) => {
 
 // Página de todos os produtos
 app.get('/produtos', async (req, res) => {
-	const activeProducts = await getActiveProducts();
-	res.render('products_all', { products: activeProducts });
+	try {
+		const { q, category, system } = req.query;
+		let queryText = `
+			SELECT p.*, c.name as category_name 
+			FROM products p
+			LEFT JOIN categories c ON p.category_id = c.id
+			WHERE p.active = true
+		`;
+		const queryParams = [];
+
+		if (q && q.trim()) {
+			queryParams.push(`%${q.trim()}%`);
+			queryText += ` AND (p.name ILIKE $${queryParams.length} OR p.description ILIKE $${queryParams.length} OR p.name_soft ILIKE $${queryParams.length} OR p.development ILIKE $${queryParams.length})`;
+		}
+
+		if (category) {
+			queryParams.push(parseInt(category));
+			queryText += ` AND p.category_id = $${queryParams.length}`;
+		}
+
+		if (system) {
+			if (system === 'Windows') {
+				queryText += ` AND (p.system_type = 'Windows' OR p.system_type = 'Ambos')`;
+			} else if (system === 'Mac') {
+				queryText += ` AND (p.system_type = 'Mac' OR p.system_type = 'Ambos')`;
+			}
+		}
+
+		queryText += ` ORDER BY p.id ASC`;
+
+		const { rows } = await pool.query(queryText, queryParams);
+		const products = rows.map(row => {
+			const p = dbProductToJsProduct(row);
+			if (p) p.categoryName = row.category_name || '';
+			return p;
+		});
+
+		const categories = await getAllCategories();
+
+		res.render('products_all', {
+			products,
+			categories,
+			filters: { q: q || '', category: category || '', system: system || '' }
+		});
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao carregar catálogo de produtos.');
+	}
 });
 
 // Termos de Uso
@@ -786,18 +902,115 @@ app.get('/admin/produtos', requireAuth, async (req, res) => {
 	res.render('admin_products', { products: allProducts });
 });
 
+// Admin - Gerenciamento de Categorias
+app.get('/admin/categorias', requireAuth, async (req, res) => {
+	try {
+		const categories = await getAllCategories();
+		res.render('admin_categories', { categories });
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao carregar categorias.');
+	}
+});
+
+app.post('/admin/categorias', requireAuth, async (req, res) => {
+	const { name } = req.body;
+	if (!name || !name.trim()) {
+		return res.status(400).send('Nome da categoria é obrigatório.');
+	}
+	try {
+		await pool.query(
+			`INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
+			[name.trim()]
+		);
+		res.redirect('/admin/categorias?success=1');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao cadastrar categoria.');
+	}
+});
+app.post('/admin/categorias/excluir/:id', requireAuth, async (req, res) => {
+	try {
+		await pool.query('DELETE FROM categories WHERE id = $1', [req.params.id]);
+		res.redirect('/admin/categorias?success=2');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao excluir categoria.');
+	}
+});
+
+// Admin - Configurações da Loja e do Banner
+app.get('/admin/configuracao', requireAuth, async (req, res) => {
+	try {
+		const { rows } = await pool.query('SELECT * FROM stores WHERE slug = $1', [req.store.slug]);
+		const store = rows[0];
+		const products = await getAllProducts();
+		res.render('admin_config', { store, products, userRole: req.session.userRole });
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao carregar configurações.');
+	}
+});
+
+app.post('/admin/configuracao', requireAuth, upload.single('bannerImageFile'), async (req, res) => {
+	const {
+		name, logoUrl, resendApiKey, resendFrom, mpAccessToken,
+		bannerProductId, bannerTitle, bannerSubtitle, bannerTimerHours, bannerBackgroundImage
+	} = req.body;
+
+	let bgImagePath = bannerBackgroundImage || '';
+	if (req.file) {
+		bgImagePath = '/images/produtos/' + req.file.filename;
+	}
+
+	try {
+		await pool.query(
+			`UPDATE stores SET
+				name = $1,
+				logo_url = $2,
+				resend_api_key = $3,
+				resend_from = $4,
+				mp_access_token = $5,
+				banner_product_id = $6,
+				banner_background_image = $7,
+				banner_title = $8,
+				banner_subtitle = $9,
+				banner_timer_hours = $10
+			 WHERE slug = $11`,
+			[
+				name || '',
+				logoUrl || null,
+				resendApiKey || null,
+				resendFrom || null,
+				mpAccessToken || '',
+				bannerProductId || null,
+				bgImagePath || null,
+				bannerTitle || null,
+				bannerSubtitle || null,
+				bannerTimerHours ? parseInt(bannerTimerHours) : 8,
+				req.store.slug
+			]
+		);
+		res.redirect('/admin/configuracao?success=1');
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao salvar configurações.');
+	}
+});
+
 // Admin - Cadastro de Produtos
 app.get('/admin/produtos/novo', requireAuth, async (req, res) => {
 	const nextId = await getNextProductId();
 	const allProducts = await getAllProducts();
-	res.render('admin_product_create', { products: allProducts, nextId });
+	const categories = await getAllCategories();
+	res.render('admin_product_create', { products: allProducts, nextId, categories });
 });
 
 app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), async (req, res) => {
 	const {
 		id, name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell, emailMessage
+		orderbump, upsell, emailMessage, categoryId, systemType
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -825,13 +1038,17 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 		parsedPinions = Object.values(req.body.pinions);
 	}
 
+	const catId = categoryId ? parseInt(categoryId) : null;
+	const sysType = systemType || null;
+
 	try {
 		await pool.query(
 			`INSERT INTO products (
 				id, name, price_before, price, price_upsell, url_produto, tutorial_video, more_info,
 				image, thumbs, development, name_soft, version, licence, formart, description,
-				orderbump, upsell, relation_products, pinions, questions, active, email_message
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+				orderbump, upsell, relation_products, pinions, questions, active, email_message,
+				category_id, system_type
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
 			[
 				id || `PROD${Date.now()}`,
 				name || '',
@@ -855,7 +1072,9 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 				JSON.stringify(parsedPinions),
 				JSON.stringify(parsedQuestions),
 				true,
-				emailMessage || ''
+				emailMessage || '',
+				catId,
+				sysType
 			]
 		);
 		res.redirect('/admin/produtos/novo?success=1');
@@ -870,14 +1089,15 @@ app.get('/admin/produtos/editar/:id', requireAuth, async (req, res) => {
 	const product = await getProductById(req.params.id);
 	if (!product) return res.status(404).send('Produto não encontrado');
 	const allProducts = await getAllProducts();
-	res.render('admin_product_edit', { product, products: allProducts });
+	const categories = await getAllCategories();
+	res.render('admin_product_edit', { product, products: allProducts, categories });
 });
 
 app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thumbImages', maxCount: 10 }]), async (req, res) => {
 	const {
 		name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell, emailMessage
+		orderbump, upsell, emailMessage, categoryId, systemType
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -905,14 +1125,18 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 		parsedPinions = Object.values(req.body.pinions);
 	}
 
+	const catId = categoryId ? parseInt(categoryId) : null;
+	const sysType = systemType || null;
+
 	try {
 		await pool.query(
 			`UPDATE products SET
 				name = $1, price_before = $2, price = $3, price_upsell = $4, url_produto = $5,
 				tutorial_video = $6, more_info = $7, image = $8, thumbs = $9, development = $10,
 				name_soft = $11, version = $12, licence = $13, formart = $14, description = $15,
-				orderbump = $16, upsell = $17, pinions = $18, questions = $19, email_message = $20
-			 WHERE id = $21`,
+				orderbump = $16, upsell = $17, pinions = $18, questions = $19, email_message = $20,
+				category_id = $21, system_type = $22
+			 WHERE id = $23`,
 			[
 				name || '',
 				Number(priceBefore) || 0,
@@ -934,6 +1158,8 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 				JSON.stringify(parsedPinions),
 				JSON.stringify(parsedQuestions),
 				emailMessage || '',
+				catId,
+				sysType,
 				req.params.id
 			]
 		);

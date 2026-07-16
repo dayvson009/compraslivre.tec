@@ -31,6 +31,8 @@
             <nav class="hidden md:flex gap-6">
                 <a href="/admin/produtos" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-list mr-1"></i> Produtos</a>
                 <a href="/admin/produtos/novo" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-plus mr-1"></i> Cadastrar</a>
+                <a href="/admin/categorias" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-tags mr-1"></i> Categorias</a>
+                <a href="/admin/configuracao" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-cog mr-1"></i> Configurações</a>
                 <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
                     <a href="/admin/lojas" class="text-sm font-bold text-slate-500 hover:text-tech-blue transition"><i class="fas fa-store mr-1"></i> Lojas & Subadmins</a>
                 <% } %>
@@ -105,6 +107,26 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Formato</label>
                         <input type="text" name="formart" value="<%= product.formart || '' %>" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Categoria *</label>
+                        <select name="categoryId" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            <option value="">Selecione uma categoria</option>
+                            <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+                                <% categories.forEach(function(cat) { %>
+                                    <option value="<%= cat.id %>" <%= product.categoryId === cat.id ? 'selected' : '' %>><%= cat.name %></option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Tipo de Sistema *</label>
+                        <select name="systemType" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition bg-white">
+                            <option value="">Selecione a compatibilidade</option>
+                            <option value="Windows" <%= product.systemType === 'Windows' ? 'selected' : '' %>>Windows</option>
+                            <option value="Mac" <%= product.systemType === 'Mac' ? 'selected' : '' %>>Mac</option>
+                            <option value="Ambos" <%= product.systemType === 'Ambos' ? 'selected' : '' %>>Ambos (Windows & Mac)</option>
+                        </select>
                     </div>
                 </div>
             </div>

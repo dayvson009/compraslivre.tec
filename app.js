@@ -339,6 +339,23 @@ async function initSchema() {
 	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_subtitle TEXT;`);
 	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_timer_hours INTEGER DEFAULT 8;`);
 
+	// 5. Tabela de logs de tracking dos clientes
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS customer_logs (
+			id SERIAL PRIMARY KEY,
+			session_id TEXT,
+			product_id TEXT,
+			product_name TEXT,
+			store_slug TEXT,
+			event_type TEXT, -- 'visited', 'clicked_checkout', 'form_submitted', 'paid'
+			email TEXT,
+			whatsapp TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
+	await pool.query(`CREATE INDEX IF NOT EXISTS idx_customer_logs_session ON customer_logs (session_id);`);
+	await pool.query(`CREATE INDEX IF NOT EXISTS idx_customer_logs_created ON customer_logs (created_at DESC);`);
+
 	// --- SEED DE DADOS INICIAIS ---
 
 	// Se não existirem categorias, insere as categorias padrão
@@ -509,7 +526,7 @@ async function sendPurchaseEmail(email, purchasedProducts, store) {
 // Helper para processar aprovação de pagamento e enviar para Google Forms e Resend
 async function handlePaymentApproved(paymentId) {
 	try {
-		const { rows: checkRows } = await pool.query(`SELECT status, email, product_name, description, store_slug FROM payments WHERE payment_id=$1`, [paymentId]);
+		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, description, store_slug FROM payments WHERE payment_id=$1`, [paymentId]);
 
 		if (checkRows.length > 0 && checkRows[0].status !== 'paid') {
 			await pool.query(
@@ -517,11 +534,20 @@ async function handlePaymentApproved(paymentId) {
 				[paymentId]
 			);
 
-			// Disparar requisição para Google Forms
 			const emailEnvio = checkRows[0].email;
+			const whatsappEnvio = checkRows[0].whatsapp;
 			const productEnvio = checkRows[0].product_name;
 			const descriptionEnvio = checkRows[0].description;
 			const storeSlugEnvio = checkRows[0].store_slug;
+
+			// Registrar evento 'paid' no log de tracking
+			await pool.query(
+				`INSERT INTO customer_logs (product_name, store_slug, event_type, email, whatsapp)
+				 VALUES ($1, $2, 'paid', $3, $4)`,
+				[productEnvio, storeSlugEnvio, emailEnvio || null, whatsappEnvio || null]
+			).catch(e => console.error('Erro ao registrar log de compra concluida:', e));
+
+			// Disparar requisição para Google Forms
 
 			if (emailEnvio && productEnvio) {
 				console.log('Enviando dados para o Google Forms...', { emailEnvio, productEnvio });
@@ -1212,6 +1238,13 @@ app.get('/produto/:id', async (req, res) => {
 		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
 
+		// Registrar evento 'visited'
+		await pool.query(
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type)
+			 VALUES ($1, $2, $3, $4, 'visited')`,
+			[req.sessionID || 'guest', product.id, product.name, req.store.slug]
+		).catch(e => console.error('Erro ao registrar log de visita:', e));
+
 		let relatedProducts = [];
 		if (product.relationProducts && product.relationProducts.length > 0) {
 			relatedProducts = activeProducts.filter(p => product.relationProducts.includes(p.id));
@@ -1231,6 +1264,56 @@ app.get('/produto/:id', async (req, res) => {
 	}
 });
 
+// Rota de tracking de eventos do frontend
+app.post('/track-event', async (req, res) => {
+	try {
+		const { eventType, productId } = req.body;
+		if (!eventType || !productId) {
+			return res.status(400).send('eventType e productId são obrigatórios.');
+		}
+		const product = await getProductById(productId);
+		const productName = product ? product.name : 'Desconhecido';
+
+		await pool.query(
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type)
+			 VALUES ($1, $2, $3, $4, $5)`,
+			[req.sessionID || 'guest', productId, productName, req.store.slug, eventType]
+		);
+		return res.sendStatus(200);
+	} catch (e) {
+		console.error('Erro /track-event:', e);
+		return res.sendStatus(500);
+	}
+});
+
+// Admin - Dashboard de Tracking global (Apenas Master Admin)
+app.get('/admin/tracking', requireAuth, requireGlobalAdmin, async (req, res) => {
+	try {
+		const { rows: logs } = await pool.query(`
+			SELECT cl.*, s.name as store_name
+			FROM customer_logs cl
+			LEFT JOIN stores s ON cl.store_slug = s.slug
+			ORDER BY cl.created_at DESC
+			LIMIT 300
+		`);
+
+		// Estatísticas básicas gerais
+		const { rows: stats } = await pool.query(`
+			SELECT 
+				COUNT(CASE WHEN event_type = 'visited' THEN 1 END) as visits,
+				COUNT(CASE WHEN event_type = 'clicked_checkout' THEN 1 END) as clicks,
+				COUNT(CASE WHEN event_type = 'form_submitted' THEN 1 END) as forms,
+				COUNT(CASE WHEN event_type = 'paid' THEN 1 END) as purchases
+			FROM customer_logs
+		`);
+
+		res.render('admin_tracking', { logs, stats: stats[0] });
+	} catch (e) {
+		console.error(e);
+		res.status(500).send('Erro ao carregar dashboard de tracking.');
+	}
+});
+
 // Comprar produto e renderizar checkout
 app.post('/buy/:id', async (req, res) => {
 	try {
@@ -1243,6 +1326,13 @@ app.post('/buy/:id', async (req, res) => {
 		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
 		if (!email) return res.status(400).send('E-mail é obrigatório');
+
+		// Registrar evento 'form_submitted'
+		await pool.query(
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, email, whatsapp)
+			 VALUES ($1, $2, $3, $4, 'form_submitted', $5, $6)`,
+			[req.sessionID || 'guest', id, product.name, req.store.slug, email || null, whatsapp || null]
+		).catch(e => console.error('Erro ao registrar log de form_submitted:', e));
 
 		let amount = product.price;
 		let description = product.name;

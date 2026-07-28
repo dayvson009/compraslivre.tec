@@ -870,7 +870,7 @@
                 }
 
                 // Cria o token do cartão no frontend via SDK do Mercado Pago
-                const tokenResult = await mpInstance.cardToken.create({
+                const tokenResult = await mpInstance.createCardToken({
                     cardNumber: cardNumber,
                     cardholderName: cardName,
                     cardExpirationMonth: month,

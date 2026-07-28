@@ -328,6 +328,7 @@ async function initSchema() {
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS product_name TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS store_slug TEXT;`);
+	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS ip_address TEXT;`);
 
 	// Índices úteis
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at DESC);`);
@@ -358,6 +359,7 @@ async function initSchema() {
 	`);
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_customer_logs_session ON customer_logs (session_id);`);
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_customer_logs_created ON customer_logs (created_at DESC);`);
+	await pool.query(`ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS ip_address TEXT;`);
 
 	// --- SEED DE DADOS INICIAIS ---
 
@@ -529,7 +531,7 @@ async function sendPurchaseEmail(email, purchasedProducts, store) {
 // Helper para processar aprovação de pagamento e enviar para Google Forms e Resend
 async function handlePaymentApproved(paymentId) {
 	try {
-		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, description, store_slug FROM payments WHERE payment_id=$1`, [paymentId]);
+		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, description, store_slug, ip_address FROM payments WHERE payment_id=$1`, [paymentId]);
 
 		if (checkRows.length > 0 && checkRows[0].status !== 'paid') {
 			await pool.query(
@@ -542,12 +544,13 @@ async function handlePaymentApproved(paymentId) {
 			const productEnvio = checkRows[0].product_name;
 			const descriptionEnvio = checkRows[0].description;
 			const storeSlugEnvio = checkRows[0].store_slug;
+			const ipEnvio = checkRows[0].ip_address;
 
 			// Registrar evento 'paid' no log de tracking
 			await pool.query(
-				`INSERT INTO customer_logs (product_name, store_slug, event_type, email, whatsapp)
-				 VALUES ($1, $2, 'paid', $3, $4)`,
-				[productEnvio, storeSlugEnvio, emailEnvio || null, whatsappEnvio || null]
+				`INSERT INTO customer_logs (product_name, store_slug, event_type, email, whatsapp, ip_address)
+				 VALUES ($1, $2, 'paid', $3, $4, $5)`,
+				[productEnvio, storeSlugEnvio, emailEnvio || null, whatsappEnvio || null, ipEnvio || null]
 			).catch(e => console.error('Erro ao registrar log de compra concluida:', e));
 
 			// Disparar requisição para Google Forms
@@ -1245,9 +1248,9 @@ app.get('/produto/:id', async (req, res) => {
 
 		// Registrar evento 'visited'
 		await pool.query(
-			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type)
-			 VALUES ($1, $2, $3, $4, 'visited')`,
-			[req.sessionID || 'guest', product.id, product.name, req.store.slug]
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address)
+			 VALUES ($1, $2, $3, $4, 'visited', $5)`,
+			[req.sessionID || 'guest', product.id, product.name, req.store.slug, req.ip]
 		).catch(e => console.error('Erro ao registrar log de visita:', e));
 
 		let relatedProducts = [];
@@ -1280,9 +1283,9 @@ app.post('/track-event', async (req, res) => {
 		const productName = product ? product.name : 'Desconhecido';
 
 		await pool.query(
-			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type)
-			 VALUES ($1, $2, $3, $4, $5)`,
-			[req.sessionID || 'guest', productId, productName, req.store.slug, eventType]
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address)
+			 VALUES ($1, $2, $3, $4, $5, $6)`,
+			[req.sessionID || 'guest', productId, productName, req.store.slug, eventType, req.ip]
 		);
 		return res.sendStatus(200);
 	} catch (e) {
@@ -1319,6 +1322,23 @@ app.get('/admin/tracking', requireAuth, requireGlobalAdmin, async (req, res) => 
 	}
 });
 
+// Admin - Excluir logs selecionados do tracking (Apenas Master Admin)
+app.post('/admin/tracking/delete', requireAuth, requireGlobalAdmin, async (req, res) => {
+	try {
+		const { logIds } = req.body;
+		if (logIds && Array.isArray(logIds) && logIds.length > 0) {
+			const ids = logIds.map(id => parseInt(id)).filter(Number.isInteger);
+			if (ids.length > 0) {
+				await pool.query('DELETE FROM customer_logs WHERE id = ANY($1)', [ids]);
+			}
+		}
+		return res.redirect('/admin/tracking?success=deleted');
+	} catch (e) {
+		console.error('Erro ao excluir logs:', e);
+		return res.status(500).send('Erro ao excluir logs.');
+	}
+});
+
 // Comprar produto e renderizar checkout
 app.post('/buy/:id', async (req, res) => {
 	try {
@@ -1334,9 +1354,9 @@ app.post('/buy/:id', async (req, res) => {
 
 		// Registrar evento 'form_submitted'
 		await pool.query(
-			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, email, whatsapp)
-			 VALUES ($1, $2, $3, $4, 'form_submitted', $5, $6)`,
-			[req.sessionID || 'guest', id, product.name, req.store.slug, email || null, whatsapp || null]
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, email, whatsapp, ip_address)
+			 VALUES ($1, $2, $3, $4, 'form_submitted', $5, $6, $7)`,
+			[req.sessionID || 'guest', id, product.name, req.store.slug, email || null, whatsapp || null, req.ip]
 		).catch(e => console.error('Erro ao registrar log de form_submitted:', e));
 
 		let amount = product.price;
@@ -1354,9 +1374,9 @@ app.post('/buy/:id', async (req, res) => {
 		const accessToken = generateAccessToken();
 		const finalTarget = `/funil/${accessToken}`;
 		await pool.query(
-			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug)
-			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9)`,
-			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug]
+			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address)
+			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10)`,
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug, req.ip]
 		);
 		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {

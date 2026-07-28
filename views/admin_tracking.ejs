@@ -122,6 +122,19 @@
             </div>
         </div>
 
+        <script>
+            // Show success message if parameter ?success=deleted
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'deleted') {
+                document.write(`
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-8 rounded shadow-sm" role="alert">
+                        <p class="font-bold">Sucesso!</p>
+                        <p>Os logs selecionados foram excluídos com sucesso do banco de dados.</p>
+                    </div>
+                `);
+            }
+        </script>
+
         <!-- Tabela de Logs de Conversão -->
         <div class="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -129,90 +142,127 @@
                     <h3 class="text-lg font-bold text-slate-800">Últimos Logs de Atividade</h3>
                     <p class="text-xs text-slate-500">Visitas, cliques, cadastros e compras em tempo real.</p>
                 </div>
+                <button type="submit" form="delete-logs-form" id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-white font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-1.5 shadow-md shadow-red-500/10 cursor-pointer disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-trash-alt"></i> Excluir Selecionados (<span id="selected-count">0</span>)
+                </button>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
-                            <th class="p-4 font-semibold border-b border-slate-200">Data / Hora</th>
-                            <th class="p-4 font-semibold border-b border-slate-200">Loja (Subdomínio)</th>
-                            <th class="p-4 font-semibold border-b border-slate-200">Produto</th>
-                            <th class="p-4 font-semibold border-b border-slate-200">Tipo de Ação</th>
-                            <th class="p-4 font-semibold border-b border-slate-200">E-mail</th>
-                            <th class="p-4 font-semibold border-b border-slate-200">WhatsApp</th>
-                            <th class="p-4 font-semibold border-b border-slate-200 text-center">Ações de Recuperação</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <% if (logs && logs.length > 0) { %>
-                            <% logs.forEach(function(log) { %>
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="p-4 text-xs text-slate-500 font-mono">
-                                        <%= new Date(log.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %>
-                                    </td>
-                                    <td class="p-4 font-semibold text-slate-700">
-                                        <%= log.store_name || log.store_slug || 'ComprasLivre' %>
-                                    </td>
-                                    <td class="p-4 text-slate-800 font-bold">
-                                        <%= log.product_name %>
-                                    </td>
-                                    <td class="p-4">
-                                        <% if (log.event_type === 'visited') { %>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                                                <i class="far fa-eye text-[10px]"></i> Visitou
-                                            </span>
-                                        <% } else if (log.event_type === 'clicked_checkout') { %>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                                <i class="fas fa-mouse-pointer text-[10px]"></i> Clicou Comprar
-                                            </span>
-                                        <% } else if (log.event_type === 'form_submitted') { %>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                <i class="fas fa-user-tag text-[10px]"></i> Preencheu Dados
-                                            </span>
-                                        <% } else if (log.event_type === 'paid') { %>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                                                <i class="fas fa-check-circle text-[10px]"></i> Pagou 🎉
-                                            </span>
-                                        <% } else { %>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                                                <%= log.event_type %>
-                                            </span>
-                                        <% } %>
-                                    </td>
-                                    <td class="p-4 text-sm text-slate-600">
-                                        <%= log.email || '-' %>
-                                    </td>
-                                    <td class="p-4 text-sm text-slate-600 font-mono">
-                                        <%= log.whatsapp || '-' %>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <% if (log.whatsapp && log.event_type !== 'paid') { %>
-                                            <% 
-                                                const rawPhone = log.whatsapp.replace(/\D/g, '');
-                                                const message = `Olá, tudo bem? Vi que você se interessou pelo ${log.product_name} no nosso site mas acabou não finalizando a compra. Consegui liberar uma condição especial ou desconto exclusivo para você levar hoje mesmo! Tem alguma dúvida que eu possa ajudar?`;
-                                                const waUrl = `https://wa.me/55${rawPhone}?text=${encodeURIComponent(message)}`;
-                                            %>
-                                            <a href="<%= waUrl %>" target="_blank" class="inline-flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition">
-                                                <i class="fab fa-whatsapp"></i> Chamar Downsell
-                                            </a>
-                                        <% } else { %>
-                                            <span class="text-xs text-slate-400 font-medium">-</span>
-                                        <% } %>
+            <form id="delete-logs-form" action="/admin/tracking/delete" method="POST">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
+                                <th class="p-4 w-12 border-b border-slate-200"><input type="checkbox" id="select-all-checkbox" class="w-4 h-4 rounded text-tech-blue border-slate-300 focus:ring-tech-blue cursor-pointer"></th>
+                                <th class="p-4 font-semibold border-b border-slate-200">Data / Hora</th>
+                                <th class="p-4 font-semibold border-b border-slate-200">Loja (Subdomínio)</th>
+                                <th class="p-4 font-semibold border-b border-slate-200">Produto</th>
+                                <th class="p-4 font-semibold border-b border-slate-200">IP de Origem</th>
+                                <th class="p-4 font-semibold border-b border-slate-200">Tipo de Ação</th>
+                                <th class="p-4 font-semibold border-b border-slate-200">E-mail</th>
+                                <th class="p-4 font-semibold border-b border-slate-200">WhatsApp</th>
+                                <th class="p-4 font-semibold border-b border-slate-200 text-center">Ações de Recuperação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <% if (logs && logs.length > 0) { %>
+                                <% logs.forEach(function(log) { %>
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="p-4">
+                                            <input type="checkbox" name="logIds[]" value="<%= log.id %>" class="log-item-checkbox w-4 h-4 rounded text-tech-blue border-slate-300 focus:ring-tech-blue cursor-pointer">
+                                        </td>
+                                        <td class="p-4 text-xs text-slate-500 font-mono">
+                                            <%= new Date(log.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %>
+                                        </td>
+                                        <td class="p-4 font-semibold text-slate-700">
+                                            <%= log.store_name || log.store_slug || 'ComprasLivre' %>
+                                        </td>
+                                        <td class="p-4 text-slate-800 font-bold">
+                                            <%= log.product_name %>
+                                        </td>
+                                        <td class="p-4 text-xs text-slate-500 font-mono">
+                                            <%= log.ip_address || 'Desconhecido' %>
+                                        </td>
+                                        <td class="p-4">
+                                            <% if (log.event_type === 'visited') { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                                    <i class="far fa-eye text-[10px]"></i> Visitou
+                                                </span>
+                                            <% } else if (log.event_type === 'clicked_checkout') { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                    <i class="fas fa-mouse-pointer text-[10px]"></i> Clicou Comprar
+                                                </span>
+                                            <% } else if (log.event_type === 'form_submitted') { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <i class="fas fa-user-tag text-[10px]"></i> Preencheu Dados
+                                                </span>
+                                            <% } else if (log.event_type === 'paid') { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                                    <i class="fas fa-check-circle text-[10px]"></i> Pagou 🎉
+                                                </span>
+                                            <% } else { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                                    <%= log.event_type %>
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td class="p-4 text-sm text-slate-600">
+                                            <%= log.email || '-' %>
+                                        </td>
+                                        <td class="p-4 text-sm text-slate-600 font-mono">
+                                            <%= log.whatsapp || '-' %>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <% if (log.whatsapp && log.event_type !== 'paid') { %>
+                                                <% 
+                                                    const rawPhone = log.whatsapp.replace(/\D/g, '');
+                                                    const message = `Olá, tudo bem? Vi que você se interessou pelo ${log.product_name} no nosso site mas acabou não finalizando a compra. Consegui liberar uma condição especial ou desconto exclusivo para você levar hoje mesmo! Tem alguma dúvida que eu possa ajudar?`;
+                                                    const waUrl = `https://wa.me/55${rawPhone}?text=${encodeURIComponent(message)}`;
+                                                %>
+                                                <a href="<%= waUrl %>" target="_blank" class="inline-flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition">
+                                                    <i class="fab fa-whatsapp"></i> Chamar Downsell
+                                                </a>
+                                            <% } else { %>
+                                                <span class="text-xs text-slate-400 font-medium">-</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="9" class="p-8 text-center text-slate-400">
+                                        Nenhum log registrado até o momento.
                                     </td>
                                 </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-slate-400">
-                                    Nenhum log registrado até o momento.
-                                </td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </form>
         </div>
     </main>
+
+    <script>
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        const checkboxes = document.querySelectorAll('.log-item-checkbox');
+        const deleteBtn = document.getElementById('delete-selected-btn');
+        const selectedCountSpan = document.getElementById('selected-count');
+
+        function updateDeleteButton() {
+            const checkedCount = document.querySelectorAll('.log-item-checkbox:checked').length;
+            selectedCountSpan.innerText = checkedCount;
+            deleteBtn.disabled = checkedCount === 0;
+        }
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', (e) => {
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                updateDeleteButton();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateDeleteButton);
+        });
+    </script>
 </body>
 </html>

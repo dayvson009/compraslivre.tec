@@ -1753,6 +1753,97 @@ app.post('/webhook/mercadopago', async (req, res) => {
 	}
 });
 
+// POST /webhook/cakto - recebe eventos de compra aprovada da Cakto
+app.post('/webhook/cakto', async (req, res) => {
+	try {
+		console.log('--- WEBHOOK CAKTO RECEBIDO ---');
+		console.dir(req.body, { depth: null });
+
+		const { event, data, secret } = req.body || {};
+
+		if (event !== 'purchase_approved') {
+			console.log(`Webhook Cakto: evento "${event}" ignorado.`);
+			return res.status(200).send('Evento ignorado');
+		}
+
+		const email = data.customer && data.customer.email;
+		if (!email) {
+			return res.status(400).send('Email do cliente nao encontrado');
+		}
+
+		// 1. Tentar encontrar um pagamento pendente para este email no banco
+		const { rows: payments } = await pool.query(
+			`SELECT * FROM payments WHERE email = $1 AND status = 'pending' ORDER BY created_at DESC LIMIT 1`,
+			[email]
+		);
+
+		if (payments.length > 0) {
+			const payment = payments[0];
+			console.log(`Webhook Cakto: pagamento pendente encontrado para o email ${email}. Aprovando...`);
+			
+			const caktoId = data.id || `cakto_${Date.now()}`;
+			await pool.query(
+				`UPDATE payments SET payment_id = $1, payment_method = 'cakto_card' WHERE id = $2`,
+				[caktoId.toString(), payment.id]
+			);
+
+			await handlePaymentApproved(caktoId.toString());
+		} else {
+			console.log(`Webhook Cakto: nenhum pagamento pendente encontrado para ${email}. Criando registro dinâmico...`);
+			
+			// Encontrar o produto correspondente a partir do nome
+			let productName = '';
+			if (data.product && data.product.name) {
+				productName = data.product.name;
+			} else if (data.products && data.products[0] && data.products[0].name) {
+				productName = data.products[0].name;
+			}
+
+			const activeProducts = await getActiveProducts();
+			const product = activeProducts.find(p => 
+				productName.toLowerCase().includes(p.name.toLowerCase()) || 
+				p.name.toLowerCase().includes(productName.toLowerCase()) ||
+				productName.toLowerCase().includes((p.nameSoft || '').toLowerCase())
+			);
+
+			if (product) {
+				const accessToken = generateAccessToken();
+				const finalTarget = `/funil/${accessToken}`;
+				const caktoId = (data.id || `cakto_${Date.now()}`).toString();
+
+				// Insere o pagamento aprovado diretamente como pago
+				await pool.query(
+					`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, payment_method, store_slug, paid_at)
+					 VALUES ($1, $2, $3, $4, $5, 'paid', $6, $7, $8, $9, 'cakto_card', $10, CURRENT_TIMESTAMP)`,
+					[
+						caktoId, 
+						data.amount ? Math.round(Number(data.amount) * 100) : Math.round(product.price * 100), 
+						product.name, 
+						finalTarget, 
+						accessToken, 
+						email, 
+						product.urlProduto || null, 
+						(data.customer && data.customer.phone) || null, 
+						product.name, 
+						'teclivre', 
+						'cakto_card'
+					]
+				);
+
+				await handlePaymentApproved(caktoId);
+			} else {
+				console.error(`Webhook Cakto: Nao foi possivel mapear o produto correspondente para "${productName}"`);
+				return res.status(400).send('Produto nao mapeado');
+			}
+		}
+
+		return res.status(200).send('OK');
+	} catch (err) {
+		console.error('Erro no webhook da Cakto:', err);
+		return res.status(500).send('Erro interno');
+	}
+});
+
 
 
 // GET /status/:payment_id - consulta status salvo

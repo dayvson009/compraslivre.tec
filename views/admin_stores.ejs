@@ -152,7 +152,7 @@
                 <h3 class="text-lg font-bold text-slate-900">Cadastrar Nova Loja</h3>
                 <button onclick="toggleModal('modal-store', false)" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             </div>
-            <form action="/admin/lojas" method="POST" class="space-y-4">
+            <form action="/admin/lojas" method="POST" enctype="multipart/form-data" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Subdomínio (Slug) *</label>
                     <input type="text" name="slug" required placeholder="Ex: teclivre" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm font-mono">
@@ -166,8 +166,9 @@
                     <input type="text" name="mp_access_token" required placeholder="Ex: APP_USR-..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">URL da Logo (Opcional)</label>
-                    <input type="text" name="logo_url" placeholder="Ex: /images/minha_logo.png" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Logo da Loja</label>
+                    <input type="file" name="logoFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-tech-blue hover:file:bg-blue-100 mb-2">
+                    <input type="text" name="logo_url" placeholder="Ou digite o caminho da logo (Ex: /images/minha_logo.png)" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
                 </div>
                 <button type="submit" class="w-full bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm shadow transition">Salvar Loja</button>
             </form>
@@ -181,7 +182,7 @@
                 <h3 class="text-lg font-bold text-slate-900">Editar Loja</h3>
                 <button onclick="toggleModal('modal-edit-store', false)" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             </div>
-            <form action="/admin/lojas/editar" method="POST" class="space-y-4">
+            <form action="/admin/lojas/editar" method="POST" enctype="multipart/form-data" class="space-y-4">
                 <input type="hidden" name="id" id="edit-store-id">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Subdomínio (Slug) *</label>
@@ -196,8 +197,20 @@
                     <input type="text" name="mp_access_token" id="edit-store-token" required placeholder="Ex: APP_USR-..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">URL da Logo (Opcional)</label>
-                    <input type="text" name="logo_url" id="edit-store-logo" placeholder="Ex: /images/minha_logo.png" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Logo da Loja</label>
+                    <div class="flex items-center gap-4 mb-2">
+                        <div id="edit-store-logo-preview-container" class="w-16 h-16 bg-slate-100 rounded-lg border overflow-hidden hidden items-center justify-center p-1 relative group shadow-sm">
+                            <img id="edit-store-logo-preview" src="" class="max-w-full max-h-full object-contain">
+                            <button type="button" onclick="removeEditStoreLogo()" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[10px] font-bold rounded-lg cursor-pointer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="flex-grow">
+                            <input type="file" name="logoFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-tech-blue hover:file:bg-blue-100">
+                        </div>
+                    </div>
+                    <input type="text" name="logo_url" id="edit-store-logo" placeholder="Ou digite o caminho da logo (Ex: /images/minha_logo.png)" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-tech-blue outline-none text-sm">
+                    <input type="hidden" name="removeLogo" id="edit-store-remove-logo" value="false">
                 </div>
                 <button type="submit" class="w-full bg-tech-blue hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm shadow transition">Salvar Alterações</button>
             </form>
@@ -259,7 +272,28 @@
             document.getElementById('edit-store-name').value = store.name;
             document.getElementById('edit-store-token').value = store.mp_access_token;
             document.getElementById('edit-store-logo').value = store.logo_url || '';
+            document.getElementById('edit-store-remove-logo').value = 'false';
+            
+            const previewContainer = document.getElementById('edit-store-logo-preview-container');
+            const previewImg = document.getElementById('edit-store-logo-preview');
+            if (store.logo_url) {
+                previewImg.src = store.logo_url;
+                previewContainer.classList.remove('hidden');
+                previewContainer.classList.add('flex');
+            } else {
+                previewContainer.classList.add('hidden');
+                previewContainer.classList.remove('flex');
+            }
             toggleModal('modal-edit-store', true);
+        }
+
+        function removeEditStoreLogo() {
+            if (confirm('Deseja realmente remover o logotipo atual?')) {
+                document.getElementById('edit-store-remove-logo').value = 'true';
+                document.getElementById('edit-store-logo').value = '';
+                document.getElementById('edit-store-logo-preview-container').classList.add('hidden');
+                document.getElementById('edit-store-logo-preview-container').classList.remove('flex');
+            }
         }
     </script>
 </body>

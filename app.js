@@ -25,6 +25,23 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Função auxiliar para deletar arquivos locais
+function deleteLocalFile(filePath) {
+	if (filePath && filePath.startsWith('/images/')) {
+		const relativePath = filePath.replace(/^\/images\//, '');
+		const absolutePath = path.join(__dirname, 'public', 'images', relativePath);
+		if (fs.existsSync(absolutePath)) {
+			try {
+				fs.unlinkSync(absolutePath);
+				console.log(`Arquivo deletado com sucesso: ${absolutePath}`);
+			} catch (err) {
+				console.error(`Erro ao deletar arquivo: ${absolutePath}`, err);
+			}
+		}
+	}
+}
+
+
 function dbProductToJsProduct(row) {
 	if (!row) return null;
 	return {
@@ -859,8 +876,12 @@ app.get('/admin/lojas', requireAuth, requireGlobalAdmin, async (req, res) => {
 	}
 });
 
-app.post('/admin/lojas', requireAuth, requireGlobalAdmin, async (req, res) => {
+app.post('/admin/lojas', requireAuth, requireGlobalAdmin, upload.single('logoFile'), async (req, res) => {
 	const { slug, name, mp_access_token, logo_url } = req.body;
+	let finalLogoUrl = logo_url || '';
+	if (req.file) {
+		finalLogoUrl = '/images/produtos/' + req.file.filename;
+	}
 	try {
 		await pool.query(
 			`INSERT INTO stores (slug, name, mp_access_token, logo_url)
@@ -868,7 +889,7 @@ app.post('/admin/lojas', requireAuth, requireGlobalAdmin, async (req, res) => {
 			 ON CONFLICT (slug) DO UPDATE 
 			 SET name = EXCLUDED.name, mp_access_token = EXCLUDED.mp_access_token, 
 			     logo_url = EXCLUDED.logo_url`,
-			[slug.toLowerCase().trim(), name, mp_access_token, logo_url || null]
+			[slug.toLowerCase().trim(), name, mp_access_token, finalLogoUrl || null]
 		);
 		res.redirect('/admin/lojas');
 	} catch (e) {
@@ -877,12 +898,28 @@ app.post('/admin/lojas', requireAuth, requireGlobalAdmin, async (req, res) => {
 	}
 });
 
-app.post('/admin/lojas/editar', requireAuth, requireGlobalAdmin, async (req, res) => {
-	const { id, slug, name, mp_access_token, logo_url } = req.body;
+app.post('/admin/lojas/editar', requireAuth, requireGlobalAdmin, upload.single('logoFile'), async (req, res) => {
+	const { id, slug, name, mp_access_token, logo_url, removeLogo } = req.body;
 	try {
+		const { rows: currentStoreRows } = await pool.query('SELECT logo_url FROM stores WHERE id = $1', [id]);
+		const oldLogoUrl = currentStoreRows[0]?.logo_url;
+
+		let finalLogoUrl = logo_url || '';
+		if (removeLogo === 'true') {
+			finalLogoUrl = '';
+			if (oldLogoUrl) {
+				deleteLocalFile(oldLogoUrl);
+			}
+		} else if (req.file) {
+			finalLogoUrl = '/images/produtos/' + req.file.filename;
+			if (oldLogoUrl) {
+				deleteLocalFile(oldLogoUrl);
+			}
+		}
+
 		await pool.query(
 			`UPDATE stores SET slug = $1, name = $2, mp_access_token = $3, logo_url = $4 WHERE id = $5`,
-			[slug.toLowerCase().trim(), name, mp_access_token, logo_url || null, id]
+			[slug.toLowerCase().trim(), name, mp_access_token, finalLogoUrl || null, id]
 		);
 		res.redirect('/admin/lojas');
 	} catch (e) {
@@ -893,6 +930,12 @@ app.post('/admin/lojas/editar', requireAuth, requireGlobalAdmin, async (req, res
 
 app.post('/admin/lojas/excluir/:id', requireAuth, requireGlobalAdmin, async (req, res) => {
 	try {
+		const { rows: currentStoreRows } = await pool.query('SELECT logo_url FROM stores WHERE id = $1', [req.params.id]);
+		const oldLogoUrl = currentStoreRows[0]?.logo_url;
+		if (oldLogoUrl) {
+			deleteLocalFile(oldLogoUrl);
+		}
+
 		await pool.query('DELETE FROM stores WHERE id = $1', [req.params.id]);
 		res.redirect('/admin/lojas');
 	} catch (e) {
@@ -984,18 +1027,34 @@ app.get('/admin/configuracao', requireAuth, async (req, res) => {
 	}
 });
 
-app.post('/admin/configuracao', requireAuth, upload.single('bannerImageFile'), async (req, res) => {
+app.post('/admin/configuracao', requireAuth, upload.fields([{ name: 'logoFile', maxCount: 1 }, { name: 'bannerImageFile', maxCount: 1 }]), async (req, res) => {
 	const {
 		name, logoUrl, resendApiKey, resendFrom, mpAccessToken,
-		bannerProductId, bannerTitle, bannerSubtitle, bannerTimerHours, bannerBackgroundImage
+		bannerProductId, bannerTitle, bannerSubtitle, bannerTimerHours, bannerBackgroundImage, removeLogo
 	} = req.body;
 
 	let bgImagePath = bannerBackgroundImage || '';
-	if (req.file) {
-		bgImagePath = '/images/produtos/' + req.file.filename;
+	if (req.files && req.files['bannerImageFile'] && req.files['bannerImageFile'][0]) {
+		bgImagePath = '/images/produtos/' + req.files['bannerImageFile'][0].filename;
 	}
 
 	try {
+		const { rows: currentStoreRows } = await pool.query('SELECT logo_url FROM stores WHERE slug = $1', [req.store.slug]);
+		const oldLogoUrl = currentStoreRows[0]?.logo_url;
+
+		let finalLogoUrl = logoUrl || '';
+		if (removeLogo === 'true') {
+			finalLogoUrl = '';
+			if (oldLogoUrl) {
+				deleteLocalFile(oldLogoUrl);
+			}
+		} else if (req.files && req.files['logoFile'] && req.files['logoFile'][0]) {
+			finalLogoUrl = '/images/produtos/' + req.files['logoFile'][0].filename;
+			if (oldLogoUrl) {
+				deleteLocalFile(oldLogoUrl);
+			}
+		}
+
 		await pool.query(
 			`UPDATE stores SET
 				name = $1,
@@ -1011,7 +1070,7 @@ app.post('/admin/configuracao', requireAuth, upload.single('bannerImageFile'), a
 			 WHERE slug = $11`,
 			[
 				name || '',
-				logoUrl || null,
+				finalLogoUrl || null,
 				resendApiKey || null,
 				resendFrom || null,
 				mpAccessToken || '',

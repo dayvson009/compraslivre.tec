@@ -325,9 +325,9 @@
                 ferramentas mais requisitadas por profissionais.</p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <% products.slice(0, 4).forEach(product=> { %>
-                    <div
-                        class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                <% products.slice(0, 8).forEach(product=> { %>
+                    <div onclick="window.location.href='/produto/<%= product.id %>'"
+                        class="software-card bg-white p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center cursor-pointer">
                         <div class="h-32 flex items-center justify-center mb-4">
                             <img src="<%= getImageUrl(product.image) %>"
                                 class="max-h-full object-contain mix-blend-multiply rounded-lg">
@@ -339,8 +339,8 @@
                             <%= product.development %> • <%= product.version %>
                         </p>
                         <a href="/produto/<%= product.id %>"
-                            class="bg-tech-blue hover-bg-tech-blue text-white w-full py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
-                            Solicitar
+                            class="bg-tech-blue hover:bg-blue-600 text-white w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/40 flex justify-center items-center gap-2">
+                            Solicitar <i class="fas fa-arrow-right text-[10px]"></i>
                         </a>
                     </div>
                     <% }) %>

@@ -52,7 +52,8 @@ function dbProductToJsProduct(row) {
 		active: row.active !== false,
 		emailMessage: row.email_message || '',
 		categoryId: row.category_id || null,
-		systemType: row.system_type || ''
+		systemType: row.system_type || '',
+		externalCheckoutUrl: row.external_checkout_url || ''
 	};
 }
 
@@ -299,6 +300,7 @@ async function initSchema() {
 	// Alterações incrementais na tabela de produtos
 	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;`);
 	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS system_type TEXT;`);
+	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS external_checkout_url TEXT;`);
 
 	// 4. Tabela de Pagamentos
 	await pool.query(`
@@ -338,6 +340,7 @@ async function initSchema() {
 	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_title TEXT;`);
 	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_subtitle TEXT;`);
 	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS banner_timer_hours INTEGER DEFAULT 8;`);
+	await pool.query(`ALTER TABLE stores ADD COLUMN IF NOT EXISTS mp_public_key TEXT;`);
 
 	// 5. Tabela de logs de tracking dos clientes
 	await pool.query(`
@@ -1036,7 +1039,7 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 	const {
 		id, name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell, emailMessage, categoryId, systemType
+		orderbump, upsell, emailMessage, categoryId, systemType, externalCheckoutUrl
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -1075,8 +1078,8 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 				id, name, price_before, price, price_upsell, url_produto, tutorial_video, more_info,
 				image, thumbs, development, name_soft, version, licence, formart, description,
 				orderbump, upsell, relation_products, pinions, questions, active, email_message,
-				category_id, system_type
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
+				category_id, system_type, external_checkout_url
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)`,
 			[
 				id || `PROD${Date.now()}`,
 				name || '',
@@ -1102,7 +1105,8 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 				true,
 				emailMessage || '',
 				catId,
-				sysType
+				sysType,
+				externalCheckoutUrl || ''
 			]
 		);
 		res.redirect('/admin/produtos/novo?success=1');
@@ -1125,7 +1129,7 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 	const {
 		name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell, emailMessage, categoryId, systemType
+		orderbump, upsell, emailMessage, categoryId, systemType, externalCheckoutUrl
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -1165,8 +1169,8 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 				tutorial_video = $6, more_info = $7, image = $8, thumbs = $9, development = $10,
 				name_soft = $11, version = $12, licence = $13, formart = $14, description = $15,
 				orderbump = $16, upsell = $17, pinions = $18, questions = $19, email_message = $20,
-				category_id = $21, system_type = $22
-			 WHERE id = $23`,
+				category_id = $21, system_type = $22, external_checkout_url = $23
+			 WHERE id = $24`,
 			[
 				name || '',
 				Number(priceBefore) || 0,
@@ -1190,6 +1194,7 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 				emailMessage || '',
 				catId,
 				sysType,
+				externalCheckoutUrl || '',
 				req.params.id
 			]
 		);
@@ -1379,7 +1384,8 @@ app.get('/checkout/:token', async (req, res) => {
 			payment: row,
 			product,
 			amount: row.amount / 100,
-			token
+			token,
+			mpPublicKey: req.store.mp_public_key || process.env.MP_PUBLIC_KEY || ''
 		});
 	} catch (err) {
 		console.error('Erro ao carregar checkout:', err);
@@ -1466,13 +1472,10 @@ app.post('/checkout/card/:token', async (req, res) => {
 	try {
 		const { token } = req.params;
 		const {
-			cardName,
-			cardNumber,
-			cardCvv,
-			cardMonth,
-			cardYear,
+			token: cardTokenId,
 			installments,
-			cpf
+			cpf,
+			cardBrand
 		} = req.body;
 
 		const { rows } = await pool.query(
@@ -1484,42 +1487,7 @@ app.post('/checkout/card/:token', async (req, res) => {
 
 		const amount = row.amount / 100;
 
-		// 1. Tokeniza o cartão no Mercado Pago
-		const expirationYear = cardYear.length === 2 ? '20' + cardYear : cardYear;
-
-		console.log('[Mercado Pago] Tokenizando cartão...');
-		const cardTokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens', {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${req.store.mp_access_token}`,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				card_number: cardNumber.replace(/\s/g, ''),
-				expiration_month: parseInt(cardMonth),
-				expiration_year: parseInt(expirationYear),
-				security_code: cardCvv,
-				cardholder: {
-					name: cardName,
-					identification: {
-						type: 'CPF',
-						number: cpf.replace(/\D/g, '')
-					}
-				}
-			})
-		});
-
-		const cardTokenData = await cardTokenResponse.json();
-		if (!cardTokenResponse.ok || !cardTokenData.id) {
-			console.error('Erro ao tokenizar cartão:', cardTokenData);
-			const errorMsg = (cardTokenData && cardTokenData.message) || 'Erro ao validar cartão no Mercado Pago';
-			throw new Error(errorMsg);
-		}
-
-		const cardTokenId = cardTokenData.id;
-		const cardBrand = getCardBrand(cardNumber);
-
-		// 2. Cria o pagamento no Mercado Pago
+		// Cria o pagamento no Mercado Pago
 		const transactionAmount = Number(amount.toFixed(2));
 		const idempotency = crypto.randomUUID();
 
@@ -1529,6 +1497,7 @@ app.post('/checkout/card/:token', async (req, res) => {
 			description: row.description || 'Cartão ComprasLivre',
 			installments: parseInt(installments),
 			payment_method_id: cardBrand,
+			binary_mode: false,
 			payer: {
 				email: row.email,
 				identification: {
@@ -1583,6 +1552,13 @@ app.post('/checkout/card/:token', async (req, res) => {
 		}
 	} catch (err) {
 		console.error('Erro ao processar cartão no checkout:', err.message || err);
+		if (err.response && err.response.data) {
+			console.log('--- ERRO DETALHADO DO MERCADO PAGO ---');
+			console.dir(err.response.data, { depth: null });
+			console.log('--------------------------------------');
+		} else if (err.cause) {
+			console.dir(err.cause, { depth: null });
+		}
 		return res.status(500).json({ error: err.message || 'Erro ao processar pagamento' });
 	}
 });

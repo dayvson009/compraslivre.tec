@@ -380,7 +380,7 @@
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="products-grid">
                         <% products.forEach(product => { %>
-                            <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md product-card flex flex-col h-full group product-grid-item" data-product-id="<%= product.id %>">
+                            <div onclick="window.location.href='/produto/<%= product.id %>'" class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md product-card flex flex-col h-full group product-grid-item cursor-pointer" data-product-id="<%= product.id %>">
                                 
                                 <!-- Image Area -->
                                 <div class="relative bg-slate-50/50 p-6 flex items-center justify-center h-48 overflow-hidden transition-colors duration-200 group-hover:bg-slate-50">

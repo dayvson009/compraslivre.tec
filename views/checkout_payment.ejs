@@ -6,6 +6,7 @@
     <title>Checkout Seguro - <%= product.name %></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <style>
         :root {
             --primary: #3483fa;
@@ -507,78 +508,93 @@
 
             <!-- FORMULÁRIO CARTÃO DE CRÉDITO -->
             <div id="cardForm" class="payment-form">
-                <div class="info-box security">
-                    <i class="fa-solid fa-shield-halved" style="color: var(--success); margin-top: 2px;"></i>
-                    <p>Ambiente criptografado. Os dados do seu cartão são transmitidos com segurança e nunca são salvos em nosso banco de dados.</p>
-                </div>
-                <form id="formCardCheckout" onsubmit="processCardPayment(event)">
-                    <div class="form-group">
-                        <label for="cardName">Nome no Cartão</label>
-                        <div class="input-wrapper">
-                            <i class="fa-regular fa-user"></i>
-                            <input id="cardName" type="text" placeholder="Como escrito no cartão" required />
-                        </div>
+                <% if (product.externalCheckoutUrl && product.externalCheckoutUrl.trim() !== '') { %>
+                    <div class="info-box security">
+                        <i class="fa-solid fa-shield-halved" style="color: var(--success); margin-top: 2px;"></i>
+                        <p>Pagamento Seguro via Cartão de Crédito.</p>
                     </div>
-
-                    <div class="form-group">
-                        <label for="cardNumber">Número do Cartão</label>
-                        <div class="input-wrapper">
-                            <i class="fa-regular fa-credit-card"></i>
-                            <input id="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" required />
-                        </div>
+                    <div style="text-align: center; padding: 20px 0;">
+                        <p style="font-size: 15px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">
+                            Para concluir sua compra no cartão de crédito, clique no botão abaixo para acessar nosso ambiente de pagamento seguro na plataforma <strong>Cakto</strong>.
+                        </p>
+                        <a href="<%= product.externalCheckoutUrl %>" target="_blank" class="submit-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fa-regular fa-credit-card"></i> IR PARA PAGAMENTO SEGURO
+                        </a>
                     </div>
-
-                    <div class="form-row">
+                <% } else { %>
+                    <div class="info-box security">
+                        <i class="fa-solid fa-shield-halved" style="color: var(--success); margin-top: 2px;"></i>
+                        <p>Ambiente criptografado. Os dados do seu cartão são transmitidos com segurança e nunca são salvos em nosso banco de dados.</p>
+                    </div>
+                    <form id="formCardCheckout" onsubmit="processCardPayment(event)">
                         <div class="form-group">
-                            <label for="cardExpiry">Validade</label>
+                            <label for="cardName">Nome no Cartão</label>
                             <div class="input-wrapper">
-                                <i class="fa-regular fa-calendar"></i>
-                                <input id="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" required />
+                                <i class="fa-regular fa-user"></i>
+                                <input id="cardName" type="text" placeholder="Como escrito no cartão" required />
                             </div>
                         </div>
+
                         <div class="form-group">
-                            <label for="cardCvv">CVV</label>
+                            <label for="cardNumber">Número do Cartão</label>
                             <div class="input-wrapper">
-                                <i class="fa-solid fa-key"></i>
-                                <input id="cardCvv" type="text" placeholder="123" maxlength="4" required />
+                                <i class="fa-regular fa-credit-card"></i>
+                                <input id="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" required />
                             </div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="cardCpf">CPF do Titular do Cartão</label>
-                        <div class="input-wrapper">
-                            <i class="fa-regular fa-id-card"></i>
-                            <input id="cardCpf" type="text" placeholder="000.000.000-00" required />
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cardExpiry">Validade</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    <input id="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardCvv">CVV</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-key"></i>
+                                    <input id="cardCvv" type="text" placeholder="123" maxlength="4" required />
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="installments">Parcelamento</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-list-ol"></i>
-                            <select id="installments" style="padding-left: 38px;" required>
-                                <option value="1">1x de R$ <%= amount.toFixed(2) %> (Sem juros)</option>
-                                <option value="2">2x de R$ <%= (amount / 2).toFixed(2) %></option>
-                                <option value="3">3x de R$ <%= (amount / 3).toFixed(2) %></option>
-                                <option value="4">4x de R$ <%= (amount / 4).toFixed(2) %></option>
-                                <option value="5">5x de R$ <%= (amount / 5).toFixed(2) %></option>
-                                <option value="6">6x de R$ <%= (amount / 6).toFixed(2) %></option>
-                                <option value="7">7x de R$ <%= (amount / 7).toFixed(2) %></option>
-                                <option value="8">8x de R$ <%= (amount / 8).toFixed(2) %></option>
-                                <option value="9">9x de R$ <%= (amount / 9).toFixed(2) %></option>
-                                <option value="10">10x de R$ <%= (amount / 10).toFixed(2) %></option>
-                                <option value="11">11x de R$ <%= (amount / 11).toFixed(2) %></option>
-                                <option value="12">12x de R$ <%= (amount / 12).toFixed(2) %></option>
-                            </select>
+                        <div class="form-group">
+                            <label for="cardCpf">CPF do Titular do Cartão</label>
+                            <div class="input-wrapper">
+                                <i class="fa-regular fa-id-card"></i>
+                                <input id="cardCpf" type="text" placeholder="000.000.000-00" required />
+                            </div>
                         </div>
-                    </div>
 
-                    <button type="submit" class="submit-btn" id="btnCardSubmit">
-                        <span class="spinner" id="cardSpinner"></span>
-                        <span id="cardBtnText">PAGAR AGORA</span>
-                    </button>
-                </form>
+                        <div class="form-group">
+                            <label for="installments">Parcelamento</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-list-ol"></i>
+                                <select id="installments" style="padding-left: 38px;" required>
+                                    <option value="1">1x de R$ <%= amount.toFixed(2) %> (Sem juros)</option>
+                                    <option value="2">2x de R$ <%= (amount / 2).toFixed(2) %></option>
+                                    <option value="3">3x de R$ <%= (amount / 3).toFixed(2) %></option>
+                                    <option value="4">4x de R$ <%= (amount / 4).toFixed(2) %></option>
+                                    <option value="5">5x de R$ <%= (amount / 5).toFixed(2) %></option>
+                                    <option value="6">6x de R$ <%= (amount / 6).toFixed(2) %></option>
+                                    <option value="7">7x de R$ <%= (amount / 7).toFixed(2) %></option>
+                                    <option value="8">8x de R$ <%= (amount / 8).toFixed(2) %></option>
+                                    <option value="9">9x de R$ <%= (amount / 9).toFixed(2) %></option>
+                                    <option value="10">10x de R$ <%= (amount / 10).toFixed(2) %></option>
+                                    <option value="11">11x de R$ <%= (amount / 11).toFixed(2) %></option>
+                                    <option value="12">12x de R$ <%= (amount / 12).toFixed(2) %></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="btnCardSubmit">
+                            <span class="spinner" id="cardSpinner"></span>
+                            <span id="cardBtnText">PAGAR AGORA</span>
+                        </button>
+                    </form>
+                <% } %>
             </div>
         </div>
 
@@ -618,6 +634,26 @@
     </div>
 
     <script>
+        // Inicializar SDK do Mercado Pago
+        let mpInstance = null;
+        <% if (typeof mpPublicKey !== 'undefined' && mpPublicKey) { %>
+            try {
+                mpInstance = new MercadoPago('<%= mpPublicKey %>');
+                console.log('Mercado Pago SDK inicializado.');
+            } catch (e) {
+                console.error('Erro ao inicializar SDK do Mercado Pago:', e);
+            }
+        <% } %>
+
+        function getCardBrand(cardNumber) {
+            const clean = cardNumber.replace(/\D/g, '');
+            if (/^4/.test(clean)) return 'visa';
+            if (/^5[1-5]/.test(clean) || /^222[1-9]/.test(clean)) return 'master';
+            if (/^3[47]/.test(clean)) return 'amex';
+            if (/^(606282|3841)/.test(clean)) return 'hipercard';
+            return 'visa';
+        }
+
         let pollingInterval = null;
 
         // Máscaras de Input
@@ -826,22 +862,43 @@
 
             btn.disabled = true;
             spinner.style.display = 'inline-block';
-            btnText.textContent = 'PROCESSANDO PAGAMENTO...';
+            btnText.textContent = 'VALIDANDO CARTÃO...';
 
             try {
+                if (!mpInstance) {
+                    throw new Error('SDK do Mercado Pago não carregou ou não está configurado.');
+                }
+
+                // Cria o token do cartão no frontend via SDK do Mercado Pago
+                const tokenResult = await mpInstance.cardToken.create({
+                    cardNumber: cardNumber,
+                    cardholderName: cardName,
+                    cardExpirationMonth: month,
+                    cardExpirationYear: year.length === 2 ? '20' + year : year,
+                    securityCode: cvv,
+                    identificationType: 'CPF',
+                    identificationNumber: cpf
+                });
+
+                if (!tokenResult || !tokenResult.id) {
+                    console.error('Erro de tokenização:', tokenResult);
+                    throw new Error('Não foi possível validar o seu cartão de crédito. Verifique os dados digitados.');
+                }
+
+                const cardBrand = (tokenResult.payment_method && tokenResult.payment_method.id) || getCardBrand(cardNumber);
+
+                btnText.textContent = 'PROCESSANDO PAGAMENTO...';
+
                 const response = await fetch('/checkout/card/<%= token %>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        cardName,
-                        cardNumber,
-                        cardCvv: cvv,
-                        cardMonth: month,
-                        cardYear: year,
+                        token: tokenResult.id,
                         installments,
-                        cpf
+                        cpf,
+                        cardBrand
                     })
                 });
 

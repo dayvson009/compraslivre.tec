@@ -1273,6 +1273,25 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 	}
 });
 
+// Admin - Reordenar Produtos por Drag and Drop
+app.post('/admin/produtos/reordenar', requireAuth, async (req, res) => {
+	const { ids } = req.body;
+	if (!ids || !Array.isArray(ids)) {
+		return res.status(400).json({ success: false, error: 'Array de IDs inválido.' });
+	}
+	try {
+		for (let i = 0; i < ids.length; i++) {
+			const id = ids[i];
+			const newOrder = ids.length - i;
+			await pool.query('UPDATE products SET relevance_order = $1 WHERE id = $2', [newOrder, id]);
+		}
+		res.json({ success: true });
+	} catch (e) {
+		console.error('Erro ao reordenar produtos:', e);
+		res.status(500).json({ success: false, error: 'Erro ao reordenar produtos no banco de dados.' });
+	}
+});
+
 // Admin - Upload AJAX para Miniaturas/Imagens
 app.post('/admin/upload-ajax', requireAuth, upload.single('imageFile'), (req, res) => {
 	if (!req.file) {

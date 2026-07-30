@@ -82,6 +82,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
+                            <th class="p-4 w-10 text-center border-b border-slate-200"></th>
                             <th class="p-4 font-semibold border-b border-slate-200">Imagem</th>
                             <th class="p-4 font-semibold border-b border-slate-200">ID / Nome</th>
                             <th class="p-4 font-semibold border-b border-slate-200">Categoria / Sistema</th>
@@ -94,7 +95,10 @@
                     <tbody class="divide-y divide-slate-100">
                         <% if (products && products.length > 0) { %>
                             <% products.forEach(function(product) { %>
-                                <tr class="hover:bg-slate-50 transition">
+                                <tr class="hover:bg-slate-50 transition product-row" draggable="true" data-id="<%= product.id %>">
+                                    <td class="p-4 text-center text-slate-300 hover:text-slate-600 drag-handle cursor-grab select-none">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </td>
                                     <td class="p-4">
                                         <% if (product.image) { %>
                                             <div class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center p-1 border border-slate-200">
@@ -132,7 +136,7 @@
                                         <% } %>
                                     </td>
                                     <td class="p-4 text-center">
-                                        <span class="bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded text-sm"><%= product.relevanceOrder !== undefined ? product.relevanceOrder : 0 %></span>
+                                        <span class="relevance-badge bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded text-sm"><%= product.relevanceOrder !== undefined ? product.relevanceOrder : 0 %></span>
                                     </td>
                                     <td class="p-4 text-center">
                                         <form action="/admin/produtos/status/<%= product.id %>" method="POST" class="inline">
@@ -161,7 +165,7 @@
                             <% }); %>
                         <% } else { %>
                             <tr>
-                                <td colspan="7" class="p-8 text-center text-slate-500">
+                                <td colspan="8" class="p-8 text-center text-slate-500">
                                     Nenhum produto cadastrado ainda.
                                 </td>
                             </tr>
@@ -171,5 +175,98 @@
             </div>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tbody = document.querySelector('tbody.divide-y');
+            let dragEl = null;
+
+            tbody.addEventListener('dragstart', (e) => {
+                const row = e.target.closest('.product-row');
+                if (!row) {
+                    e.preventDefault();
+                    return;
+                }
+                dragEl = row;
+                e.dataTransfer.effectAllowed = 'move';
+                row.classList.add('opacity-50', 'bg-blue-50');
+            });
+
+            tbody.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const targetRow = e.target.closest('.product-row');
+                if (targetRow && targetRow !== dragEl) {
+                    const rect = targetRow.getBoundingClientRect();
+                    const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                    tbody.insertBefore(dragEl, next ? targetRow.nextSibling : targetRow);
+                }
+            });
+
+            tbody.addEventListener('dragend', async (e) => {
+                if (dragEl) {
+                    dragEl.classList.remove('opacity-50', 'bg-blue-50');
+                }
+                
+                const rows = Array.from(tbody.querySelectorAll('.product-row'));
+                const ids = rows.map(r => r.dataset.id);
+
+                showToast('Salvando nova ordem...');
+
+                try {
+                    const response = await fetch('/admin/produtos/reordenar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast('Ordem atualizada com sucesso!', 'success');
+                        rows.forEach((row, index) => {
+                            const relBadge = row.querySelector('.relevance-badge');
+                            if (relBadge) {
+                                relBadge.textContent = rows.length - index;
+                            }
+                        });
+                    } else {
+                        showToast('Erro ao salvar nova ordem.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Erro de conexão ao salvar nova ordem.', 'error');
+                }
+            });
+
+            function showToast(message, type = 'info') {
+                let toast = document.getElementById('drag-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'drag-toast';
+                    toast.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-bold transition-all duration-300 z-50 transform translate-y-10 opacity-0';
+                    document.body.appendChild(toast);
+                }
+                
+                if (type === 'success') {
+                    toast.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-bold bg-green-600 transition-all duration-300 z-50';
+                } else if (type === 'error') {
+                    toast.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-bold bg-red-600 transition-all duration-300 z-50';
+                } else {
+                    toast.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-bold bg-blue-600 transition-all duration-300 z-50';
+                }
+                
+                toast.textContent = message;
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+
+                if (type !== 'info') {
+                    setTimeout(() => {
+                        toast.style.transform = 'translateY(10px)';
+                        toast.style.opacity = '0';
+                    }, 3000);
+                }
+            }
+        });
+    </script>
 </body>
 </html>

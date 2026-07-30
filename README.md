@@ -150,7 +150,12 @@ npm run dev
     > sudo nginx -t
     > sudo systemctl reload nginx
 8. Gerar SSL:
-    > sudo certbot --nginx
+sudo certbot --nginx \
+-d teclivre.seusprogramas.com.br \
+-d softtech.seusprogramas.com.br \
+-d cowboytec.seusprogramas.com.br \
+-d crtech.seusprogramas.com.br \
+-d srtec.seusprogramas.com.br
 8.1 Escolha a opção referente ao seu subdomínio
 9. Pronto o projeto está rodando no servidor VPS e no CloudFlare!
 

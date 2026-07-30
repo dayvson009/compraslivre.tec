@@ -70,7 +70,8 @@ function dbProductToJsProduct(row) {
 		emailMessage: row.email_message || '',
 		categoryId: row.category_id || null,
 		systemType: row.system_type || '',
-		externalCheckoutUrl: row.external_checkout_url || ''
+		externalCheckoutUrl: row.external_checkout_url || '',
+		relevanceOrder: row.relevance_order !== undefined ? parseInt(row.relevance_order) : 0
 	};
 }
 
@@ -79,7 +80,7 @@ async function getAllProducts() {
 		SELECT p.*, c.name as category_name 
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
-		ORDER BY p.id ASC
+		ORDER BY p.relevance_order DESC, p.id ASC
 	`);
 	return rows.map(row => {
 		const p = dbProductToJsProduct(row);
@@ -94,7 +95,7 @@ async function getActiveProducts() {
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
 		WHERE p.active = true 
-		ORDER BY p.id ASC
+		ORDER BY p.relevance_order DESC, p.id ASC
 	`);
 	return rows.map(row => {
 		const p = dbProductToJsProduct(row);
@@ -318,6 +319,7 @@ async function initSchema() {
 	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;`);
 	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS system_type TEXT;`);
 	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS external_checkout_url TEXT;`);
+	await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS relevance_order INTEGER DEFAULT 0;`);
 
 	// 4. Tabela de Pagamentos
 	await pool.query(`
@@ -798,7 +800,7 @@ app.get('/produtos', async (req, res) => {
 			}
 		}
 
-		queryText += ` ORDER BY p.id ASC`;
+		queryText += ` ORDER BY p.relevance_order DESC, p.id ASC`;
 
 		const { rows } = await pool.query(queryText, queryParams);
 		const products = rows.map(row => {
@@ -1101,7 +1103,8 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 	const {
 		id, name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell, emailMessage, categoryId, systemType, externalCheckoutUrl
+		orderbump, upsell, emailMessage, categoryId, systemType, externalCheckoutUrl,
+		relevanceOrder
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -1140,8 +1143,8 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 				id, name, price_before, price, price_upsell, url_produto, tutorial_video, more_info,
 				image, thumbs, development, name_soft, version, licence, formart, description,
 				orderbump, upsell, relation_products, pinions, questions, active, email_message,
-				category_id, system_type, external_checkout_url
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)`,
+				category_id, system_type, external_checkout_url, relevance_order
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)`,
 			[
 				id || `PROD${Date.now()}`,
 				name || '',
@@ -1168,7 +1171,8 @@ app.post('/admin/produtos', requireAuth, upload.fields([{ name: 'thumbImages', m
 				emailMessage || '',
 				catId,
 				sysType,
-				externalCheckoutUrl || ''
+				externalCheckoutUrl || '',
+				parseInt(relevanceOrder) || 0
 			]
 		);
 		res.redirect('/admin/produtos/novo?success=1');
@@ -1191,7 +1195,8 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 	const {
 		name, price, priceBefore, priceUpsell, urlProduto, tutorialVideo, moreInfo,
 		development, nameSoft, version, licence, formart, description,
-		orderbump, upsell, emailMessage, categoryId, systemType, externalCheckoutUrl
+		orderbump, upsell, emailMessage, categoryId, systemType, externalCheckoutUrl,
+		relevanceOrder
 	} = req.body;
 
 	let thumbPaths = req.body.thumbs ? (Array.isArray(req.body.thumbs) ? req.body.thumbs : [req.body.thumbs]) : [];
@@ -1231,8 +1236,8 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 				tutorial_video = $6, more_info = $7, image = $8, thumbs = $9, development = $10,
 				name_soft = $11, version = $12, licence = $13, formart = $14, description = $15,
 				orderbump = $16, upsell = $17, pinions = $18, questions = $19, email_message = $20,
-				category_id = $21, system_type = $22, external_checkout_url = $23
-			 WHERE id = $24`,
+				category_id = $21, system_type = $22, external_checkout_url = $23, relevance_order = $24
+			 WHERE id = $25`,
 			[
 				name || '',
 				Number(priceBefore) || 0,
@@ -1257,6 +1262,7 @@ app.post('/admin/produtos/editar/:id', requireAuth, upload.fields([{ name: 'thum
 				catId,
 				sysType,
 				externalCheckoutUrl || '',
+				parseInt(relevanceOrder) || 0,
 				req.params.id
 			]
 		);

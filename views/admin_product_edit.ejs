@@ -128,10 +128,7 @@
                             <option value="Ambos" <%= product.systemType === 'Ambos' ? 'selected' : '' %>>Ambos (Windows & Mac)</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Ordem de Relevância (Maior primeiro)</label>
-                        <input type="number" name="relevanceOrder" value="<%= product.relevanceOrder !== undefined ? product.relevanceOrder : 0 %>" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tech-blue focus:border-tech-blue outline-none transition">
-                    </div>
+                    <input type="hidden" name="relevanceOrder" value="<%= product.relevanceOrder !== undefined ? product.relevanceOrder : 0 %>">
                 </div>
             </div>
 

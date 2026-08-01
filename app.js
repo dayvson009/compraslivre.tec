@@ -379,6 +379,9 @@ async function initSchema() {
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_customer_logs_session ON customer_logs (session_id);`);
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_customer_logs_created ON customer_logs (created_at DESC);`);
 	await pool.query(`ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS ip_address TEXT;`);
+	await pool.query(`ALTER TABLE customer_logs ADD COLUMN IF NOT EXISTS device TEXT;`);
+	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS device TEXT;`);
+
 
 	// --- SEED DE DADOS INICIAIS ---
 
@@ -550,7 +553,7 @@ async function sendPurchaseEmail(email, purchasedProducts, store) {
 // Helper para processar aprovação de pagamento e enviar para Google Forms e Resend
 async function handlePaymentApproved(paymentId) {
 	try {
-		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, description, store_slug, ip_address FROM payments WHERE payment_id=$1`, [paymentId]);
+		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, description, store_slug, ip_address, device FROM payments WHERE payment_id=$1`, [paymentId]);
 
 		if (checkRows.length > 0 && checkRows[0].status !== 'paid') {
 			await pool.query(
@@ -564,12 +567,13 @@ async function handlePaymentApproved(paymentId) {
 			const descriptionEnvio = checkRows[0].description;
 			const storeSlugEnvio = checkRows[0].store_slug;
 			const ipEnvio = checkRows[0].ip_address;
+			const deviceEnvio = checkRows[0].device;
 
 			// Registrar evento 'paid' no log de tracking
 			await pool.query(
-				`INSERT INTO customer_logs (product_name, store_slug, event_type, email, whatsapp, ip_address)
-				 VALUES ($1, $2, 'paid', $3, $4, $5)`,
-				[productEnvio, storeSlugEnvio, emailEnvio || null, whatsappEnvio || null, ipEnvio || null]
+				`INSERT INTO customer_logs (product_name, store_slug, event_type, email, whatsapp, ip_address, device)
+				 VALUES ($1, $2, 'paid', $3, $4, $5, $6)`,
+				[productEnvio, storeSlugEnvio, emailEnvio || null, whatsappEnvio || null, ipEnvio || null, deviceEnvio || null]
 			).catch(e => console.error('Erro ao registrar log de compra concluida:', e));
 
 			// Disparar requisição para Google Forms
@@ -1330,12 +1334,7 @@ app.get('/produto/:id', async (req, res) => {
 		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
 
-		// Registrar evento 'visited'
-		await pool.query(
-			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address)
-			 VALUES ($1, $2, $3, $4, 'visited', $5)`,
-			[req.sessionID || 'guest', product.id, product.name, req.store.slug, req.ip]
-		).catch(e => console.error('Erro ao registrar log de visita:', e));
+		// O evento 'visited' agora é registrado pelo cliente via POST /track-event com IP real e dispositivo.
 
 		let relatedProducts = [];
 		if (product.relationProducts && product.relationProducts.length > 0) {
@@ -1359,17 +1358,20 @@ app.get('/produto/:id', async (req, res) => {
 // Rota de tracking de eventos do frontend
 app.post('/track-event', async (req, res) => {
 	try {
-		const { eventType, productId } = req.body;
+		const { eventType, productId, ipAddress, device } = req.body;
 		if (!eventType || !productId) {
 			return res.status(400).send('eventType e productId são obrigatórios.');
 		}
 		const product = await getProductById(productId);
 		const productName = product ? product.name : 'Desconhecido';
 
+		const clientIp = ipAddress || req.ip;
+		const clientDevice = device || (/Mobi|Android/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
+
 		await pool.query(
-			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address)
-			 VALUES ($1, $2, $3, $4, $5, $6)`,
-			[req.sessionID || 'guest', productId, productName, req.store.slug, eventType, req.ip]
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address, device)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			[req.sessionID || 'guest', productId, productName, req.store.slug, eventType, clientIp, clientDevice]
 		);
 		return res.sendStatus(200);
 	} catch (e) {
@@ -1386,20 +1388,67 @@ app.get('/admin/tracking', requireAuth, requireGlobalAdmin, async (req, res) => 
 			FROM customer_logs cl
 			LEFT JOIN stores s ON cl.store_slug = s.slug
 			ORDER BY cl.created_at DESC
-			LIMIT 300
+			LIMIT 1000
 		`);
 
-		// Estatísticas básicas gerais
+		// Estatísticas básicas e por dispositivo
 		const { rows: stats } = await pool.query(`
 			SELECT 
 				COUNT(CASE WHEN event_type = 'visited' THEN 1 END) as visits,
 				COUNT(CASE WHEN event_type = 'clicked_checkout' THEN 1 END) as clicks,
 				COUNT(CASE WHEN event_type = 'form_submitted' THEN 1 END) as forms,
-				COUNT(CASE WHEN event_type = 'paid' THEN 1 END) as purchases
+				COUNT(CASE WHEN event_type = 'paid' THEN 1 END) as purchases,
+
+				COUNT(CASE WHEN event_type = 'visited' AND COALESCE(device, 'Desktop') = 'Mobile' THEN 1 END) as mobile_visits,
+				COUNT(CASE WHEN event_type = 'clicked_checkout' AND COALESCE(device, 'Desktop') = 'Mobile' THEN 1 END) as mobile_clicks,
+				COUNT(CASE WHEN event_type = 'form_submitted' AND COALESCE(device, 'Desktop') = 'Mobile' THEN 1 END) as mobile_forms,
+				COUNT(CASE WHEN event_type = 'paid' AND COALESCE(device, 'Desktop') = 'Mobile' THEN 1 END) as mobile_purchases,
+
+				COUNT(CASE WHEN event_type = 'visited' AND COALESCE(device, 'Desktop') = 'Desktop' THEN 1 END) as desktop_visits,
+				COUNT(CASE WHEN event_type = 'clicked_checkout' AND COALESCE(device, 'Desktop') = 'Desktop' THEN 1 END) as desktop_clicks,
+				COUNT(CASE WHEN event_type = 'form_submitted' AND COALESCE(device, 'Desktop') = 'Desktop' THEN 1 END) as desktop_forms,
+				COUNT(CASE WHEN event_type = 'paid' AND COALESCE(device, 'Desktop') = 'Desktop' THEN 1 END) as desktop_purchases
 			FROM customer_logs
 		`);
 
-		res.render('admin_tracking', { logs, stats: stats[0] });
+		// Agrupar logs por IP em memória
+		const groupedLogs = {};
+		for (const log of logs) {
+			const ip = log.ip_address || 'Desconhecido';
+			if (!groupedLogs[ip]) {
+				groupedLogs[ip] = {
+					ip_address: ip,
+					device: log.device || 'Desktop',
+					store_name: log.store_name || log.store_slug || 'ComprasLivre',
+					last_activity: log.created_at,
+					activities: [],
+					email: log.email || null,
+					whatsapp: log.whatsapp || null,
+					purchased: false,
+					log_ids: []
+				};
+			}
+			groupedLogs[ip].activities.push({
+				id: log.id,
+				event_type: log.event_type,
+				product_name: log.product_name,
+				created_at: log.created_at,
+				email: log.email,
+				whatsapp: log.whatsapp
+			});
+			groupedLogs[ip].log_ids.push(log.id);
+			if (log.event_type === 'paid') {
+				groupedLogs[ip].purchased = true;
+			}
+			if (log.email && !groupedLogs[ip].email) groupedLogs[ip].email = log.email;
+			if (log.whatsapp && !groupedLogs[ip].whatsapp) groupedLogs[ip].whatsapp = log.whatsapp;
+			if (log.device && log.device !== 'Desktop') groupedLogs[ip].device = log.device;
+		}
+		
+		// Ordena os IPs pela atividade mais recente
+		const groupedLogsList = Object.values(groupedLogs).sort((a, b) => new Date(b.last_activity) - new Date(a.last_activity));
+
+		res.render('admin_tracking', { logs: groupedLogsList, stats: stats[0] });
 	} catch (e) {
 		console.error(e);
 		res.status(500).send('Erro ao carregar dashboard de tracking.');
@@ -1411,7 +1460,15 @@ app.post('/admin/tracking/delete', requireAuth, requireGlobalAdmin, async (req, 
 	try {
 		const { logIds } = req.body;
 		if (logIds && Array.isArray(logIds) && logIds.length > 0) {
-			const ids = logIds.map(id => parseInt(id)).filter(Number.isInteger);
+			let flattenedIds = [];
+			for (const val of logIds) {
+				if (typeof val === 'string' && val.includes(',')) {
+					flattenedIds.push(...val.split(','));
+				} else {
+					flattenedIds.push(val);
+				}
+			}
+			const ids = flattenedIds.map(id => parseInt(id)).filter(Number.isInteger);
 			if (ids.length > 0) {
 				await pool.query('DELETE FROM customer_logs WHERE id = ANY($1)', [ids]);
 			}
@@ -1436,11 +1493,14 @@ app.post('/buy/:id', async (req, res) => {
 		if (!product) return res.status(404).send('Produto não encontrado');
 		if (!email) return res.status(400).send('E-mail é obrigatório');
 
+		const clientIp = (req.body && req.body.ip_address) ? String(req.body.ip_address).trim() : req.ip;
+		const clientDevice = (req.body && req.body.device) ? String(req.body.device).trim() : (/Mobi|Android/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
+
 		// Registrar evento 'form_submitted'
 		await pool.query(
-			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, email, whatsapp, ip_address)
-			 VALUES ($1, $2, $3, $4, 'form_submitted', $5, $6, $7)`,
-			[req.sessionID || 'guest', id, product.name, req.store.slug, email || null, whatsapp || null, req.ip]
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, email, whatsapp, ip_address, device)
+			 VALUES ($1, $2, $3, $4, 'form_submitted', $5, $6, $7, $8)`,
+			[req.sessionID || 'guest', id, product.name, req.store.slug, email || null, whatsapp || null, clientIp, clientDevice]
 		).catch(e => console.error('Erro ao registrar log de form_submitted:', e));
 
 		let amount = product.price;
@@ -1458,9 +1518,9 @@ app.post('/buy/:id', async (req, res) => {
 		const accessToken = generateAccessToken();
 		const finalTarget = `/funil/${accessToken}`;
 		await pool.query(
-			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address)
-			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10)`,
-			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug, req.ip]
+			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address, device)
+			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11)`,
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug, clientIp, clientDevice]
 		);
 		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {

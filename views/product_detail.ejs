@@ -1790,6 +1790,8 @@
 
                 <!-- Purchase form -->
                 <form method="post" action="/buy/<%= product.id %>" id="pd-buy-form">
+                    <input type="hidden" name="ip_address" id="client-ip" value="">
+                    <input type="hidden" name="device" id="client-device" value="">
                     <!-- Order Bump -->
                     <% if (typeof orderbumpProduct !== 'undefined' && orderbumpProduct) { %>
                     <div class="pd-orderbump" id="ob-box">
@@ -2097,6 +2099,38 @@
             }
         }
 
+        // ---- DEVICE & IP DETECTOR ----
+        let clientIP = '';
+        const clientDevice = /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+        const deviceInput = document.getElementById('client-device');
+        if (deviceInput) deviceInput.value = clientDevice;
+
+        async function fetchClientIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                clientIP = data.ip;
+                const ipInput = document.getElementById('client-ip');
+                if (ipInput) ipInput.value = clientIP;
+            } catch (error) {
+                console.error('Erro ao obter o endereço IP:', error);
+            }
+        }
+
+        // Registrar visita no frontend usando IP externo real
+        fetchClientIP().then(() => {
+            fetch('/track-event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventType: 'visited',
+                    productId: '<%= product.id %>',
+                    ipAddress: clientIP,
+                    device: clientDevice
+                })
+            }).catch(e => console.error('Erro ao enviar tracking de visita:', e));
+        });
+
         // ---- WHATSAPP MASK ----
         document.getElementById('whatsapp').addEventListener('input', function (e) {
             var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
@@ -2119,7 +2153,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         eventType: 'clicked_checkout',
-                        productId: '<%= product.id %>'
+                        productId: '<%= product.id %>',
+                        ipAddress: clientIP,
+                        device: clientDevice
                     })
                 }).catch(e => console.error('Erro ao enviar tracking:', e));
             });

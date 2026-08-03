@@ -41,6 +41,26 @@ function deleteLocalFile(filePath) {
 	}
 }
 
+function getClientIp(req) {
+	let ip = req.headers['cf-connecting-ip'] || 
+	         req.headers['x-forwarded-for'] || 
+	         req.headers['x-real-ip'] || 
+	         req.ip || 
+	         (req.socket ? req.socket.remoteAddress : '') || 
+	         '';
+	if (ip.includes(',')) {
+		ip = ip.split(',')[0].trim();
+	}
+	if (ip.startsWith('::ffff:')) {
+		ip = ip.substring(7);
+	}
+	if (ip === '::1' || ip === '0.0.0.0') {
+		ip = '127.0.0.1';
+	}
+	return ip;
+}
+
+
 
 function dbProductToJsProduct(row) {
 	if (!row) return null;
@@ -141,6 +161,7 @@ async function getNextProductId() {
 }
 
 const app = express();
+app.set('trust proxy', true);
 app.use(bodyParser.json({ type: ['application/json', 'text/plain', 'application/*+json'] }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -1365,7 +1386,13 @@ app.post('/track-event', async (req, res) => {
 		const product = await getProductById(productId);
 		const productName = product ? product.name : 'Desconhecido';
 
-		const clientIp = ipAddress || req.ip;
+		let clientIp = ipAddress;
+		if (!clientIp || clientIp === '172.18.0.1' || clientIp === '::ffff:172.18.0.1') {
+			clientIp = getClientIp(req);
+		} else {
+			if (clientIp.includes(',')) clientIp = clientIp.split(',')[0].trim();
+			if (clientIp.startsWith('::ffff:')) clientIp = clientIp.substring(7);
+		}
 		const clientDevice = device || (/Mobi|Android/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
 
 		await pool.query(
@@ -1493,7 +1520,13 @@ app.post('/buy/:id', async (req, res) => {
 		if (!product) return res.status(404).send('Produto não encontrado');
 		if (!email) return res.status(400).send('E-mail é obrigatório');
 
-		const clientIp = (req.body && req.body.ip_address) ? String(req.body.ip_address).trim() : req.ip;
+		let clientIp = (req.body && req.body.ip_address) ? String(req.body.ip_address).trim() : '';
+		if (!clientIp || clientIp === '172.18.0.1' || clientIp === '::ffff:172.18.0.1') {
+			clientIp = getClientIp(req);
+		} else {
+			if (clientIp.includes(',')) clientIp = clientIp.split(',')[0].trim();
+			if (clientIp.startsWith('::ffff:')) clientIp = clientIp.substring(7);
+		}
 		const clientDevice = (req.body && req.body.device) ? String(req.body.device).trim() : (/Mobi|Android/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
 
 		// Registrar evento 'form_submitted'

@@ -369,6 +369,7 @@ async function initSchema() {
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS store_slug TEXT;`);
 	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS ip_address TEXT;`);
+	await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS product_id TEXT;`);
 
 	// Índices úteis
 	await pool.query(`CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at DESC);`);
@@ -574,7 +575,7 @@ async function sendPurchaseEmail(email, purchasedProducts, store) {
 // Helper para processar aprovação de pagamento e enviar para Google Forms e Resend
 async function handlePaymentApproved(paymentId) {
 	try {
-		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, description, store_slug, ip_address, device FROM payments WHERE payment_id=$1`, [paymentId]);
+		const { rows: checkRows } = await pool.query(`SELECT status, email, whatsapp, product_name, product_id, description, store_slug, ip_address, device FROM payments WHERE payment_id=$1`, [paymentId]);
 
 		if (checkRows.length > 0 && checkRows[0].status !== 'paid') {
 			await pool.query(
@@ -585,6 +586,7 @@ async function handlePaymentApproved(paymentId) {
 			const emailEnvio = checkRows[0].email;
 			const whatsappEnvio = checkRows[0].whatsapp;
 			const productEnvio = checkRows[0].product_name;
+			const productIdEnvio = checkRows[0].product_id;
 			const descriptionEnvio = checkRows[0].description;
 			const storeSlugEnvio = checkRows[0].store_slug;
 			const ipEnvio = checkRows[0].ip_address;
@@ -613,6 +615,7 @@ async function handlePaymentApproved(paymentId) {
 			if (emailEnvio) {
 				const activeProducts = await getActiveProducts();
 				const purchasedProducts = activeProducts.filter(p => {
+					if (productIdEnvio && p.id === productIdEnvio) return true;
 					if (p.nameSoft === productEnvio || p.name === productEnvio) return true;
 					if (descriptionEnvio && descriptionEnvio.includes(p.name)) return true;
 					return false;
@@ -1551,9 +1554,9 @@ app.post('/buy/:id', async (req, res) => {
 		const accessToken = generateAccessToken();
 		const finalTarget = `/funil/${accessToken}`;
 		await pool.query(
-			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address, device)
-			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11)`,
-			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug, clientIp, clientDevice]
+			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address, device, product_id)
+			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12)`,
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug, clientIp, clientDevice, product.id]
 		);
 		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {
@@ -1574,7 +1577,10 @@ app.get('/checkout/:token', async (req, res) => {
 		if (!row) return res.status(404).send('Token de checkout inválido');
 
 		const activeProducts = await getActiveProducts();
-		const product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		let product = activeProducts.find(p => p.id === row.product_id);
+		if (!product) {
+			product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		}
 		if (!product) return res.status(404).send('Produto não encontrado');
 
 		return res.render('checkout_payment', {
@@ -1766,7 +1772,7 @@ app.get('/funil/:token', async (req, res) => {
 	try {
 		const { token } = req.params;
 		const { rows } = await pool.query(
-			`SELECT payment_id, status, email, product_name FROM payments WHERE access_token=$1`,
+			`SELECT payment_id, status, email, whatsapp, product_name, product_id FROM payments WHERE access_token=$1`,
 			[token]
 		);
 		const row = rows[0];
@@ -1775,7 +1781,10 @@ app.get('/funil/:token', async (req, res) => {
 
 		// Acha o produto comprado
 		const activeProducts = await getActiveProducts();
-		const product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		let product = activeProducts.find(p => p.id === row.product_id);
+		if (!product) {
+			product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+		}
 
 		if (product && product.upsell) {
 			const upsellProduct = activeProducts.find(p => p.id === product.upsell);
@@ -1990,8 +1999,8 @@ app.post('/webhook/cakto', async (req, res) => {
 
 				// Insere o pagamento aprovado diretamente como pago
 				await pool.query(
-					`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, payment_method, store_slug, paid_at)
-					 VALUES ($1, $2, $3, $4, $5, 'paid', $6, $7, $8, $9, 'cakto_card', $10, CURRENT_TIMESTAMP)`,
+					`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, payment_method, store_slug, paid_at, product_id)
+					 VALUES ($1, $2, $3, $4, $5, 'paid', $6, $7, $8, $9, 'cakto_card', $10, CURRENT_TIMESTAMP, $11)`,
 					[
 						caktoId, 
 						data.amount ? Math.round(Number(data.amount) * 100) : Math.round(product.price * 100), 
@@ -2003,7 +2012,8 @@ app.post('/webhook/cakto', async (req, res) => {
 						(data.customer && data.customer.phone) || null, 
 						product.name, 
 						'teclivre', 
-						'cakto_card'
+						'cakto_card',
+						product.id
 					]
 				);
 

@@ -515,6 +515,20 @@
                 </div>
                 <form id="formPixCheckout" onsubmit="generatePix(event)">
                     <div class="form-group">
+                        <label for="pixEmail">E-mail para entrega (onde você receberá o acesso ao produto)</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input id="pixEmail" type="email" placeholder="seuemail@exemplo.com" value="<%= payment.email || '' %>" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="pixWhatsapp">WhatsApp com DDD (opcional para suporte rápido)</label>
+                        <div class="input-wrapper">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            <input id="pixWhatsapp" type="text" placeholder="(11) 99999-9999" value="<%= payment.whatsapp || '' %>" />
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label for="pixCpf">CPF do Titular (necessário para emitir a chave Pix)</label>
                         <div class="input-wrapper">
                             <i class="fa-regular fa-id-card"></i>
@@ -773,8 +787,15 @@
             e.preventDefault();
             document.getElementById('errorMessage').style.display = 'none';
             
+            const email = document.getElementById('pixEmail').value.trim();
+            const whatsapp = document.getElementById('pixWhatsapp').value.trim();
             const cpf = document.getElementById('pixCpf').value;
             const cleanCpf = cpf.replace(/\D/g, '');
+
+            if (!email) {
+                showError('Digite um e-mail válido para entrega do produto.');
+                return;
+            }
 
             if (cleanCpf.length < 11) {
                 showError('Digite um CPF válido.');
@@ -796,7 +817,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ cpf: cleanCpf })
+                    body: JSON.stringify({ cpf: cleanCpf, email: email, whatsapp: whatsapp })
                 });
 
                 const data = await response.json();

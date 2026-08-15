@@ -1,6 +1,5 @@
 {
   "ignore": [
-    "products.json",
     "public/*"
   ]
 }

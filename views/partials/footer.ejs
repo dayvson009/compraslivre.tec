@@ -133,6 +133,124 @@
     .custom-footer-social a:hover {
         color: #ffffff;
     }
+    /* Animação Suave de Flutuação Vertical */
+    @keyframes floatUpDown {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .wa-floating-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        animation: floatUpDown 3.5s ease-in-out infinite;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Chat Popup Balloon */
+    .wa-chat-balloon {
+        position: relative;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 14px 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 12px;
+        max-width: 260px;
+        opacity: 0;
+        transform: translateY(15px) scale(0.95);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+    }
+
+    .wa-chat-balloon.active {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+
+    /* Seta apontando para o botão abaixo */
+    .wa-chat-balloon::after {
+        content: '';
+        position: absolute;
+        bottom: -7px;
+        right: 24px;
+        width: 14px;
+        height: 14px;
+        background: #ffffff;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        transform: rotate(45deg);
+    }
+
+    .wa-chat-close {
+        position: absolute;
+        top: -8px;
+        left: -8px;
+        width: 22px;
+        height: 22px;
+        background: #0f172a;
+        color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        cursor: pointer;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+    }
+
+    .wa-chat-close:hover {
+        transform: scale(1.1);
+    }
+
+    .wa-chat-body {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .wa-chat-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 2px solid #22c55e;
+    }
+
+    .wa-chat-msg-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        border-top-left-radius: 4px;
+        padding: 8px 12px;
+    }
+
+    .wa-chat-msg-text {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #14532d;
+        line-height: 1.35;
+        margin: 0;
+    }
+
+    .wa-chat-msg-time {
+        font-size: 10px;
+        color: #16a34a;
+        text-align: right;
+        margin-top: 3px;
+        font-weight: 500;
+    }
 </style>
 
 <!-- Sale Notification -->
@@ -218,16 +336,54 @@
         showNotification();
         setInterval(showNotification, Math.floor(Math.random() * (25000 - 15000 + 1) + 15000));
     }, 3000);
+
+    // Balão de Chat Interativo após 5 segundos
+    setTimeout(() => {
+        const balloon = document.getElementById('wa-chat-balloon');
+        if (balloon && !sessionStorage.getItem('wa_chat_closed')) {
+            balloon.classList.add('active');
+        }
+    }, 5000);
+
+    function closeWaChat(event) {
+        if (event) event.stopPropagation();
+        const balloon = document.getElementById('wa-chat-balloon');
+        if (balloon) {
+            balloon.classList.remove('active');
+            sessionStorage.setItem('wa_chat_closed', 'true');
+        }
+    }
 </script>
 
-<!-- Floating WhatsApp Button -->
-<a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20detalhes%20sobre%20os%20softwares."
-    target="_blank"
-    class="fixed bottom-6 right-6 z-50 bg-emerald-500 hover:bg-emerald-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 animate-bounce group"
-    title="Fale Conosco" style="animation-duration: 2s; text-decoration: none;">
-    <i class="fab fa-whatsapp text-3xl"></i>
-    <span class="absolute right-16 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
-        Falar no WhatsApp
-    </span>
-</a>
+<!-- Floating WhatsApp Container (Flutuação perpétua) -->
+<div class="wa-floating-container">
+    <!-- Balão Pop-up de Atendente (Aparece em 5 segundos) -->
+    <div class="wa-chat-balloon" id="wa-chat-balloon">
+        <span class="wa-chat-close" onclick="closeWaChat(event)" title="Fechar"><i class="fas fa-times"></i></span>
+        <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20posso%20te%20ajudar%20com%20isso%3F" target="_blank" class="wa-chat-body">
+            <img src="/images/empresa/atendimento-crtech.jpg" alt="Atendente" class="wa-chat-avatar">
+            <div class="wa-chat-msg-box">
+                <p class="wa-chat-msg-text">Olá, posso te ajudar com isso?</p>
+                <div class="wa-chat-msg-time">Agora <i class="fas fa-check-double text-[9px]"></i></div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Botão Principal do WhatsApp -->
+    <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20detalhes%20sobre%20os%20softwares."
+        target="_blank"
+        class="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center gap-2.5 p-2 pr-4 shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 group"
+        title="Falar no WhatsApp" style="text-decoration: none;">
+        <div class="relative w-10 h-10 flex-shrink-0">
+            <img src="/images/empresa/atendimento-crtech.jpg" alt="Atendimento CRtech" class="w-10 h-10 rounded-full object-cover border-2 border-white">
+            <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+        </div>
+        <div class="flex flex-col text-left text-white leading-tight pr-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-100 flex items-center gap-1">
+                Atendimento Humano <i class="fab fa-whatsapp text-xs text-white"></i>
+            </span>
+            <span class="text-[10px] font-medium text-white/90">Online agora</span>
+        </div>
+    </a>
+</div>
 

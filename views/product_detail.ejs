@@ -1356,7 +1356,7 @@
             justify-content: center;
             gap: 8px;
             width: 100%;
-            padding: 13px;
+            padding: 12px;
             border-radius: 12px;
             font-weight: 700;
             font-size: 14px;
@@ -1375,16 +1375,141 @@
             transform: translateY(-1px);
         }
 
+        /* Ocultar Cronômetro por padrão */
+        .pd-timer-box {
+            display: none !important;
+        }
+
+        /* Video Container */
+        .pd-video-container {
+            margin-top: 20px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            width: 100%;
+        }
+
+        .pd-video-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pd-video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+            width: 100%;
+        }
+
+        .pd-video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* WhatsApp Humanized Support btn */
+        .pd-whatsapp-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #bbf7d0;
+            background: #f0fdf4;
+            color: #166534;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
+            margin-top: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .pd-whatsapp-btn:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+            transform: translateY(-1px);
+        }
+
+        .pd-wa-avatar-container {
+            position: relative;
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+        }
+
+        .pd-wa-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #22c55e;
+        }
+
+        .pd-wa-status-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 11px;
+            height: 11px;
+            background-color: #22c55e;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+        }
+
+        .pd-wa-text {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            flex: 1;
+        }
+
+        .pd-wa-title {
+            font-weight: 700;
+            color: #14532d;
+            font-size: 13.5px;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pd-wa-subtitle {
+            font-size: 11.5px;
+            color: #15803d;
+            margin-top: 2px;
+        }
+
         /* --- RESPONSIVE --- */
         @media (max-width: 1024px) {
             .pd-container {
                 grid-template-columns: 1fr;
                 display: flex;
-                flex-direction: column-reverse;
+                flex-direction: column;
             }
 
             .pd-checkout {
                 position: static;
+                order: 2;
+            }
+
+            .pd-gallery-card-wrapper {
+                order: 1;
             }
 
             .pd-desc-body {
@@ -1425,12 +1550,6 @@
 
             .pd-gallery-benefits {
                 grid-template-columns: repeat(2, 1fr);
-            }
-
-            .pd-timer-box {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
             }
 
             .pd-price-current {
@@ -1591,7 +1710,7 @@
     <!-- MAIN GRID: GALLERY + CHECKOUT -->
     <div class="pd-container">
         <!-- LEFT: GALLERY -->
-        <div>
+        <div class="pd-gallery-card-wrapper">
             <div class="pd-gallery-card">
                 <div class="pd-gallery">
                     <div class="pd-thumbs" id="pd-thumbs-container">
@@ -1615,6 +1734,18 @@
                             alt="<%= product.name %>">
                     </div>
                 </div>
+
+                <!-- VIDEO EXPLICATIVO -->
+                <div class="pd-video-container">
+                    <h3 class="pd-video-title">
+                        <i class="fa-solid fa-circle-play" style="color: #2563eb;"></i>
+                        Veja como funciona em 1 minuto 👇
+                    </h3>
+                    <div class="pd-video-wrapper">
+                        <iframe src="https://www.youtube.com/embed/KXk5_f_b1ms" title="Como funciona" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+
                 <div class="pd-gallery-benefits">
                     <div class="pd-gallery-benefit">
                         <i class="fa-regular fa-paper-plane"></i>
@@ -1757,27 +1888,6 @@
 
         <!-- RIGHT: CHECKOUT PANEL -->
         <div class="pd-checkout">
-            <!-- Timer -->
-            <div class="pd-timer-box">
-                <div class="pd-timer-label">
-                    <i class="fa-solid fa-fire-flame-curved"></i>
-                    <span>OFERTA POR<br>TEMPO LIMITADO!</span>
-                </div>
-                <div class="pd-timer-digits">
-                    <div class="pd-timer-unit">
-                        <span class="num" id="pd-timer-h">08</span>
-                        <span class="lbl">HORAS</span>
-                    </div>
-                    <div class="pd-timer-unit">
-                        <span class="num" id="pd-timer-m">45</span>
-                        <span class="lbl">MIN</span>
-                    </div>
-                    <div class="pd-timer-unit">
-                        <span class="num" id="pd-timer-s">32</span>
-                        <span class="lbl">SEG</span>
-                    </div>
-                </div>
-            </div>
 
             <!-- Buy Card -->
             <div class="pd-buy-card">
@@ -1829,48 +1939,14 @@
                     </div>
                     <% } %>
 
-                    <button type="button" class="pd-btn-buy" id="btn-comprar-trigger">Comprar agora <i class="fa-solid fa-arrow-right"></i></button>
-
-                    <!-- Checkout Modal -->
-                    <div class="modal-overlay" id="checkout-modal">
-                        <div class="modal-content" onclick="event.stopPropagation();">
-                            <span class="modal-close" id="modal-close-btn">&times;</span>
-                            <h3 class="modal-title">
-                                <i class="fa-solid fa-lock" style="color: #22c55e;"></i>
-                                Concluir Compra
-                            </h3>
-                            <p class="modal-subtitle">Preencha seus dados para receber o produto imediatamente.</p>
-
-                            <div class="pd-form-group">
-                                <label for="email"><i class="fa-regular fa-envelope"></i> E-mail para entrega</label>
-                                <input id="email" name="email" type="email" placeholder="onde você receberá o produto" required>
-                            </div>
-                            <div class="pd-form-group">
-                                <label for="whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp (com DDD)</label>
-                                <input id="whatsapp" name="whatsapp" type="text" placeholder="(11) 99999-9999" required>
-                            </div>
-
-                            <button type="submit" class="pd-btn-buy">Continuar compra <i class="fa-solid fa-arrow-right"></i></button>
-                        </div>
-                    </div>
+                    <button type="submit" class="pd-btn-buy" id="btn-comprar-trigger">Comprar agora <i class="fa-solid fa-arrow-right"></i></button>
                 </form>
 
                 <!-- Safe alert -->
                 <div class="pd-safe-alert">
                     <i class="fa-solid fa-shield-halved"></i>
-                    <span><strong>Compra Segura!</strong> O acesso será enviado IMEDIATAMENTE após a confirmação do PIX.</span>
+                    <span><strong>Compra Segura!</strong> O acesso será enviado IMEDIATAMENTE após a confirmação.</span>
                 </div>
-
-                <!-- Favorite -->
-                <button class="pd-btn-fav" id="pd-fav-btn" onclick="pdToggleFavorite('<%= product.id %>')">
-                    <i class="fa-regular fa-heart"></i> Adicionar aos favoritos
-                </button>
-
-                <!-- WhatsApp -->
-                <a href="https://wa.me/5581985315669?text=Ol%C3%A1%2C%20tenho%20d%C3%BAvidas%20sobre%20o%20produto%20<%= encodeURIComponent(product.name) %>"
-                    target="_blank" class="pd-whatsapp-btn">
-                    <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i> Fale com Suporte
-                </a>
 
                 <!-- Security -->
                 <div class="pd-security-row">
@@ -2157,16 +2233,12 @@
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
         });
 
-        // ---- CHECKOUT MODAL LOGIC ----
-        const modal = document.getElementById('checkout-modal');
-        const openBtn = document.getElementById('btn-comprar-trigger');
-        const closeBtn = document.getElementById('modal-close-btn');
+        // ---- DIRECT CHECKOUT SUBMIT & TRACKING ----
+        const buyForm = document.getElementById('pd-buy-form');
+        const buyBtn = document.getElementById('btn-comprar-trigger');
 
-        if (openBtn && modal && closeBtn) {
-            openBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                modal.classList.add('active');
-
+        if (buyBtn && buyForm) {
+            buyBtn.addEventListener('click', function(e) {
                 // Enviar tracking event
                 fetch('/track-event', {
                     method: 'POST',
@@ -2178,14 +2250,6 @@
                         device: clientDevice
                     })
                 }).catch(e => console.error('Erro ao enviar tracking:', e));
-            });
-
-            closeBtn.addEventListener('click', function() {
-                modal.classList.remove('active');
-            });
-
-            modal.addEventListener('click', function() {
-                modal.classList.remove('active');
             });
         }
     </script>

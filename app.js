@@ -1521,7 +1521,6 @@ app.post('/buy/:id', async (req, res) => {
 		const activeProducts = await getActiveProducts();
 		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
-		if (!email) return res.status(400).send('E-mail é obrigatório');
 
 		let clientIp = (req.body && req.body.ip_address) ? String(req.body.ip_address).trim() : '';
 		if (!clientIp || clientIp === '172.18.0.1' || clientIp === '::ffff:172.18.0.1') {
@@ -1613,9 +1612,26 @@ app.post('/checkout/pix/:token', async (req, res) => {
 		const transactionAmount = Number(amount.toFixed(2));
 		const idempotency = crypto.randomUUID();
 
+		let email = row.email;
+		let whatsapp = row.whatsapp;
+		if (req.body.email && req.body.email.trim() !== '') {
+			email = req.body.email.trim();
+		}
+		if (req.body.whatsapp && req.body.whatsapp.trim() !== '') {
+			whatsapp = req.body.whatsapp.trim();
+		}
+
+		// Atualizar banco com os dados preenchidos no checkout
+		if (email !== row.email || whatsapp !== row.whatsapp) {
+			await pool.query(
+				`UPDATE payments SET email = $1, whatsapp = $2 WHERE access_token = $3`,
+				[email, whatsapp, token]
+			).catch(e => console.error('Erro ao atualizar email/whatsapp no pagamento:', e));
+		}
+
 		const payerPayload = {
-			email: row.email,
-			first_name: row.email.split('@')[0] || 'Cliente',
+			email: email || 'cliente@compraslivre.tec',
+			first_name: (email ? email.split('@')[0] : 'Cliente'),
 			last_name: 'ComprasLivre',
 			identification: {
 				type: 'CPF',

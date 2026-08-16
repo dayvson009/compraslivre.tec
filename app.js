@@ -1963,72 +1963,80 @@ app.post('/webhook/cakto', async (req, res) => {
 
 		const { event, data, secret } = req.body || {};
 
-		if (event !== 'purchase_approved') {
+		const eventName = (event || req.body?.event_name || req.body?.type || '').toLowerCase();
+		if (eventName !== 'purchase_approved' && eventName !== 'compra_aprovada' && eventName !== 'paid' && eventName !== 'approved') {
 			console.log(`Webhook Cakto: evento "${event}" ignorado.`);
 			return res.status(200).send('Evento ignorado');
 		}
 
-		const email = data.customer && data.customer.email;
+		const email = (data?.customer?.email || req.body?.customer?.email || '').trim().toLowerCase();
 		if (!email) {
+			console.error('Webhook Cakto: Email do cliente não encontrado no payload');
 			return res.status(400).send('Email do cliente nao encontrado');
 		}
 
-		// 1. Tentar encontrar um pagamento pendente para este email no banco
+		// 1. Tentar encontrar um pagamento pendente para este email no banco (case insensitive)
 		const { rows: payments } = await pool.query(
-			`SELECT * FROM payments WHERE email = $1 AND status = 'pending' ORDER BY created_at DESC LIMIT 1`,
+			`SELECT * FROM payments WHERE LOWER(TRIM(email)) = $1 AND status = 'pending' ORDER BY created_at DESC LIMIT 1`,
 			[email]
 		);
+
+		const caktoId = (data?.id || req.body?.id || `cakto_${Date.now()}`).toString();
 
 		if (payments.length > 0) {
 			const payment = payments[0];
 			console.log(`Webhook Cakto: pagamento pendente encontrado para o email ${email}. Aprovando...`);
 			
-			const caktoId = data.id || `cakto_${Date.now()}`;
 			await pool.query(
 				`UPDATE payments SET payment_id = $1, payment_method = 'cakto_card' WHERE id = $2`,
-				[caktoId.toString(), payment.id]
+				[caktoId, payment.id]
 			);
 
-			await handlePaymentApproved(caktoId.toString());
+			await handlePaymentApproved(caktoId);
 		} else {
 			console.log(`Webhook Cakto: nenhum pagamento pendente encontrado para ${email}. Criando registro dinâmico...`);
 			
 			// Encontrar o produto correspondente a partir do nome
-			let productName = '';
-			if (data.product && data.product.name) {
-				productName = data.product.name;
-			} else if (data.products && data.products[0] && data.products[0].name) {
-				productName = data.products[0].name;
-			}
+			let productName = (
+				data?.product?.name || 
+				data?.offer?.name || 
+				data?.products?.[0]?.name || 
+				req.body?.product?.name || 
+				req.body?.offer?.name || 
+				''
+			).trim();
 
 			const activeProducts = await getActiveProducts();
-			const product = activeProducts.find(p => 
-				productName.toLowerCase().includes(p.name.toLowerCase()) || 
-				p.name.toLowerCase().includes(productName.toLowerCase()) ||
-				productName.toLowerCase().includes((p.nameSoft || '').toLowerCase())
-			);
+			let product = null;
+
+			if (productName) {
+				product = activeProducts.find(p => 
+					productName.toLowerCase().includes(p.name.toLowerCase()) || 
+					p.name.toLowerCase().includes(productName.toLowerCase()) ||
+					(p.nameSoft && productName.toLowerCase().includes(p.nameSoft.toLowerCase()))
+				);
+			}
 
 			if (product) {
 				const accessToken = generateAccessToken();
 				const finalTarget = `/funil/${accessToken}`;
-				const caktoId = (data.id || `cakto_${Date.now()}`).toString();
 
-				// Insere o pagamento aprovado diretamente como pago
+				// Insere o pagamento inicialmente como 'pending' para que handlePaymentApproved processe o envio do e-mail e os logs de venda
 				await pool.query(
-					`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, payment_method, store_slug, paid_at, product_id)
-					 VALUES ($1, $2, $3, $4, $5, 'paid', $6, $7, $8, $9, 'cakto_card', $10, CURRENT_TIMESTAMP, $11)`,
+					`INSERT INTO payments (payment_id, amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, payment_method, store_slug, product_id)
+					 VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9, 'cakto_card', $10, $11)
+					 ON CONFLICT (payment_id) DO UPDATE SET payment_method = 'cakto_card'`,
 					[
 						caktoId, 
-						data.amount ? Math.round(Number(data.amount) * 100) : Math.round(product.price * 100), 
+						data?.amount ? Math.round(Number(data.amount) * 100) : Math.round(product.price * 100), 
 						product.name, 
 						finalTarget, 
 						accessToken, 
 						email, 
 						product.urlProduto || null, 
-						(data.customer && data.customer.phone) || null, 
+						(data?.customer && data.customer.phone) || null, 
 						product.name, 
 						'teclivre', 
-						'cakto_card',
 						product.id
 					]
 				);

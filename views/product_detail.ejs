@@ -1533,6 +1533,16 @@
 
             .pd-reviews-faq-section {
                 padding: 0 12px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .pd-faq-card form{
+                flex-direction: column;
+            }
+
+            .pd-faq-card button{
+                padding: 10px !important;
             }
 
             .pd-gallery {
@@ -1578,6 +1588,169 @@
             }
 
             .pd-ideal-tags {
+                gap: 6px;
+            }
+        }
+
+        /* --- MOBILE STICKY BOTTOM BAR --- */
+        .pd-mobile-sticky-bar {
+            display: none;
+        }
+
+        @keyframes pdPulseBtn {
+            0% { transform: scale(1); box-shadow: 0 4px 14px rgba(34, 45, 197, 0.3); }
+            50% { transform: scale(1.04); box-shadow: 0 0 25px rgba(45, 111, 239, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 4px 14px rgba(34, 45, 197, 0.3); }
+        }
+
+        .pd-btn-highlight {
+            animation: pdPulseBtn 0.8s ease-in-out 2;
+        }
+
+        @media (max-width: 1024px) {
+            .pd-mobile-sticky-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 99990;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                padding: 10px 16px;
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                box-shadow: 0 -4px 25px rgba(15, 23, 42, 0.12);
+                border-top: 1px solid rgba(226, 232, 240, 0.9);
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+                transform: translateY(0);
+                opacity: 1;
+                cursor: pointer;
+            }
+
+            .pd-mobile-sticky-bar.pd-sticky-hidden {
+                transform: translateY(120%);
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .pd-sticky-info {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .pd-sticky-label {
+                font-size: 11px;
+                color: #64748b;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .pd-sticky-price-row {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .pd-sticky-price {
+                font-size: 20px;
+                font-weight: 800;
+                color: #0f172a;
+                line-height: 1.1;
+            }
+
+            .pd-sticky-cents {
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .pd-sticky-badge {
+                background: #dcfce7;
+                color: #16a34a;
+                font-size: 10px;
+                font-weight: 800;
+                padding: 2px 6px;
+                border-radius: 6px;
+            }
+
+            .pd-sticky-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background: linear-gradient(135deg, #2290c5, #2d6fef);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                padding: 12px 22px;
+                font-size: 15px;
+                font-weight: 700;
+                font-family: inherit;
+                cursor: pointer;
+                box-shadow: 0 4px 14px rgba(45, 111, 239, 0.35);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .pd-sticky-btn:active {
+                transform: scale(0.96);
+            }
+
+            /* Eleva o botão flutuante de WhatsApp e notificações acima da barra fixa mobile */
+            .wa-floating-container {
+                bottom: 85px !important;
+                right: 16px !important;
+                z-index: 99999 !important;
+            }
+
+            #sale-notification {
+                bottom: 85px !important;
+                z-index: 99998 !important;
+            }
+        }
+
+        /* --- MOBILE PRODUCT TITLE (ACIMA DA GALERIA NO MOBILE) --- */
+        .pd-mobile-product-header {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .pd-mobile-product-header {
+                display: block;
+                background: #fff;
+                border-radius: 16px;
+                padding: 18px 20px;
+                margin-bottom: 14px;
+                border: 1px solid #e8ecf0;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            }
+
+            .pd-mobile-condition {
+                font-size: 12px;
+                color: #94a3b8;
+                margin: 0 0 6px 0;
+            }
+
+            .pd-mobile-title {
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0 0 4px 0;
+                line-height: 1.3;
+            }
+
+            .pd-mobile-subtitle {
+                font-size: 13px;
+                color: #64748b;
+                margin: 0 0 10px 0;
+            }
+
+            .pd-mobile-rating-row {
+                display: flex;
+                align-items: center;
                 gap: 6px;
             }
         }
@@ -1711,6 +1884,22 @@
     <div class="pd-container">
         <!-- LEFT: GALLERY -->
         <div class="pd-gallery-card-wrapper">
+            <!-- Mobile Product Title & Rating Header (Acima da Imagem no Mobile) -->
+            <div class="pd-mobile-product-header">
+                <p class="pd-mobile-condition">Novo | +250 vendidos</p>
+                <h1 class="pd-mobile-title"><%= product.name %></h1>
+                <p class="pd-mobile-subtitle"><%= product.licence %> - <%= product.formart || 'Digital' %></p>
+                <div class="pd-mobile-rating-row">
+                    <div class="pd-stars">
+                        <% for(let i=0; i<5; i++) { %>
+                        <i class="fa-solid fa-star <%= i < Math.floor(avgRate) ? '' : 'empty' %>"></i>
+                        <% } %>
+                    </div>
+                    <span class="pd-rating-num"><%= avgRate %></span>
+                    <a href="#pd-reviews" class="pd-rating-link">(<%= totalReviews %> avaliações)</a>
+                </div>
+            </div>
+
             <div class="pd-gallery-card">
                 <div class="pd-gallery">
                     <div class="pd-thumbs" id="pd-thumbs-container">
@@ -2084,6 +2273,23 @@
         </div>
     </div>
 
+    <!-- MOBILE STICKY BOTTOM BAR -->
+    <div class="pd-mobile-sticky-bar" id="pd-mobile-sticky-bar" onclick="scrollToCheckout(event)">
+        <div class="pd-sticky-info">
+            <span class="pd-sticky-label">Valor total</span>
+            <div class="pd-sticky-price-row">
+                <span class="pd-sticky-price">R$ <%= priceParts[0] %><span class="pd-sticky-cents">,<%= priceParts[1] %></span></span>
+                <% if (discountPct > 0) { %>
+                <span class="pd-sticky-badge"><%= discountPct %>% OFF</span>
+                <% } %>
+            </div>
+        </div>
+        <button type="button" class="pd-sticky-btn" id="pd-sticky-buy-btn" onclick="submitBuyForm(event)">
+            <span>Comprar</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // URL Hash for tracking
@@ -2196,9 +2402,9 @@
         }
 
         // ---- DEVICE & IP DETECTOR ----
-        let clientIP = '';
-        const clientDevice = /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-        const deviceInput = document.getElementById('client-device');
+        var clientIP = '';
+        var clientDevice = /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+        var deviceInput = document.getElementById('client-device');
         if (deviceInput) deviceInput.value = clientDevice;
 
         async function fetchClientIP() {
@@ -2228,14 +2434,17 @@
         });
 
         // ---- WHATSAPP MASK ----
-        document.getElementById('whatsapp').addEventListener('input', function (e) {
-            var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
-            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-        });
+        var waInput = document.getElementById('whatsapp');
+        if (waInput) {
+            waInput.addEventListener('input', function (e) {
+                var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+                e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+            });
+        }
 
         // ---- DIRECT CHECKOUT SUBMIT & TRACKING ----
-        const buyForm = document.getElementById('pd-buy-form');
-        const buyBtn = document.getElementById('btn-comprar-trigger');
+        var buyForm = document.getElementById('pd-buy-form');
+        var buyBtn = document.getElementById('btn-comprar-trigger');
 
         if (buyBtn && buyForm) {
             buyBtn.addEventListener('click', function(e) {
@@ -2252,6 +2461,86 @@
                 }).catch(e => console.error('Erro ao enviar tracking:', e));
             });
         }
+
+        // ---- ROLAR ATÉ O CHECKOUT AO CLICAR NA BARRA ----
+        function scrollToCheckout(e) {
+            if (e) e.preventDefault();
+            var checkoutEl = document.querySelector('.pd-checkout') || document.getElementById('btn-comprar-trigger') || document.getElementById('pd-buy-form');
+            if (checkoutEl) {
+                checkoutEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var mainBuyBtn = document.getElementById('btn-comprar-trigger');
+                if (mainBuyBtn) {
+                    mainBuyBtn.classList.add('pd-btn-highlight');
+                    setTimeout(function () {
+                        mainBuyBtn.classList.remove('pd-btn-highlight');
+                    }, 1600);
+                }
+            }
+        }
+
+        // ---- SUBMETER COMPRA / CHECKOUT AO CLICAR NO BOTÃO COMPRAR ----
+        function submitBuyForm(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            var form = document.getElementById('pd-buy-form');
+            var btn = document.getElementById('btn-comprar-trigger');
+
+            // Enviar tracking event
+            try {
+                fetch('/track-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        eventType: 'clicked_checkout',
+                        productId: '<%= product.id %>',
+                        ipAddress: clientIP,
+                        device: clientDevice
+                    })
+                }).catch(function(err) { console.error('Erro tracking:', err); });
+            } catch (err) {}
+
+            if (form) {
+                var devInput = document.getElementById('client-device');
+                if (devInput && clientDevice) devInput.value = clientDevice;
+                var ipInput = document.getElementById('client-ip');
+                if (ipInput && clientIP) ipInput.value = clientIP;
+
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            } else if (btn) {
+                btn.click();
+            }
+        }
+
+        // ---- MOBILE STICKY BAR OBSERVER ----
+        document.addEventListener('DOMContentLoaded', function () {
+            var stickyBar = document.getElementById('pd-mobile-sticky-bar');
+            var mainBuyBtn = document.getElementById('btn-comprar-trigger');
+
+            if (stickyBar && mainBuyBtn) {
+                if ('IntersectionObserver' in window) {
+                    var observer = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) {
+                                stickyBar.classList.add('pd-sticky-hidden');
+                            } else {
+                                stickyBar.classList.remove('pd-sticky-hidden');
+                            }
+                        });
+                    }, {
+                        root: null,
+                        threshold: 0.1
+                    });
+
+                    observer.observe(mainBuyBtn);
+                }
+            }
+        });
     </script>
 
     <%- include('partials/footer') %>

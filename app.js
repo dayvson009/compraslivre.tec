@@ -614,12 +614,24 @@ async function handlePaymentApproved(paymentId) {
 			// Disparar envio do e-mail de entrega via Resend
 			if (emailEnvio) {
 				const activeProducts = await getActiveProducts();
-				const purchasedProducts = activeProducts.filter(p => {
-					if (productIdEnvio && p.id === productIdEnvio) return true;
-					if (p.nameSoft === productEnvio || p.name === productEnvio) return true;
-					if (descriptionEnvio && descriptionEnvio.includes(p.name)) return true;
-					return false;
-				});
+				let purchasedProducts = [];
+
+				if (productIdEnvio) {
+					const exactProduct = activeProducts.find(p => p.id === productIdEnvio);
+					if (exactProduct) {
+						purchasedProducts = [exactProduct];
+					}
+				}
+
+				// Fallback apenas se não encontrou pelo ID exato
+				if (purchasedProducts.length === 0) {
+					purchasedProducts = activeProducts.filter(p => {
+						if (p.name === productEnvio) return true;
+						if (descriptionEnvio && descriptionEnvio.includes(p.name)) return true;
+						return false;
+					});
+				}
+
 				if (purchasedProducts.length > 0) {
 					let store = null;
 					if (storeSlugEnvio) {
@@ -1555,7 +1567,7 @@ app.post('/buy/:id', async (req, res) => {
 		await pool.query(
 			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address, device, product_id)
 			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12)`,
-			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, (product.nameSoft || product.name) || null, req.store.slug, clientIp, clientDevice, product.id]
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, product.name || null, req.store.slug, clientIp, clientDevice, product.id]
 		);
 		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {
@@ -1578,7 +1590,7 @@ app.get('/checkout/:token', async (req, res) => {
 		const activeProducts = await getActiveProducts();
 		let product = activeProducts.find(p => p.id === row.product_id);
 		if (!product) {
-			product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+			product = activeProducts.find(p => p.name === row.product_name || (row.description && row.description.includes(p.name)));
 		}
 		if (!product) return res.status(404).send('Produto não encontrado');
 
@@ -1799,7 +1811,7 @@ app.get('/funil/:token', async (req, res) => {
 		const activeProducts = await getActiveProducts();
 		let product = activeProducts.find(p => p.id === row.product_id);
 		if (!product) {
-			product = activeProducts.find(p => p.nameSoft === row.product_name || p.name === row.product_name);
+			product = activeProducts.find(p => p.name === row.product_name || (row.description && row.description.includes(p.name)));
 		}
 
 		if (product && product.upsell) {
@@ -2010,10 +2022,11 @@ app.post('/webhook/cakto', async (req, res) => {
 			let product = null;
 
 			if (productName) {
+				// Prioriza match exato pelo nome completo do produto
 				product = activeProducts.find(p => 
+					productName.toLowerCase() === p.name.toLowerCase() ||
 					productName.toLowerCase().includes(p.name.toLowerCase()) || 
-					p.name.toLowerCase().includes(productName.toLowerCase()) ||
-					(p.nameSoft && productName.toLowerCase().includes(p.nameSoft.toLowerCase()))
+					p.name.toLowerCase().includes(productName.toLowerCase())
 				);
 			}
 

@@ -1370,7 +1370,7 @@ app.get('/produto/:id', async (req, res) => {
 		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
 
-		// O evento 'visited' agora é registrado pelo cliente via POST /track-event com IP real e dispositivo.
+		// O evento 'visited' é registrado pelo cliente via POST /track-event com IP real e dispositivo.
 
 		let relatedProducts = [];
 		if (product.relationProducts && product.relationProducts.length > 0) {

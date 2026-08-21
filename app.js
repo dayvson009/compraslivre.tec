@@ -1413,7 +1413,7 @@ app.post('/track-event', async (req, res) => {
 		await pool.query(
 			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address, device)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-			[req.sessionID || 'guest', productId, productName, req.store.slug, eventType, clientIp, clientDevice]
+			[req.sessionID || 'guest', productId, productName, (req.store && req.store.slug) || 'compraslivre', eventType, clientIp, clientDevice]
 		);
 		return res.sendStatus(200);
 	} catch (e) {

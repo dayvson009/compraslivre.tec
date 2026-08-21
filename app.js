@@ -1370,7 +1370,16 @@ app.get('/produto/:id', async (req, res) => {
 		const product = activeProducts.find(p => p.id === id);
 		if (!product) return res.status(404).send('Produto não encontrado');
 
-		// O evento 'visited' é registrado pelo cliente via POST /track-event com IP real e dispositivo.
+		// Registrar evento 'visited' no backend garantindo que qualquer acesso seja salvo
+		const clientIp = getClientIp(req);
+		const clientDevice = (/Mobi|Android|iPhone|iPad/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
+		const storeSlug = (req.store && req.store.slug) || 'compraslivre';
+
+		await pool.query(
+			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address, device)
+			 VALUES ($1, $2, $3, $4, 'visited', $5, $6)`,
+			[req.sessionID || 'guest', product.id, product.name, storeSlug, clientIp, clientDevice]
+		).catch(e => console.error('Erro ao registrar log de visita no backend:', e));
 
 		let relatedProducts = [];
 		if (product.relationProducts && product.relationProducts.length > 0) {
@@ -1543,11 +1552,13 @@ app.post('/buy/:id', async (req, res) => {
 		}
 		const clientDevice = (req.body && req.body.device) ? String(req.body.device).trim() : (/Mobi|Android/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
 
+		const storeSlug = (req.store && req.store.slug) || 'compraslivre';
+
 		// Registrar evento 'form_submitted'
 		await pool.query(
 			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, email, whatsapp, ip_address, device)
 			 VALUES ($1, $2, $3, $4, 'form_submitted', $5, $6, $7, $8)`,
-			[req.sessionID || 'guest', id, product.name, req.store.slug, email || null, whatsapp || null, clientIp, clientDevice]
+			[req.sessionID || 'guest', id, product.name, storeSlug, email || null, whatsapp || null, clientIp, clientDevice]
 		).catch(e => console.error('Erro ao registrar log de form_submitted:', e));
 
 		let amount = product.price;
@@ -1567,7 +1578,7 @@ app.post('/buy/:id', async (req, res) => {
 		await pool.query(
 			`INSERT INTO payments (amount, description, target_url, access_token, status, email, product_url, whatsapp, product_name, store_slug, ip_address, device, product_id)
 			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12)`,
-			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, product.name || null, req.store.slug, clientIp, clientDevice, product.id]
+			[Math.round(amount * 100), description, finalTarget, accessToken, email || null, product.urlProduto || null, whatsapp || null, product.name || null, storeSlug, clientIp, clientDevice, product.id]
 		);
 		return res.redirect(`/checkout/${accessToken}`);
 	} catch (err) {

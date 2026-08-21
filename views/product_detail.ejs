@@ -2401,40 +2401,10 @@
             }
         }
 
-        // ---- DEVICE & IP DETECTOR ----
-        var clientIP = '';
+        // ---- DEVICE DETECTOR ----
         var clientDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
         var deviceInput = document.getElementById('client-device');
         if (deviceInput) deviceInput.value = clientDevice;
-
-        async function fetchClientIP() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const response = await fetch('https://ifconfig.me/ip', { signal: controller.signal });
-                clearTimeout(timeoutId);
-                const data = await response.text();
-                clientIP = (data || '').trim();
-                const ipInput = document.getElementById('client-ip');
-                if (ipInput) ipInput.value = clientIP;
-            } catch (error) {
-                // Em caso de lentidão ou falha externa, o servidor usará getClientIp(req)
-            }
-        }
-
-        // Registrar visita no frontend usando IP externo real
-        fetchClientIP().finally(() => {
-            fetch('/track-event', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventType: 'visited',
-                    productId: '<%= product.id %>',
-                    ipAddress: clientIP,
-                    device: clientDevice
-                })
-            }).catch(e => console.error('Erro ao enviar tracking de visita:', e));
-        });
 
         // ---- WHATSAPP MASK ----
         var waInput = document.getElementById('whatsapp');
@@ -2458,7 +2428,6 @@
                     body: JSON.stringify({
                         eventType: 'clicked_checkout',
                         productId: '<%= product.id %>',
-                        ipAddress: clientIP,
                         device: clientDevice
                     })
                 }).catch(e => console.error('Erro ao enviar tracking:', e));
@@ -2498,7 +2467,6 @@
                     body: JSON.stringify({
                         eventType: 'clicked_checkout',
                         productId: '<%= product.id %>',
-                        ipAddress: clientIP,
                         device: clientDevice
                     })
                 }).catch(function(err) { console.error('Erro tracking:', err); });
@@ -2507,8 +2475,6 @@
             if (form) {
                 var devInput = document.getElementById('client-device');
                 if (devInput && clientDevice) devInput.value = clientDevice;
-                var ipInput = document.getElementById('client-ip');
-                if (ipInput && clientIP) ipInput.value = clientIP;
 
                 if (typeof form.requestSubmit === 'function') {
                     form.requestSubmit();

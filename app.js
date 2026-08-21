@@ -1410,14 +1410,11 @@ app.post('/track-event', async (req, res) => {
 		const product = await getProductById(productId);
 		const productName = product ? product.name : 'Desconhecido';
 
-		let clientIp = ipAddress;
-		if (!clientIp || clientIp === '172.18.0.1' || clientIp === '::ffff:172.18.0.1') {
-			clientIp = getClientIp(req);
-		} else {
-			if (clientIp.includes(',')) clientIp = clientIp.split(',')[0].trim();
-			if (clientIp.startsWith('::ffff:')) clientIp = clientIp.substring(7);
+		let clientIp = getClientIp(req);
+		if ((!clientIp || clientIp === '127.0.0.1') && ipAddress) {
+			clientIp = ipAddress;
 		}
-		const clientDevice = device || (/Mobi|Android/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
+		const clientDevice = device || (/Mobi|Android|iPhone|iPad/i.test(req.headers['user-agent'] || '') ? 'Mobile' : 'Desktop');
 
 		await pool.query(
 			`INSERT INTO customer_logs (session_id, product_id, product_name, store_slug, event_type, ip_address, device)
